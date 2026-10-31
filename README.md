@@ -82,12 +82,14 @@ Depois da primeira sincronização, o salvamento automático funciona normalment
 
 ## Importar a lista de convidados
 
-Na aba **🎟️ Convidados**, clique em **📥 Importar lista** e escolha o arquivo. A página mostra um resumo (quantos adultos e quantas crianças) e deixa você escolher:
+Na aba **🎟️ Convidados**, clique em **📥 Lista do Ben (69)** para carregar direto o `convidados.json` publicado no site — não precisa baixar arquivo nenhum. A página mostra um resumo (quantos adultos e quantas crianças) e deixa você escolher:
 
 - **Adicionar aos convidados atuais** — mantém a lista e inclui só os nomes novos (repetidos são ignorados).
 - **Substituir a lista atual** — apaga os convidados deste aparelho e usa exatamente os do arquivo.
 
 Repetidos são comparados por **nome + tipo**, então uma criança e um adulto com o mesmo nome podem coexistir. Todos entram como **Pendente**, a menos que o arquivo traga o status.
+
+Para usar outro arquivo (ou uma lista atualizada), clique em **📂 Importar arquivo** e escolha o `.txt`, `.csv` ou `.json` do seu aparelho.
 
 ### Formatos aceitos
 

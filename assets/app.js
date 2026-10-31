@@ -1549,62 +1549,76 @@
   function handleGuestImportFile(file) {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      const parsed = parseGuestText(String(reader.result || ""));
-      if (parsed.invalid) {
-        toast("O JSON do arquivo não é válido.", "err");
-        return;
-      }
-      if (!parsed.guests.length) {
-        toast("Não encontrei nomes no arquivo. Use uma lista com um nome por linha.", "err");
-        return;
-      }
-
-      pendingGuestImport = parsed.guests;
-
-      const adults = parsed.guests.filter((g) => g.type === "adult").length;
-      const kids = parsed.guests.filter((g) => g.type === "child").length;
-      $("#guestImportSummary").textContent =
-        parsed.guests.length + " nome(s) no arquivo: " + adults + " adulto(s) e " + kids + " criança(s).";
-
-      const preview = parsed.guests.slice(0, 8);
-      let previewHtml = preview
-        .map(
-          (g) =>
-            "<li>" + esc(g.name) +
-            '<span class="muted">' + (g.type === "child" ? "criança" : "adulto") + "</span></li>"
-        )
-        .join("");
-      if (parsed.guests.length > preview.length) {
-        previewHtml += '<li class="muted">… e mais ' + (parsed.guests.length - preview.length) + "</li>";
-      }
-      $("#guestImportPreview").innerHTML = previewHtml;
-
-      const existing = new Set(state.guests.map((g) => norm(g.name) + "|" + g.type));
-      const repeated = parsed.guests.filter((g) => existing.has(norm(g.name) + "|" + g.type)).length;
-      const dupesEl = $("#guestImportDupes");
-      const notes = [];
-      if (repeated) {
-        notes.push(
-          repeated + " nome(s) já estão na lista e serão ignorados se você escolher “Adicionar”."
-        );
-      }
-      if (parsed.duplicates) {
-        notes.push(parsed.duplicates + " repetido(s) dentro do próprio arquivo foram ignorados.");
-      }
-      if (notes.length) {
-        dupesEl.hidden = false;
-        dupesEl.textContent = notes.join(" ");
-      } else {
-        dupesEl.hidden = true;
-        dupesEl.textContent = "";
-      }
-
-      $("input[name=importMode][value=merge]").checked = true;
-      openModal($("#guestImportModal"));
-    };
+    reader.onload = () => showGuestImportPreview(String(reader.result || ""), "no arquivo");
     reader.onerror = () => toast("Não foi possível ler o arquivo.", "err");
     reader.readAsText(file);
+  }
+
+  async function importBundledGuests() {
+    try {
+      const response = await fetch("convidados.json", { cache: "no-store" });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      showGuestImportPreview(await response.text(), "na lista do Ben");
+    } catch (e) {
+      toast("Não consegui abrir a lista do Ben. Use “Importar lista” e escolha o arquivo.", "err");
+    }
+  }
+
+  function showGuestImportPreview(text, sourceLabel) {
+    const parsed = parseGuestText(text);
+    if (parsed.invalid) {
+      toast("O JSON do arquivo não é válido.", "err");
+      return;
+    }
+    if (!parsed.guests.length) {
+      toast("Não encontrei nomes no arquivo. Use uma lista com um nome por linha.", "err");
+      return;
+    }
+
+    pendingGuestImport = parsed.guests;
+
+    const adults = parsed.guests.filter((g) => g.type === "adult").length;
+    const kids = parsed.guests.filter((g) => g.type === "child").length;
+    $("#guestImportSummary").textContent =
+      parsed.guests.length +
+      " nome(s) " + sourceLabel + ": " +
+      adults + " adulto(s) e " + kids + " criança(s).";
+
+    const preview = parsed.guests.slice(0, 8);
+    let previewHtml = preview
+      .map(
+        (g) =>
+          "<li>" + esc(g.name) +
+          '<span class="muted">' + (g.type === "child" ? "criança" : "adulto") + "</span></li>"
+      )
+      .join("");
+    if (parsed.guests.length > preview.length) {
+      previewHtml += '<li class="muted">… e mais ' + (parsed.guests.length - preview.length) + "</li>";
+    }
+    $("#guestImportPreview").innerHTML = previewHtml;
+
+    const existing = new Set(state.guests.map((g) => norm(g.name) + "|" + g.type));
+    const repeated = parsed.guests.filter((g) => existing.has(norm(g.name) + "|" + g.type)).length;
+    const dupesEl = $("#guestImportDupes");
+    const notes = [];
+    if (repeated) {
+      notes.push(
+        repeated + " nome(s) já estão na lista e serão ignorados se você escolher “Adicionar”."
+      );
+    }
+    if (parsed.duplicates) {
+      notes.push(parsed.duplicates + " repetido(s) dentro do próprio arquivo foram ignorados.");
+    }
+    if (notes.length) {
+      dupesEl.hidden = false;
+      dupesEl.textContent = notes.join(" ");
+    } else {
+      dupesEl.hidden = true;
+      dupesEl.textContent = "";
+    }
+
+    $("input[name=importMode][value=merge]").checked = true;
+    openModal($("#guestImportModal"));
   }
 
   function confirmGuestImport() {
@@ -1838,6 +1852,7 @@
     });
 
     $("#copyInviteBtn").addEventListener("click", copyInvite);
+    $("#importBundledGuestsBtn").addEventListener("click", importBundledGuests);
     $("#importGuestsBtn").addEventListener("click", () => $("#guestImportFile").click());
     $("#guestImportFile").addEventListener("change", (event) => {
       const file = event.target.files && event.target.files[0];
