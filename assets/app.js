@@ -247,7 +247,7 @@
   }
 
   function seedGuests() {
-    const g = (name, type, status) => ({ id: uid(), name, type, status });
+    const g = (name, type, status) => ({ id: guestKey(name, type), name, type, status });
     return [
       g("Tia Ana", "adult", "confirmed"),
       g("Lucas", "child", "confirmed"),
@@ -265,6 +265,7 @@
       location: "Buffet Alegria — Salão 2",
       budget: 7000,
       theme: "Toy Story",
+      rsvpUrl: "",
     };
   }
 
@@ -290,6 +291,7 @@
     meta.location = String(meta.location || "");
     meta.budget = parseMoney(meta.budget);
     meta.theme = String(meta.theme || "Toy Story");
+    meta.rsvpUrl = safeUrl(meta.rsvpUrl);
 
     const items = raw.items
       .filter((i) => i && typeof i === "object")
@@ -310,12 +312,21 @@
     const guests = Array.isArray(raw.guests)
       ? raw.guests
           .filter((g) => g && typeof g === "object" && g.name)
-          .map((g) => ({
-            id: String(g.id || uid()),
-            name: String(g.name).slice(0, 80),
-            type: g.type === "adult" ? "adult" : "child",
-            status: GUEST_STATUS[g.status] ? g.status : "pending",
-          }))
+          .map((g) => {
+            const name = String(g.name).slice(0, 80);
+            const type = g.type === "adult" ? "adult" : "child";
+            const rsvpAt =
+              typeof g.rsvpAt === "string" && !isNaN(Date.parse(g.rsvpAt)) ? g.rsvpAt : "";
+            return {
+              id: guestKey(name, type),
+              name,
+              type,
+              status: GUEST_STATUS[g.status] ? g.status : "pending",
+              rsvpAt,
+              rsvpMessage: String(g.rsvpMessage || "").slice(0, 280),
+              rsvpSource: rsvpAt && (g.rsvpSource === "owner" || g.rsvpSource === "guest") ? g.rsvpSource : rsvpAt ? "guest" : "",
+            };
+          })
       : [];
 
     return { version: 1, meta, items, guests, updatedAt: raw.updatedAt || nowISO() };
@@ -858,15 +869,28 @@
     list.innerHTML = sorted
       .map((g) => {
         const gs = GUEST_STATUS[g.status] || GUEST_STATUS.pending;
+        const link = guestInviteUrl(g);
+        const rsvpNote = g.rsvpAt
+          ? '<div class="guest-rsvp-time">' +
+            (g.rsvpSource === "owner" ? "Atualizado " : "Respondeu ") +
+            esc(timeAgo(g.rsvpAt)) + "</div>"
+          : "";
+        const rsvpMsg = g.rsvpMessage
+          ? '<div class="guest-rsvp-msg">“' + esc(g.rsvpMessage) + "”</div>"
+          : "";
         return (
           '<div class="guest-row">' +
             '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
             '<div class="guest-main"><div class="guest-name">' + esc(g.name) + "</div>" +
               '<div class="guest-type">' + (g.type === "child" ? "Criança" : "Adulto") +
-              " · " + gs.label + "</div></div>" +
+              " · " + gs.label + "</div>" + rsvpNote + rsvpMsg + "</div>" +
             '<select class="status-select" data-guest-status="' + esc(g.id) +
               '" style="--sc:' + gs.color + ";--sb:" + gs.bg + '" aria-label="Confirmação de ' +
               esc(g.name) + '">' + guestStatusOptions(g.status) + "</select>" +
+            '<button class="icon-btn" type="button" data-guest-link="' + esc(g.id) +
+              '" data-link="' + esc(link) +
+              '" aria-label="Copiar link do convite de ' + esc(g.name) +
+              '" title="Copiar link do convite">🔗</button>' +
             '<button class="icon-btn" type="button" data-guest-del="' + esc(g.id) +
               '" aria-label="Remover ' + esc(g.name) + '">🗑</button>' +
           "</div>"
@@ -1079,6 +1103,73 @@
     }
   }
 
+  function mergeRsvpsFrom(remote) {
+    if (!remote || !Array.isArray(remote.guests)) return 0;
+    const byId = new Map(remote.guests.map((g) => [g.id, g]));
+    let changed = 0;
+    state.guests.forEach((g) => {
+      const r = byId.get(g.id);
+      if (!r || !r.rsvpAt) return;
+      const localAt = Date.parse(g.rsvpAt || "") || 0;
+      const remoteAt = Date.parse(r.rsvpAt) || 0;
+      if (remoteAt <= localAt) return;
+      g.status = r.status;
+      g.rsvpAt = r.rsvpAt;
+      g.rsvpMessage = r.rsvpMessage || "";
+      g.rsvpSource = r.rsvpSource || "guest";
+      changed++;
+    });
+    return changed;
+  }
+
+  async function refreshGuestResponses(options) {
+    const opts = options || {};
+    const stateEl = $("#guestSyncState");
+    if (!hasCloud() || !cloud.verified) {
+      if (opts.manual) {
+        if (stateEl) stateEl.textContent = "Configure a nuvem para atualizar as respostas.";
+        toast("Configure a nuvem nos Ajustes para buscar respostas.", "warn");
+      }
+      return;
+    }
+    if (savingCloud) return;
+
+    if (stateEl) stateEl.textContent = "Buscando respostas…";
+    try {
+      const data = await gh("GET");
+      if (data.notFound) {
+        if (stateEl) stateEl.textContent = "";
+        if (opts.manual) toast("Ainda não há dados na nuvem.", "warn");
+        return;
+      }
+
+      const remote = normalizeState(JSON.parse(b64decode(data.content)));
+      if (!remote) throw new Error("formato inesperado");
+
+      const changed = mergeRsvpsFrom(remote);
+      if (changed) {
+        saveLocal();
+        renderGuests();
+        renderHero();
+        cloud.lastSync = nowISO();
+        saveCloudCfg();
+        renderCloudBar();
+      }
+
+      if (stateEl) {
+        stateEl.textContent = changed
+          ? changed + (changed === 1 ? " resposta atualizada agora." : " respostas atualizadas agora.")
+          : "Nenhuma resposta nova.";
+      }
+      if (opts.manual) {
+        toast(changed ? changed + " resposta(s) atualizada(s)." : "Nenhuma resposta nova.", "ok");
+      }
+    } catch (e) {
+      if (stateEl) stateEl.textContent = "Não foi possível atualizar: " + (e.message || "erro");
+      if (opts.manual) toast("Não foi possível atualizar: " + (e.message || "erro"), "err");
+    }
+  }
+
   async function saveCloud(options) {
     const opts = options || {};
     if (!hasCloud()) {
@@ -1094,6 +1185,18 @@
     try {
       const head = await gh("GET");
       const sha = head.notFound ? null : head.sha;
+
+      // Preserva respostas de presença que chegaram pelo convite depois da última cópia local.
+      let mergedRsvps = 0;
+      if (!head.notFound && head.content) {
+        try {
+          const remote = normalizeState(JSON.parse(b64decode(head.content)));
+          if (remote) mergedRsvps = mergeRsvpsFrom(remote);
+        } catch (e) {
+          /* arquivo remoto inválido: mantém os dados locais */
+        }
+      }
+
       const content = b64encode(JSON.stringify(state, null, 2));
 
       const body = {
@@ -1115,6 +1218,11 @@
       cloud.verified = true;
       saveCloudCfg();
       dirty = false;
+      if (mergedRsvps) {
+        saveLocal();
+        renderGuests();
+        renderHero();
+      }
       setCloudPhase("idle");
       if (opts.fromSettings) {
         setConfigState(
@@ -1285,6 +1393,20 @@
     $("#setPath").value = cloud.path || "data.json";
     $("#setToken").value = cloud.token || "";
     $("#setAuto").checked = !!cloud.auto;
+    $("#setInviteLink").value = invitePageUrl();
+    $("#setRsvpUrl").value = meta.rsvpUrl || "";
+
+    const help = $("#rsvpHelpLink");
+    if (help) {
+      const owner = cloud.owner || (guess ? guess.owner : "");
+      const repo = cloud.repo || (guess ? guess.repo : "");
+      const branch = cloud.branch || "main";
+      help.href =
+        owner && repo
+          ? "https://github.com/" + owner + "/" + repo + "/blob/" + branch + "/apps-script/README.md"
+          : "https://github.com/andersonfabiao/festa-ben/blob/main/apps-script/README.md";
+    }
+
     $("#cloudConfigState").textContent = "";
     openModal($("#settingsModal"));
   }
@@ -1318,6 +1440,11 @@
     meta.time = $("#setTime").value || "16:00";
     meta.location = $("#setLocation").value.trim();
     meta.budget = parseMoney($("#setBudget").value);
+    const rsvpValue = $("#setRsvpUrl").value.trim();
+    meta.rsvpUrl = safeUrl(rsvpValue);
+    if (rsvpValue && !meta.rsvpUrl) {
+      toast("A URL do Apps Script precisa começar com https://.", "warn");
+    }
 
     readCloudForm();
 
@@ -1406,18 +1533,26 @@
 
   /* ---------- Convite ---------- */
 
-  async function copyInvite() {
-    const m = state.meta;
-    const text =
-      "🎉 " + m.name + " faz " + m.age + " anos!\n" +
-      "Tema: " + m.theme + " 🤠🚀\n" +
-      "📅 " + longDate(m.date) + (m.time ? " às " + m.time.replace(":", "h") : "") + "\n" +
-      "📍 " + (m.location || "Local a definir") + "\n\n" +
-      "Confirme sua presença! 💙";
+  function invitePageUrl() {
+    try {
+      const url = new URL("convite.html", location.href);
+      url.search = "";
+      url.hash = "";
+      return url.href;
+    } catch (e) {
+      return "convite.html";
+    }
+  }
 
+  function guestInviteUrl(guest) {
+    const key = guestKey(guest.name, guest.type);
+    return invitePageUrl() + "?convite=" + encodeURIComponent(key);
+  }
+
+  async function copyText(text) {
     try {
       await navigator.clipboard.writeText(text);
-      toast("Convite copiado para a área de transferência.", "ok");
+      return true;
     } catch (e) {
       const ta = document.createElement("textarea");
       ta.value = text;
@@ -1425,14 +1560,33 @@
       ta.style.opacity = "0";
       document.body.appendChild(ta);
       ta.select();
+      let ok = false;
       try {
-        document.execCommand("copy");
-        toast("Convite copiado.", "ok");
+        ok = document.execCommand("copy");
       } catch (err) {
-        toast("Não foi possível copiar automaticamente.", "err");
+        ok = false;
       }
       ta.remove();
+      return ok;
     }
+  }
+
+  async function copyInvite() {
+    const m = state.meta;
+    const text =
+      "🎉 " + m.name + " faz " + m.age + " anos!\n" +
+      "Tema: " + m.theme + " 🤠🚀\n" +
+      "📅 " + longDate(m.date) + (m.time ? " às " + m.time.replace(":", "h") : "") + "\n" +
+      "📍 " + (m.location || "Local a definir") + "\n\n" +
+      "Confirme sua presença: " + invitePageUrl();
+
+    const ok = await copyText(text);
+    toast(ok ? "Convite com o link copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
+  }
+
+  async function copyInviteLink() {
+    const ok = await copyText(invitePageUrl());
+    toast(ok ? "Link do convite copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
   }
 
   /* ---------- Importar convidados ---------- */
@@ -1631,7 +1785,7 @@
 
     if (mode === "replace") {
       state.guests = list.map((g) => ({
-        id: uid(),
+        id: guestKey(g.name, g.type),
         name: g.name,
         type: g.type,
         status: g.status,
@@ -1646,7 +1800,12 @@
           return;
         }
         existing.add(key);
-        state.guests.push({ id: uid(), name: g.name, type: g.type, status: g.status });
+        state.guests.push({
+          id: guestKey(g.name, g.type),
+          name: g.name,
+          type: g.type,
+          status: g.status,
+        });
         added++;
       });
     }
@@ -1694,7 +1853,10 @@
     });
 
     if (name === "budget") renderBudget();
-    if (name === "guests") renderGuests();
+    if (name === "guests") {
+      renderGuests();
+      refreshGuestResponses();
+    }
 
     try {
       const hash = name === "checklist" ? "" : "#" + name;
@@ -1812,10 +1974,11 @@
         $("#guestName").focus();
         return;
       }
+      const type = $("#guestType").value === "adult" ? "adult" : "child";
       state.guests.push({
-        id: uid(),
+        id: guestKey(name, type),
         name,
-        type: $("#guestType").value === "adult" ? "adult" : "child",
+        type,
         status: GUEST_STATUS[$("#guestStatus").value] ? $("#guestStatus").value : "pending",
       });
       $("#guestName").value = "";
@@ -1833,12 +1996,28 @@
       const guest = state.guests.find((g) => g.id === select.dataset.guestStatus);
       if (!guest) return;
       guest.status = select.value;
+      guest.rsvpAt = nowISO();
+      guest.rsvpSource = "owner";
       touch();
       renderGuests();
       renderCloudBar();
     });
 
     $("#guestList").addEventListener("click", (event) => {
+      const link = event.target.closest("[data-guest-link]");
+      if (link) {
+        const guest = state.guests.find((g) => g.id === link.dataset.guestLink);
+        copyText(link.dataset.link).then((ok) => {
+          toast(
+            ok
+              ? "Link do convite de " + (guest ? guest.name : "convidado") + " copiado."
+              : "Não foi possível copiar automaticamente.",
+            ok ? "ok" : "err"
+          );
+        });
+        return;
+      }
+
       const del = event.target.closest("[data-guest-del]");
       if (!del) return;
       const guest = state.guests.find((g) => g.id === del.dataset.guestDel);
@@ -1852,6 +2031,9 @@
     });
 
     $("#copyInviteBtn").addEventListener("click", copyInvite);
+    $("#copyInviteLinkBtn").addEventListener("click", copyInviteLink);
+    $("#copyInviteLinkBtn2").addEventListener("click", copyInviteLink);
+    $("#refreshGuestsBtn").addEventListener("click", () => refreshGuestResponses({ manual: true }));
     $("#importBundledGuestsBtn").addEventListener("click", importBundledGuests);
     $("#importGuestsBtn").addEventListener("click", () => $("#guestImportFile").click());
     $("#guestImportFile").addEventListener("change", (event) => {
@@ -1969,9 +2151,19 @@
 
     if (hasCloud() && !hadLocal) {
       pullCloud({ silent: true });
+    } else if (hasCloud() && cloud.verified) {
+      refreshGuestResponses();
     }
 
     setInterval(renderCountdown, 60000);
+    setInterval(() => {
+      const guestsView = $("#view-guests");
+      if (!document.hidden && guestsView && !guestsView.hidden) refreshGuestResponses();
+    }, 60000);
+    document.addEventListener("visibilitychange", () => {
+      const guestsView = $("#view-guests");
+      if (!document.hidden && guestsView && !guestsView.hidden) refreshGuestResponses();
+    });
   }
 
   if (document.readyState === "loading") {

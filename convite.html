@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Convite · Ben faz 5!</title>
+  <meta name="description" content="Confirme sua presença na festa de 5 anos do Ben — tema Toy Story." />
+  <meta name="theme-color" content="#8fd3ff" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 61,38 96,38 68,59 79,93 50,72 21,93 32,59 4,38 39,38' fill='%23ffc93c' stroke='%23e8453c' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261101" />
+</head>
+<body class="invite-body">
+  <div class="invite-sky" aria-hidden="true">
+    <span class="cloud c1"></span>
+    <span class="cloud c2"></span>
+    <span class="cloud c3"></span>
+    <span class="cloud c4"></span>
+    <span class="spark s1">✦</span>
+    <span class="spark s2">✦</span>
+    <span class="spark s3">✦</span>
+    <span class="spark s4">✧</span>
+  </div>
+
+  <main class="invite-wrap">
+    <section class="invite-card" aria-labelledby="inviteTitle">
+      <div class="invite-badge" aria-hidden="true"><span id="inviteAge">5</span><small>anos</small></div>
+      <p class="eyebrow">Uma aventura Toy Story</p>
+      <h1 id="inviteTitle"><span id="inviteName">Ben</span> faz <span id="inviteAgeText">5</span>!</h1>
+      <p class="invite-sub" id="inviteSub">Você está convidado para celebrar com a gente.</p>
+
+      <div class="invite-meta" id="inviteMeta"></div>
+
+      <div id="inviteContent" aria-live="polite">
+        <div class="invite-loading">
+          <span class="invite-spinner" aria-hidden="true"></span>
+          <p>Carregando o convite…</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="invite-foot">Feito com 💙 para a festa do Ben.</p>
+  </main>
+
+  <div class="toast" id="inviteToast" role="status" aria-live="polite"></div>
+
+  <script src="assets/guest-id.js?v=20261101"></script>
+  <script src="assets/convite.js?v=20261101"></script>
+</body>
+</html>

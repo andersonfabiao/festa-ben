@@ -9,6 +9,7 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Valores** — custo previsto, valor já pago, fornecedor, link, data limite e observações.
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
 - **Convidados** — lista com criança/adulto, confirmação de presença e resumo, com importação de lista em `.txt`, `.csv` ou `.json`.
+- **Convite digital** — página própria com a data, o local e botões **Vou comemorar** / **Não poderei ir**, com recado opcional. A resposta cai direto na lista de convidados.
 - **Contagem regressiva** para a festa.
 - **Salvamento automático** no navegador (localStorage).
 - **Sincronização opcional com GitHub** para abrir em qualquer aparelho e ver os mesmos dados.
@@ -24,11 +25,10 @@ Basta abrir o `index.html` no navegador. Para publicar online, siga o passo a pa
 
 1. Crie um repositório no GitHub, por exemplo `festa-ben` (pode ser público).
 2. Envie estes arquivos para a branch `main`:
-   - `index.html`
-   - `assets/styles.css`
-   - `assets/app.js`
-   - `README.md`
-   - `.nojekyll`
+   - `index.html`, `convite.html`
+   - `assets/styles.css`, `assets/app.js`, `assets/convite.js`, `assets/guest-id.js`
+   - `convidados.json`
+   - `README.md`, `.nojekyll`
 3. No repositório, abra **Settings → Pages**.
 4. Em **Build and deployment**, escolha **Deploy from a branch**.
 5. Selecione a branch **main** e a pasta **/ (root)**. Salve.
@@ -134,6 +134,48 @@ Tipos aceitos: `adulto`/`adult`, `criança`/`child`. Status: `pendente`, `confir
 
 O arquivo `convidados.json` na raiz já contém a lista atual (69 pessoas: 50 adultos e 19 crianças), pronto para importar em qualquer aparelho. Depois de importar, use **☁️ Salvar na nuvem** para levar a lista aos outros aparelhos.
 
+## Convite digital e confirmação de presença (RSVP)
+
+O convite fica em **`convite.html`** (ex.: `https://andersonfabiao.github.io/festa-ben/convite.html`). Ele mostra a data, a hora, o local e o tema, e deixa o convidado confirmar ou recusar com um recado opcional.
+
+### Links do convite
+
+- **Link único (para o grupo)** — o convidado abre o convite, busca o próprio nome na lista e responde. Use **🔗 Link do convite** na aba **Convidados** ou o campo em **Ajustes → Convite e RSVP**.
+- **Link individual** — cada convidado tem um link próprio, que já abre o convite com o nome dele. Clique no **🔗** ao lado do nome na lista para copiar. O link usa um ID estável (nome + tipo), então continua o mesmo depois de reimportar a lista — mas muda se o nome for alterado.
+
+O botão **📋 Copiar convite** copia um texto pronto com data, local e o link único para colar no WhatsApp.
+
+### Como o convidado responde
+
+1. Abre o link e escolhe o nome (ou já cai no nome, se for link individual).
+2. Escreve um recado, se quiser.
+3. Toca em **🎉 Vou comemorar** ou **😢 Não poderei ir**.
+4. A resposta é gravada no `data.json` e aparece na lista dos anfitriões com status, hora e recado.
+
+No app, a lista se atualiza sozinha a cada minuto (e ao voltar para a aba). Também dá para forçar com **🔄 Atualizar respostas**. Ao salvar na nuvem, o app preserva as respostas que chegaram pelo convite e ainda não estavam no aparelho.
+
+### Configurar o Apps Script (uma vez)
+
+O GitHub Pages é estático e não pode gravar no repositório com segurança, então o convite envia a resposta para um **Google Apps Script**, que grava no `data.json` usando um token guardado no Google. O passo a passo completo está em **[`apps-script/README.md`](apps-script/README.md)**. Resumo:
+
+1. Crie o script em [script.google.com](https://script.google.com) e cole o conteúdo de `apps-script/rsvp.gs`.
+2. Crie um token fine-grained com **Contents: Read and write** no repositório.
+3. Nas **Propriedades do script**, defina `GH_TOKEN`, `GH_OWNER`, `GH_REPO` (e, se quiser, `GH_BRANCH` e `GH_PATH`).
+4. **Implantar → Nova implantação → Aplicativo da Web**, executar como **Eu** e acesso **Qualquer pessoa**.
+5. Copie a URL `/exec`, cole em **Ajustes → Convite e RSVP → URL do Google Apps Script**, clique em **Salvar** e depois em **☁️ Salvar na nuvem**.
+6. Teste `SUA_URL/exec?ping=1` no navegador: deve responder `{"ok":true,…}`.
+
+Sem essa URL, o convite abre normalmente, mas os botões ficam desativados e aparece um aviso para falar com os anfitriões.
+
+### Antes de compartilhar
+
+1. Importe a lista (**📥 Lista do Ben (69)**) e clique em **☁️ Salvar na nuvem** — o convite lê o `data.json` publicado.
+2. Configure a URL do Apps Script e salve na nuvem.
+3. Abra o link do convite no celular e envie uma resposta de teste.
+4. Confira em **🎟️ Convidados → 🔄 Atualizar respostas**.
+
+> O repositório é público, então nomes, confirmações e recados no `data.json` também são públicos. O token do GitHub **não** vai para o site: fica só no navegador (app) e nas Propriedades do script (RSVP).
+
 ## Backup e impressão
 
 - **Ajustes → Exportar JSON** baixa um arquivo com todos os dados.
@@ -150,13 +192,18 @@ O arquivo `convidados.json` na raiz já contém a lista atual (69 pessoas: 50 ad
 ## Estrutura
 
 ```
-index.html          página única
-assets/styles.css   visual (tema Toy Story, responsivo e impressão)
-assets/app.js       lógica, dados locais e sincronização GitHub
-data.json           criado automaticamente na primeira sincronização
-convidados.json     lista de convidados pronta para importar
+index.html            página principal (checklist, orçamento, convidados)
+convite.html          convite digital com confirmação de presença
+assets/styles.css     visual (tema Toy Story, responsivo, impressão e convite)
+assets/app.js         lógica, dados locais e sincronização GitHub
+assets/guest-id.js    ID estável do convidado (usado pelo app e pelo convite)
+assets/convite.js     carrega o convite e envia a resposta ao Apps Script
+apps-script/rsvp.gs   script do Google que grava a resposta no data.json
+apps-script/README.md passo a passo do Apps Script
+data.json             criado automaticamente na primeira sincronização
+convidados.json       lista de convidados pronta para importar
 lista_convidados.txt  mesma lista em texto simples
-.nojekyll           evita processamento do Jekyll no GitHub Pages
+.nojekyll             evita processamento do Jekyll no GitHub Pages
 ```
 
 ## Problemas comuns
@@ -167,6 +214,9 @@ lista_convidados.txt  mesma lista em texto simples
 | “Arquivo ainda não existe” ao carregar | Normal na primeira vez. Use **Enviar para a nuvem** (em Ajustes) ou **Salvar na nuvem** para criar o `data.json`. Se você já salvou em outro aparelho, confira o token (**Contents: Read and write**) e se o branch é o mesmo. |
 | Erro de conflito ao salvar | Alguém/algo atualizou o arquivo. Use **Carregar**, confira e salve de novo. |
 | Dados diferentes entre celular e computador | Falta sincronizar: **Carregar** no aparelho ou **Salvar** no que está atualizado. |
+| Botões do convite desativados | Falta configurar a URL do Apps Script em **Ajustes → Convite e RSVP** e clicar em **Salvar**. |
+| Resposta do convite não aparece | Clique em **🔄 Atualizar respostas**. Se persistir, teste `SUA_URL/exec?ping=1` e veja [`apps-script/README.md`](apps-script/README.md). |
+| Convite diz “não encontrei esse convite” | O nome do convidado mudou depois do link ser copiado. Copie o link novo pelo **🔗** na lista. |
 | Página em branco no GitHub Pages | Confira se o Pages está em **main / (root)** e se os arquivos estão na raiz do repositório. |
 
 Feito com 💙 para a festa do Ben.

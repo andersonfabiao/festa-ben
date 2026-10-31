@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261031" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261101" />
 </head>
 <body>
   <header class="hero">
@@ -146,6 +146,7 @@
         </div>
         <div class="head-actions">
           <button class="btn btn-ghost" id="copyInviteBtn" type="button">📋 Copiar convite</button>
+          <button class="btn btn-ghost" id="copyInviteLinkBtn" type="button">🔗 Link do convite</button>
           <button class="btn btn-ghost" id="importBundledGuestsBtn" type="button">📥 Lista do Ben (69)</button>
           <button class="btn btn-ghost" id="importGuestsBtn" type="button">📂 Importar arquivo</button>
           <input type="file" id="guestImportFile" accept=".txt,.csv,.json,text/plain,text/csv,application/json" hidden />
@@ -153,6 +154,11 @@
       </div>
 
       <div id="guestStats" class="stat-grid small"></div>
+
+      <div class="guest-sync">
+        <button class="btn btn-ghost btn-sm" id="refreshGuestsBtn" type="button">🔄 Atualizar respostas</button>
+        <span class="muted" id="guestSyncState"></span>
+      </div>
 
       <form id="guestForm" class="card guest-form">
         <input id="guestName" class="input" placeholder="Nome do convidado" maxlength="80" autocomplete="off" aria-label="Nome do convidado" />
@@ -311,6 +317,21 @@
           <span id="cloudConfigState" class="muted"></span>
         </div>
 
+        <h3 class="form-section">Convite e RSVP</h3>
+        <label class="field-label">Link do convite (para compartilhar)
+          <span class="copy-field">
+            <input id="setInviteLink" class="input" readonly />
+            <button type="button" class="btn btn-ghost btn-sm" id="copyInviteLinkBtn2">Copiar</button>
+          </span>
+        </label>
+        <label class="field-label">URL do Google Apps Script (recebe as respostas)
+          <input id="setRsvpUrl" class="input" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" />
+        </label>
+        <p class="hint">
+          Sem essa URL, o convite mostra os botões desativados.
+          <a id="rsvpHelpLink" href="https://github.com/andersonfabiao/festa-ben/blob/main/apps-script/README.md" target="_blank" rel="noopener noreferrer">Passo a passo para configurar ↗</a>
+        </p>
+
         <h3 class="form-section">Dados</h3>
         <div class="data-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">⬇️ Exportar JSON</button>
@@ -365,6 +386,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/app.js?v=20261031"></script>
+  <script src="assets/guest-id.js?v=20261101"></script>
+  <script src="assets/app.js?v=20261101"></script>
 </body>
 </html>
