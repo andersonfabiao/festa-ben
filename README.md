@@ -8,7 +8,7 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Status por item** — a fazer, em andamento, contratado e concluído, com checkbox para marcar rápido.
 - **Valores** — custo previsto, valor já pago, fornecedor, link, data limite e observações.
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
-- **Convidados** — lista com criança/adulto, confirmação de presença e resumo.
+- **Convidados** — lista com criança/adulto, confirmação de presença e resumo, com importação de lista em `.txt`, `.csv` ou `.json`.
 - **Contagem regressiva** para a festa.
 - **Salvamento automático** no navegador (localStorage).
 - **Sincronização opcional com GitHub** para abrir em qualquer aparelho e ver os mesmos dados.
@@ -80,6 +80,58 @@ Depois da primeira sincronização, o salvamento automático funciona normalment
 - Para manter tudo privado: use um repositório privado com GitHub Pro/Enterprise para Pages, ou rode a página localmente (`index.html`) e sincronize só quando quiser.
 - Revogue o token em **Settings → Developer settings** se ele vazar.
 
+## Importar a lista de convidados
+
+Na aba **🎟️ Convidados**, clique em **📥 Importar lista** e escolha o arquivo. A página mostra um resumo (quantos adultos e quantas crianças) e deixa você escolher:
+
+- **Adicionar aos convidados atuais** — mantém a lista e inclui só os nomes novos (repetidos são ignorados).
+- **Substituir a lista atual** — apaga os convidados deste aparelho e usa exatamente os do arquivo.
+
+Repetidos são comparados por **nome + tipo**, então uma criança e um adulto com o mesmo nome podem coexistir. Todos entram como **Pendente**, a menos que o arquivo traga o status.
+
+### Formatos aceitos
+
+**Texto (`.txt`)** — um nome por linha. Linhas numeradas (`1. Maria`) são aceitas, e títulos de seção definem o tipo:
+
+```
+Lista de adultos
+
+Célia Rejane
+Elisabete
+...
+
+Crianças para o aniversário de Ben
+
+Letícia
+Larissa
+...
+```
+
+Asteriscos no fim do nome são ignorados. Sem seção, todos entram como adultos.
+
+**CSV (`.csv`)** — separado por `;` ou tabulação, com ou sem cabeçalho:
+
+```
+Nome;Tipo;Status
+Maria;adulto;confirmado
+Pedro;criança;pendente
+```
+
+**JSON (`.json`)** — uma lista de nomes ou de objetos, ou o backup completo do app:
+
+```json
+{
+  "guests": [
+    { "name": "Maria", "type": "adult", "status": "confirmed" },
+    { "name": "Pedro", "type": "child", "status": "pending" }
+  ]
+}
+```
+
+Tipos aceitos: `adulto`/`adult`, `criança`/`child`. Status: `pendente`, `confirmado`, `não vai`.
+
+O arquivo `convidados.json` na raiz já contém a lista atual (69 pessoas: 50 adultos e 19 crianças), pronto para importar em qualquer aparelho. Depois de importar, use **☁️ Salvar na nuvem** para levar a lista aos outros aparelhos.
+
 ## Backup e impressão
 
 - **Ajustes → Exportar JSON** baixa um arquivo com todos os dados.
@@ -100,6 +152,8 @@ index.html          página única
 assets/styles.css   visual (tema Toy Story, responsivo e impressão)
 assets/app.js       lógica, dados locais e sincronização GitHub
 data.json           criado automaticamente na primeira sincronização
+convidados.json     lista de convidados pronta para importar
+lista_convidados.txt  mesma lista em texto simples
 .nojekyll           evita processamento do Jekyll no GitHub Pages
 ```
 

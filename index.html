@@ -143,7 +143,11 @@
           <h2>Convidados</h2>
           <p class="muted">Monte a lista e acompanhe as confirmações de presença.</p>
         </div>
-        <button class="btn btn-ghost" id="copyInviteBtn" type="button">📋 Copiar convite</button>
+        <div class="head-actions">
+          <button class="btn btn-ghost" id="copyInviteBtn" type="button">📋 Copiar convite</button>
+          <button class="btn btn-ghost" id="importGuestsBtn" type="button">📥 Importar lista</button>
+          <input type="file" id="guestImportFile" accept=".txt,.csv,.json,text/plain,text/csv,application/json" hidden />
+        </div>
       </div>
 
       <div id="guestStats" class="stat-grid small"></div>
@@ -321,6 +325,39 @@
           <button type="submit" class="btn btn-primary">Salvar ajustes</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal de importação de convidados -->
+  <div class="modal" id="guestImportModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="guestImportTitle">
+      <div class="modal-head">
+        <h2 id="guestImportTitle">Importar convidados</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <div class="guest-import-body">
+        <p class="hint" id="guestImportSummary"></p>
+        <ul class="guest-import-preview" id="guestImportPreview"></ul>
+        <p class="hint" id="guestImportDupes" hidden></p>
+
+        <fieldset class="import-mode">
+          <legend>O que fazer com a lista atual?</legend>
+          <label class="check-inline">
+            <input type="radio" name="importMode" value="merge" checked />
+            Adicionar aos convidados atuais (ignora repetidos)
+          </label>
+          <label class="check-inline">
+            <input type="radio" name="importMode" value="replace" />
+            Substituir a lista atual
+          </label>
+        </fieldset>
+
+        <div class="modal-actions">
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
+          <button type="button" class="btn btn-primary" id="guestImportConfirm">Importar</button>
+        </div>
+      </div>
     </div>
   </div>
 

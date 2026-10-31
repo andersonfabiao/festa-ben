@@ -1435,6 +1435,220 @@
     }
   }
 
+  /* ---------- Importar convidados ---------- */
+
+  let pendingGuestImport = null;
+
+  function cleanGuestName(value) {
+    return String(value == null ? "" : value)
+      .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+      .replace(/\s+/g, " ")
+      .replace(/\s*\*+\s*$/, "")
+      .trim();
+  }
+
+  function parseGuestType(value, fallback) {
+    const v = norm(value);
+    if (/crian|child|kid|infant|filh/.test(v)) return "child";
+    if (/adult|respons|pai|mae|mãe/.test(v)) return "adult";
+    return fallback;
+  }
+
+  function parseGuestStatus(value) {
+    const v = norm(value);
+    if (/confirm|present|^sim\b|vai\b/.test(v)) return "confirmed";
+    if (/nao vai|^nao\b|declin|recus|^no\b/.test(v)) return "declined";
+    return "pending";
+  }
+
+  function parseGuestText(text) {
+    const raw = String(text == null ? "" : text);
+    const trimmed = raw.trim();
+    if (!trimmed) return { guests: [], duplicates: 0 };
+
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      try {
+        const data = JSON.parse(trimmed);
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data.guests)
+            ? data.guests
+            : [];
+        const guests = list
+          .map((g) => {
+            if (typeof g === "string") {
+              return { name: cleanGuestName(g), type: "adult", status: "pending" };
+            }
+            const o = g && typeof g === "object" ? g : {};
+            return {
+              name: cleanGuestName(o.name || o.nome),
+              type: parseGuestType(o.type || o.tipo, "adult"),
+              status: parseGuestStatus(o.status || o.confirmacao || o.confirmacao),
+            };
+          })
+          .filter((g) => g.name);
+        return dedupeGuestList(guests);
+      } catch (e) {
+        return { guests: [], duplicates: 0, invalid: true };
+      }
+    }
+
+    const out = [];
+    let current = "adult";
+
+    for (const rawLine of raw.split(/\r?\n/)) {
+      const line = cleanGuestName(rawLine);
+      if (!line) continue;
+
+      if (/^(lista\s+de\s+)?adultos?\b/i.test(line)) {
+        current = "adult";
+        continue;
+      }
+      if (/^crian[cç]as?\b/i.test(line)) {
+        current = "child";
+        continue;
+      }
+
+      const cells = line.split(/\s*[;\t]\s*/).filter((c) => c !== "");
+      if (cells.length > 1) {
+        const name = cleanGuestName(cells[0]);
+        if (!name || /^(nome|name|convidado)$/i.test(name)) continue;
+        const type = parseGuestType(cells[1], current);
+        out.push({ name, type, status: parseGuestStatus(cells[2] || "") });
+        continue;
+      }
+
+      const numbered = line.match(/^\d+\s*[.)\]]?\s+(.*)$/);
+      const name = cleanGuestName(numbered ? numbered[1] : line);
+      if (!name) continue;
+      if (/^(nome|convidados?|lista)\b/i.test(name) && name.split(" ").length <= 3) continue;
+
+      out.push({ name, type: current, status: "pending" });
+    }
+
+    return dedupeGuestList(out);
+  }
+
+  function dedupeGuestList(list) {
+    const seen = new Set();
+    const guests = [];
+    let duplicates = 0;
+    for (const g of list) {
+      const key = norm(g.name) + "|" + g.type;
+      if (!key) continue;
+      if (seen.has(key)) {
+        duplicates++;
+        continue;
+      }
+      seen.add(key);
+      guests.push(g);
+    }
+    return { guests, duplicates };
+  }
+
+  function handleGuestImportFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const parsed = parseGuestText(String(reader.result || ""));
+      if (parsed.invalid) {
+        toast("O JSON do arquivo não é válido.", "err");
+        return;
+      }
+      if (!parsed.guests.length) {
+        toast("Não encontrei nomes no arquivo. Use uma lista com um nome por linha.", "err");
+        return;
+      }
+
+      pendingGuestImport = parsed.guests;
+
+      const adults = parsed.guests.filter((g) => g.type === "adult").length;
+      const kids = parsed.guests.filter((g) => g.type === "child").length;
+      $("#guestImportSummary").textContent =
+        parsed.guests.length + " nome(s) no arquivo: " + adults + " adulto(s) e " + kids + " criança(s).";
+
+      const preview = parsed.guests.slice(0, 8);
+      let previewHtml = preview
+        .map(
+          (g) =>
+            "<li>" + esc(g.name) +
+            '<span class="muted">' + (g.type === "child" ? "criança" : "adulto") + "</span></li>"
+        )
+        .join("");
+      if (parsed.guests.length > preview.length) {
+        previewHtml += '<li class="muted">… e mais ' + (parsed.guests.length - preview.length) + "</li>";
+      }
+      $("#guestImportPreview").innerHTML = previewHtml;
+
+      const existing = new Set(state.guests.map((g) => norm(g.name) + "|" + g.type));
+      const repeated = parsed.guests.filter((g) => existing.has(norm(g.name) + "|" + g.type)).length;
+      const dupesEl = $("#guestImportDupes");
+      const notes = [];
+      if (repeated) {
+        notes.push(
+          repeated + " nome(s) já estão na lista e serão ignorados se você escolher “Adicionar”."
+        );
+      }
+      if (parsed.duplicates) {
+        notes.push(parsed.duplicates + " repetido(s) dentro do próprio arquivo foram ignorados.");
+      }
+      if (notes.length) {
+        dupesEl.hidden = false;
+        dupesEl.textContent = notes.join(" ");
+      } else {
+        dupesEl.hidden = true;
+        dupesEl.textContent = "";
+      }
+
+      $("input[name=importMode][value=merge]").checked = true;
+      openModal($("#guestImportModal"));
+    };
+    reader.onerror = () => toast("Não foi possível ler o arquivo.", "err");
+    reader.readAsText(file);
+  }
+
+  function confirmGuestImport() {
+    const list = pendingGuestImport;
+    if (!list || !list.length) return;
+    const mode = ($("input[name=importMode]:checked") || {}).value || "merge";
+
+    let added = 0;
+    let skipped = 0;
+
+    if (mode === "replace") {
+      state.guests = list.map((g) => ({
+        id: uid(),
+        name: g.name,
+        type: g.type,
+        status: g.status,
+      }));
+      added = state.guests.length;
+    } else {
+      const existing = new Set(state.guests.map((g) => norm(g.name) + "|" + g.type));
+      list.forEach((g) => {
+        const key = norm(g.name) + "|" + g.type;
+        if (existing.has(key)) {
+          skipped++;
+          return;
+        }
+        existing.add(key);
+        state.guests.push({ id: uid(), name: g.name, type: g.type, status: g.status });
+        added++;
+      });
+    }
+
+    pendingGuestImport = null;
+    touch();
+    closeModal($("#guestImportModal"));
+    renderGuests();
+    renderHero();
+    renderCloudBar();
+
+    let msg = added + (added === 1 ? " convidado importado" : " convidados importados");
+    if (skipped) msg += " · " + skipped + " repetido(s) ignorado(s)";
+    toast(msg + ".", "ok");
+  }
+
   /* ---------- Toast ---------- */
 
   function toast(message, type) {
@@ -1624,6 +1838,13 @@
     });
 
     $("#copyInviteBtn").addEventListener("click", copyInvite);
+    $("#importGuestsBtn").addEventListener("click", () => $("#guestImportFile").click());
+    $("#guestImportFile").addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (file) handleGuestImportFile(file);
+      event.target.value = "";
+    });
+    $("#guestImportConfirm").addEventListener("click", confirmGuestImport);
 
     /* Item modal */
     $("#itemForm").addEventListener("submit", handleItemSubmit);

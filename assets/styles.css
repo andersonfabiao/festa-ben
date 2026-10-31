@@ -744,6 +744,7 @@ textarea.input { resize: vertical; min-height: 78px; }
   flex-wrap: wrap;
   margin: 4px 0 16px;
 }
+.head-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .section-head h2 { font-size: 1.7rem; }
 .section-head p { margin: 3px 0 0; font-size: 0.9rem; }
 
@@ -945,6 +946,40 @@ textarea.input { resize: vertical; min-height: 78px; }
 .guest-type { font-size: 0.74rem; font-weight: 700; color: var(--muted); }
 .guest-row .status-select { flex: none; }
 .guest-row .icon-btn:hover { color: var(--red); }
+
+/* ---------- Importar convidados ---------- */
+
+.guest-import-body { padding: 18px 22px 20px; }
+.guest-import-body .hint { margin: 0 0 10px; }
+.guest-import-preview {
+  margin: 0 0 14px;
+  padding: 10px 14px 10px 30px;
+  background: #f7fbff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  max-height: 190px;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  color: #33445f;
+}
+.guest-import-preview li { margin: 2px 0; }
+.guest-import-preview .muted { font-size: 0.76rem; margin-left: 6px; }
+.import-mode {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.import-mode legend {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4f6a86;
+  margin-bottom: 8px;
+  padding: 0;
+}
 
 /* ---------- Footer ---------- */
 
@@ -1185,6 +1220,8 @@ body.no-scroll { overflow: hidden; }
   .item-meta { font-size: 0.74rem; gap: 3px 10px; }
 
   .section-head h2 { font-size: 1.4rem; }
+  .head-actions { width: 100%; }
+  .head-actions .btn { flex: 1 1 auto; }
   .budget-edit { width: 100%; }
   .budget-edit .input { width: 100%; }
   .card { padding: 14px; }
