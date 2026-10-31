@@ -1235,16 +1235,26 @@
 
   /* ---------- Configurações ---------- */
 
+  function guessRepoFromHost() {
+    const host = location.hostname || "";
+    const match = host.match(/^([^.]+)\.github\.io$/i);
+    if (!match) return null;
+    const repo = (location.pathname.split("/").filter(Boolean)[0] || "").trim();
+    if (!repo) return null;
+    return { owner: match[1], repo };
+  }
+
   function openSettings() {
     const meta = state.meta;
+    const guess = guessRepoFromHost();
     $("#setName").value = meta.name;
     $("#setAge").value = meta.age;
     $("#setDate").value = meta.date;
     $("#setTime").value = meta.time;
     $("#setLocation").value = meta.location || "";
     $("#setBudget").value = meta.budget ? String(meta.budget).replace(".", ",") : "";
-    $("#setOwner").value = cloud.owner || "";
-    $("#setRepo").value = cloud.repo || "";
+    $("#setOwner").value = cloud.owner || (guess ? guess.owner : "");
+    $("#setRepo").value = cloud.repo || (guess ? guess.repo : "");
     $("#setBranch").value = cloud.branch || "main";
     $("#setPath").value = cloud.path || "data.json";
     $("#setToken").value = cloud.token || "";

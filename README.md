@@ -46,7 +46,7 @@ A página usa a API de conteúdo do GitHub para ler e gravar um arquivo `data.js
 
 ### 1. Crie um token fine-grained
 
-1. No GitHub, acesse **Settings → Developer settings → Personal access tokens → Fine-grained tokens**.
+1. No GitHub, acesse **Settings → Developer settings → Personal access tokens → Fine-grained tokens** (atalho: <https://github.com/settings/tokens?type=beta>). Atenção: é nas configurações da **sua conta** (menu do avatar, canto superior direito), não nas configurações do repositório.
 2. Clique em **Generate new token**.
 3. Em **Repository access**, escolha **Only select repositories** e marque o repositório da festa.
 4. Em **Permissions → Repository permissions**, dê **Read and write** para **Contents**. Nada mais é necessário.

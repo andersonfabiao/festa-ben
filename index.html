@@ -262,6 +262,22 @@
 
         <h3 class="form-section">Sincronização com GitHub <span class="tag-optional">opcional</span></h3>
         <p class="hint">Assim você abre a página em qualquer aparelho e vê os mesmos dados. O token fica salvo somente neste navegador — ele nunca vai para o repositório.</p>
+
+        <details class="cloud-help">
+          <summary>Como criar o token (passo a passo)</summary>
+          <ol>
+            <li>
+              Abra
+              <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer">github.com/settings/tokens?type=beta ↗</a>
+              <span class="muted">(é nas configurações da sua conta, no canto superior direito do GitHub — não é nas configurações do repositório)</span>
+            </li>
+            <li>Clique em <strong>Generate new token</strong>.</li>
+            <li>Em <strong>Repository access</strong>, escolha <strong>Only select repositories</strong> e marque o repositório da festa.</li>
+            <li>Em <strong>Permissions → Repository permissions</strong>, coloque <strong>Contents</strong> em <strong>Read and write</strong>.</li>
+            <li>Gere o token, copie o valor (<code>github_pat_…</code>) e cole no campo abaixo.</li>
+          </ol>
+        </details>
+
         <div class="grid-2">
           <label class="field-label">Usuário / organização
             <input id="setOwner" class="input" placeholder="seu-usuario" autocomplete="off" />
