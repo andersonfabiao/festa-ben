@@ -931,6 +931,11 @@
     renderCloudBar();
   }
 
+  function setConfigState(text) {
+    const el = $("#cloudConfigState");
+    if (el) el.textContent = text;
+  }
+
   /* ---------- Render geral ---------- */
 
   function renderAll() {
@@ -1034,7 +1039,16 @@
       if (data.notFound) {
         setCloudPhase("idle");
         if (!opts.silent) {
-          toast("Ainda não existe arquivo na nuvem. Use “Salvar na nuvem” para criar.", "warn");
+          const send = window.confirm(
+            "Ainda não existe arquivo na nuvem para este usuário, repositório e branch.\n\n" +
+              "Se este aparelho tem os dados mais atuais, envie agora para criar o arquivo.\n\n" +
+              "Se você já salvou de outro aparelho, cancele e confira se o token tem “Contents: Read and write” neste repositório."
+          );
+          if (send) {
+            saveCloud({ fromSettings: opts.fromSettings });
+            return;
+          }
+          toast("Nada foi baixado. Use “Salvar na nuvem” para criar o arquivo.", "warn");
         }
         return;
       }
@@ -1075,6 +1089,7 @@
     if (savingCloud) return;
     savingCloud = true;
     setCloudPhase("syncing");
+    if (opts.fromSettings) setConfigState("Enviando os dados para o GitHub…");
 
     try {
       const head = await gh("GET");
@@ -1101,15 +1116,26 @@
       saveCloudCfg();
       dirty = false;
       setCloudPhase("idle");
-      if (!opts.silent) toast("Checklist salvo no GitHub ☁️", "ok");
+      if (opts.fromSettings) {
+        setConfigState(
+          sha
+            ? "Enviado! O arquivo do GitHub foi atualizado."
+            : "Enviado! O arquivo foi criado no GitHub."
+        );
+      }
+      if (!opts.silent) {
+        toast(sha ? "Checklist salvo no GitHub ☁️" : "Arquivo criado no GitHub ☁️", "ok");
+      }
     } catch (e) {
       let msg = e.message || "erro desconhecido";
       if (e.status === 401) msg = "token inválido ou expirado.";
       if (e.status === 403) msg = "o token não tem permissão de escrita neste repositório.";
+      if (e.status === 404) msg = "repositório, branch ou token sem acesso a este repositório.";
       if (e.status === 409 || e.status === 422) {
         msg = "conflito com uma versão mais nova no GitHub. Baixe da nuvem antes de salvar.";
       }
       setCloudPhase("error", msg);
+      if (opts.fromSettings) setConfigState("Não foi possível enviar: " + msg);
       if (!opts.silent) toast("Erro ao salvar: " + msg, "err");
     } finally {
       savingCloud = false;
@@ -1295,10 +1321,24 @@
 
     readCloudForm();
 
+    const needsUpload = hasCloud() && !cloud.verified;
+
     touch();
     closeModal($("#settingsModal"));
     renderAll();
-    if (!wasCloud && hasCloud()) {
+
+    if (needsUpload) {
+      const send = window.confirm(
+        "Ajustes salvos!\n\nAinda não há dados deste aparelho no GitHub.\n\n" +
+          "OK = enviar agora e criar o arquivo (use se está começando).\n" +
+          "Cancelar = não enviar (use “Baixar da nuvem” se o arquivo já existir)."
+      );
+      if (send) {
+        saveCloud();
+        return;
+      }
+      toast("Nuvem configurada. Envie ou baixe os dados quando quiser.", "warn");
+    } else if (!wasCloud && hasCloud()) {
       toast("Nuvem conectada. Use “Baixar” ou “Salvar na nuvem” para começar.", "ok");
     } else {
       toast("Ajustes salvos.", "ok");
@@ -1316,7 +1356,7 @@
     try {
       const data = await gh("GET");
       status.textContent = data.notFound
-        ? "Conexão OK! O arquivo ainda não existe — salve para criá-lo."
+        ? "Conexão OK! O arquivo ainda não existe — clique em “Enviar para a nuvem” para criá-lo."
         : "Conexão OK! Arquivo encontrado no repositório.";
       renderCloudBar();
     } catch (e) {
@@ -1592,10 +1632,18 @@
     /* Settings */
     $("#settingsForm").addEventListener("submit", handleSettingsSubmit);
     $("#testCloudBtn").addEventListener("click", testCloud);
+    $("#pushCloudBtn").addEventListener("click", () => {
+      readCloudForm();
+      if (!hasCloud()) {
+        setConfigState("Preencha usuário, repositório e token.");
+        return;
+      }
+      saveCloud({ fromSettings: true });
+    });
     $("#pullCloudBtn").addEventListener("click", () => {
       readCloudForm();
       if (!hasCloud()) {
-        $("#cloudConfigState").textContent = "Preencha usuário, repositório e token.";
+        setConfigState("Preencha usuário, repositório e token.");
         return;
       }
       closeModal($("#settingsModal"));

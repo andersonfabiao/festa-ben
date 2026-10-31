@@ -62,11 +62,11 @@ A página usa a API de conteúdo do GitHub para ler e gravar um arquivo `data.js
    - **Arquivo de dados**: `data.json`
    - **Token**: o token criado acima
 3. Marque **Salvar automaticamente na nuvem** se quiser que cada alteração seja enviada sozinha (recomendado depois da primeira sincronização).
-4. Clique em **Salvar ajustes**.
+4. Clique em **Salvar ajustes**. A página pergunta se você quer enviar os dados deste aparelho agora — responda **OK** para criar o `data.json`.
 
 Na primeira configuração, a página **não envia nada automaticamente**. Use:
 
-- **☁️ Salvar na nuvem** — envia o que está neste aparelho para o GitHub (cria o `data.json`).
+- **☁️ Salvar na nuvem** (na barra do checklist) ou **☁️ Enviar para a nuvem** (dentro de Ajustes) — envia o que está neste aparelho para o GitHub (cria o `data.json`).
 - **⬇️ Carregar** — traz o que já está no GitHub para este aparelho.
 
 > Se você já usa a página em outro aparelho, use **Carregar** primeiro. Se está começando agora, use **Salvar na nuvem** primeiro.
@@ -108,7 +108,7 @@ data.json           criado automaticamente na primeira sincronização
 | Sintoma | O que fazer |
 | --- | --- |
 | “Token inválido” | Gere outro token e confira se ele tem **Contents: Read and write** no repositório certo. |
-| “Arquivo ainda não existe” ao carregar | Normal na primeira vez. Use **Salvar na nuvem** para criar o `data.json`. |
+| “Arquivo ainda não existe” ao carregar | Normal na primeira vez. Use **Enviar para a nuvem** (em Ajustes) ou **Salvar na nuvem** para criar o `data.json`. Se você já salvou em outro aparelho, confira o token (**Contents: Read and write**) e se o branch é o mesmo. |
 | Erro de conflito ao salvar | Alguém/algo atualizou o arquivo. Use **Carregar**, confira e salve de novo. |
 | Dados diferentes entre celular e computador | Falta sincronizar: **Carregar** no aparelho ou **Salvar** no que está atualizado. |
 | Página em branco no GitHub Pages | Confira se o Pages está em **main / (root)** e se os arquivos estão na raiz do repositório. |
