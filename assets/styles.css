@@ -764,6 +764,7 @@ textarea.input { resize: vertical; min-height: 78px; }
 .head-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .section-head h2 { font-size: 1.7rem; }
 .section-head p { margin: 3px 0 0; font-size: 0.9rem; }
+.budget-head-actions { display: flex; align-items: flex-end; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
 
 .budget-edit {
   display: flex;
@@ -819,6 +820,23 @@ textarea.input { resize: vertical; min-height: 78px; }
 .stat-card.bad .value { color: var(--red); }
 .stat-card.warn { background: #fffaf0; }
 .stat-card.highlight { background: linear-gradient(150deg, #fff6d8, #fff); border-color: #ffe8a8; }
+.guest-stat { min-width: 0; }
+.stat-progress-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.stat-progress {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 7px;
+  border-radius: 999px;
+  background: #edf2f8;
+  overflow: hidden;
+}
+.stat-progress-fill { display: block; height: 100%; border-radius: inherit; transition: width 0.25s ease; }
+.stat-progress-fill.limit { background: linear-gradient(90deg, #59b94b 0%, #8fd14f 32%, #f2a900 66%, #e8453c 100%); }
+.stat-progress-fill.confirmed { background: linear-gradient(90deg, #36a852, #69c878); }
+.stat-progress-pct { flex: none; min-width: 34px; text-align: right; color: #5a7794; font-size: 0.72rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat-progress-pct.positive { color: var(--green); }
+.stat-progress-pct.limit-reached { color: var(--red); }
 
 .card {
   background: #fff;
@@ -984,68 +1002,6 @@ body.hide-values .money-input:focus {
   padding: 1px 7px;
 }
 .filter-chip.is-active .filter-count { background: rgba(255, 255, 255, 0.22); }
-
-/* Limites de convidados */
-
-.guest-limits {
-  display: grid;
-  gap: 8px;
-  margin: 14px 0 16px;
-}
-.limit-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.limit-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-width: 86px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #3b4c68;
-}
-.limit-count {
-  min-width: 52px;
-  font-size: 0.74rem;
-  font-weight: 800;
-  color: #5a7794;
-  font-variant-numeric: tabular-nums;
-}
-.limit-track {
-  position: relative;
-  flex: 1;
-  height: 9px;
-  border-radius: 999px;
-  background: #eef4fb;
-  overflow: hidden;
-}
-.limit-fill {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, #59b94b 0%, #8fd14f 32%, #f2a900 66%, #e8453c 100%);
-}
-.limit-rest {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background: #eef4fb;
-}
-.limit-pct {
-  min-width: 42px;
-  text-align: right;
-  font-size: 0.74rem;
-  font-weight: 800;
-  color: #5a7794;
-  font-variant-numeric: tabular-nums;
-}
-.limit-row.is-over .limit-pct { color: var(--red); }
-.limit-row.is-over .limit-track {
-  box-shadow: 0 0 0 2px rgba(232, 69, 60, 0.16);
-}
-.limit-row.is-full .limit-pct { color: #b26a00; }
 
 /* Busca e adicionar */
 
@@ -1709,8 +1665,9 @@ body.no-scroll { overflow: hidden; }
   .bd-values { grid-row: 1; grid-column: 2; }
 
   .guest-actions .btn { flex: 1 1 100%; }
-  .limit-label { min-width: 72px; font-size: 0.72rem; }
-  .limit-count { min-width: 44px; }
+  .stat-card.guest-stat { padding: 12px; }
+  .stat-progress-row { gap: 5px; }
+  .stat-progress-pct { min-width: 30px; font-size: 0.66rem; }
   .guest-row { flex-wrap: wrap; }
   .guest-main { flex: 1 1 140px; }
   .guest-row .status-select { order: 4; }
@@ -1757,6 +1714,13 @@ body.no-scroll { overflow: hidden; }
   .item { break-inside: avoid; }
   .hero-stats { grid-template-columns: repeat(4, 1fr); }
   .table-wrap { overflow: visible; }
+}
+
+@media (max-width: 640px) {
+  .budget-head-actions { width: 100%; justify-content: stretch; }
+  .budget-head-actions .budget-edit,
+  .budget-head-actions .budget-edit .input,
+  .budget-head-actions > .btn { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

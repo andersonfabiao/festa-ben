@@ -37,6 +37,8 @@
     declined: { label: "Não vai", color: "#b03a33", bg: "#ffe9e7" },
   };
 
+  const PARTY_LOCATION = "Enjoy Kids, Liv Mall Shopping — Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005";
+
   const stageById = (id) => STAGES.find((s) => s.id === id) || STAGES[0];
 
   /* ---------- Utilidades ---------- */
@@ -291,7 +293,7 @@
       age: 5,
       date: "2026-12-05",
       time: "16:00",
-      location: "Buffet Alegria — Salão 2",
+      location: PARTY_LOCATION,
       budget: 7000,
       theme: "Toy Story",
       rsvpUrl: "",
@@ -381,6 +383,9 @@
     meta.date = /^\d{4}-\d{2}-\d{2}$/.test(meta.date) ? meta.date : base.date;
     meta.time = /^\d{2}:\d{2}$/.test(meta.time) ? meta.time : "16:00";
     meta.location = String(meta.location || "");
+    if (["enjoy livmall", "buffet alegria — salão 2"].includes(meta.location.trim().toLowerCase())) {
+      meta.location = PARTY_LOCATION;
+    }
     meta.budget = parseMoney(meta.budget);
     meta.theme = String(meta.theme || "Toy Story");
     meta.rsvpUrl = safeUrl(meta.rsvpUrl);
@@ -571,7 +576,6 @@
           esc(place) + " ↗</a>"
         : '<span class="chip">📍 ' + esc(place) + "</span>"
     );
-    chips.push('<span class="chip">🤠 ' + esc(meta.theme) + "</span>");
     $("#heroMeta").innerHTML = chips.join("");
 
     renderCountdown();
@@ -887,6 +891,93 @@
     renderBudgetTable();
   }
 
+  function exportPartyPdf() {
+    const report = window.open("", "_blank");
+    if (!report) {
+      toast("O navegador bloqueou a janela do relatório. Permita pop-ups e tente novamente.", "warn");
+      return;
+    }
+
+    const s = summary();
+    const meta = state.meta;
+    const guests = state.guests.slice();
+    const adultGuests = guests
+      .filter((g) => g.type === "adult")
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
+    const childGuests = guests
+      .filter((g) => g.type === "child")
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
+    const items = state.items
+      .slice()
+      .sort((a, b) => stageById(a.stage).name.localeCompare(stageById(b.stage).name, "pt-BR") || a.title.localeCompare(b.title, "pt-BR"));
+
+    const guestRows = (list) => list.length
+      ? list.map((g) => {
+          const linked = g.type === "child"
+            ? guests.filter((a) => a.type === "adult" && g.guardians.includes(a.id)).map((a) => a.name)
+            : [];
+          const detail = linked.length ? '<small>Responsável: ' + esc(linked.join(", ")) + "</small>" : "";
+          return '<tr><td>' + esc(g.name) + detail + '</td><td>' + esc((GUEST_STATUS[g.status] || GUEST_STATUS.pending).label) + "</td></tr>";
+        }).join("")
+      : '<tr><td colspan="2">Nenhum convidado nesta categoria.</td></tr>';
+
+    const itemRows = items.length
+      ? items.map((item) => {
+          const stage = stageById(item.stage);
+          const status = STATUS[item.status] || STATUS.todo;
+          const due = item.due ? longDate(item.due) : "—";
+          return '<tr><td>' + esc(item.title) + '</td><td>' + esc(stage.name) +
+            '</td><td>' + esc(status.label) + '</td><td>' + money(item.cost) +
+            '</td><td>' + money(item.paid) + '</td><td>' + due + '</td></tr>';
+        }).join("")
+      : '<tr><td colspan="6">Nenhum item no checklist.</td></tr>';
+
+    const breakdownRows = STAGES.map((stage) => {
+      const stageItems = state.items.filter((item) => item.stage === stage.id);
+      const planned = stageItems.reduce((sum, item) => sum + num(item.cost), 0);
+      const paid = stageItems.reduce((sum, item) => sum + num(item.paid), 0);
+      return { stage, planned, paid };
+    }).filter((row) => row.planned || row.paid)
+      .map((row) => '<tr><td>' + esc(row.stage.name) + '</td><td>' + money(row.planned) + '</td><td>' + money(row.paid) + '</td></tr>')
+      .join("") || '<tr><td colspan="3">Ainda não há valores lançados.</td></tr>';
+
+    const confirmed = guests.filter((g) => g.status === "confirmed").length;
+    const pending = guests.filter((g) => g.status === "pending").length;
+    const declined = guests.filter((g) => g.status === "declined").length;
+    const generatedAt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date());
+    const map = mapsLink();
+
+    const html = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>Resumo da festa · ' + esc(meta.name) + '</title><style>' +
+      '*,*::before,*::after{box-sizing:border-box}body{font:14px Arial,sans-serif;color:#20304b;max-width:1000px;margin:32px auto;padding:0 24px;line-height:1.45}' +
+      'h1{font-size:28px;margin:0 0 4px}h2{font-size:19px;margin:28px 0 10px;border-bottom:2px solid #dce7f2;padding-bottom:6px}p{margin:4px 0}.muted{color:#68788e}.event,.summary{padding:16px;border:1px solid #dce7f2;border-radius:10px;background:#f7fbff}' +
+      '.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.metric{padding:10px;border:1px solid #dce7f2;border-radius:8px}.metric b{display:block;font-size:16px;margin-top:4px}' +
+      'table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #dce3eb;vertical-align:top}th{background:#f0f5fa}td small{display:block;color:#68788e;margin-top:3px}.guest-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}' +
+      '@media print{body{margin:0 auto;padding:0;max-width:none}.event,.summary,.metric{background:#fff}h2{break-after:avoid}tr{break-inside:avoid}.no-print{display:none}}@page{size:A4;margin:14mm}' +
+      '</style></head><body>' +
+      '<h1>' + esc(meta.name) + ' faz ' + esc(meta.age) + ' anos!</h1><p class="muted">Resumo da festa · gerado em ' + generatedAt + '</p>' +
+      '<section class="event"><strong>Data:</strong> ' + esc(longDate(meta.date)) + (meta.time ? ' às ' + esc(meta.time.replace(":", "h")) : "") +
+      '<br><strong>Local:</strong> ' + esc(meta.location || "A definir") +
+      (map ? '<br><strong>Mapa:</strong> ' + esc(map) : "") +
+      '<br><strong>Tema:</strong> ' + esc(meta.theme) + '</section>' +
+      '<section class="summary"><strong>Resumo financeiro</strong><div class="metrics">' +
+      '<div class="metric">Orçamento<b>' + money(s.budget) + '</b></div><div class="metric">Previsto<b>' + money(s.previsto) +
+      '</b></div><div class="metric">Contratado<b>' + money(s.contratado) + '</b></div><div class="metric">Pago<b>' + money(s.pago) +
+      '</b></div><div class="metric">A pagar<b>' + money(s.aPagar) + '</b></div><div class="metric">Saldo<b>' + money(s.saldo) + '</b></div></div></section>' +
+      '<h2>Gastos por etapa</h2><table><thead><tr><th>Etapa</th><th>Previsto</th><th>Pago</th></tr></thead><tbody>' + breakdownRows + '</tbody></table>' +
+      '<h2>Checklist e orçamento</h2><table><thead><tr><th>Item</th><th>Etapa</th><th>Status</th><th>Previsto</th><th>Pago</th><th>Vencimento</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
+      '<h2>Convidados (' + guests.length + ')</h2><p class="muted">' + confirmed + ' confirmados · ' + pending + ' pendentes · ' + declined + ' não vão</p>' +
+      '<div class="guest-grid"><section><h3>Adultos (' + adultGuests.length + ')</h3><table><thead><tr><th>Nome</th><th>Status</th></tr></thead><tbody>' + guestRows(adultGuests) + '</tbody></table></section>' +
+      '<section><h3>Crianças (' + childGuests.length + ')</h3><table><thead><tr><th>Nome</th><th>Status</th></tr></thead><tbody>' + guestRows(childGuests) + '</tbody></table></section></div>' +
+      '<p class="muted no-print" style="margin-top:24px">Na janela de impressão, escolha “Salvar como PDF”.</p>' +
+      '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},250)})<\/script></body></html>';
+
+    report.document.open();
+    report.document.write(html);
+    report.document.close();
+    report.focus();
+  }
+
   function renderBreakdown() {
     const rows = STAGES.map((stage) => {
       const items = state.items.filter((i) => i.stage === stage.id);
@@ -1046,45 +1137,6 @@
     );
   }
 
-  function renderGuestLimits() {
-    const wrap = $("#guestLimits");
-    if (!wrap) return;
-    const meta = state.meta;
-    const adults = state.guests.filter((g) => g.type === "adult").length;
-    const children = state.guests.filter((g) => g.type === "child").length;
-
-    const rows = [
-      { icon: "🧑", label: "Adultos", count: adults, max: meta.maxAdults },
-      { icon: "🧒", label: "Crianças", count: children, max: meta.maxChildren },
-    ];
-
-    wrap.innerHTML = rows
-      .map((row) => {
-        const pct = row.max > 0 ? Math.round((row.count / row.max) * 100) : 0;
-        const fill = Math.max(0, Math.min(100, pct));
-        const over = row.count > row.max;
-        const full = row.count >= row.max;
-        const status = over
-          ? "limite ultrapassado"
-          : full
-          ? "limite atingido"
-          : "dentro do limite";
-        return (
-          '<div class="limit-row' + (over ? " is-over" : full ? " is-full" : "") + '">' +
-            '<span class="limit-label">' + row.icon + " " + row.label + "</span>" +
-            '<span class="limit-count">' + row.count + "/" + row.max + "</span>" +
-            '<span class="limit-track" role="img" aria-label="' +
-              esc(row.label + ": " + row.count + " de " + row.max + ", " + pct + "%, " + status) + '">' +
-              '<span class="limit-fill"></span>' +
-              '<span class="limit-rest" style="width:' + (100 - fill) + '%"></span>' +
-            "</span>" +
-            '<span class="limit-pct">' + pct + "%</span>" +
-          "</div>"
-        );
-      })
-      .join("");
-  }
-
   function renderGuests() {
     const guests = state.guests;
     const confirmed = guests.filter((g) => g.status === "confirmed").length;
@@ -1094,20 +1146,54 @@
     const adults = guests.filter((g) => g.type === "adult").length;
     const meta = state.meta;
 
+    const progressCard = (count, max, kind) => {
+      const pct = max > 0 ? Math.round((count / max) * 100) : 0;
+      const width = Math.max(0, Math.min(100, pct));
+      const safeMax = Math.max(1, max);
+      const now = Math.max(0, Math.min(count, safeMax));
+      const label = kind === "confirmed" ? "Percentual de confirmações" : "Ocupação do limite";
+      return (
+        '<div class="stat-progress-row"><div class="stat-progress" role="progressbar" aria-label="' + label +
+          '" aria-valuemin="0" aria-valuemax="' + safeMax + '" aria-valuenow="' + now + '" aria-valuetext="' + pct + '%">' +
+          '<span class="stat-progress-fill ' + kind + '" style="width:' + width + '%"></span>' +
+        "</div>" +
+        '<span class="stat-progress-pct' + (kind === "confirmed" ? " positive" : pct >= 100 ? " limit-reached" : "") + '">' +
+          pct + "%" +
+        "</span></div>"
+      );
+    };
+
     $("#guestStats").innerHTML = [
-      { label: "Na lista", value: guests.length, note: "convidados" },
-      { label: "Confirmados", value: confirmed, note: guests.length ? Math.round((confirmed / guests.length) * 100) + "% da lista" : "—", cls: "good" },
-      { label: "Crianças", value: children, note: "de " + meta.maxChildren },
-      { label: "Adultos", value: adults, note: "de " + meta.maxAdults },
+      { label: "Na lista", value: guests.length, note: "convidados", cls: "" },
+      {
+        label: "Confirmados",
+        value: confirmed,
+        note: guests.length ? Math.round((confirmed / guests.length) * 100) + "% da lista" : "—",
+        cls: "good",
+        progress: progressCard(confirmed, guests.length, "confirmed"),
+      },
+      {
+        label: "Crianças",
+        value: children,
+        note: "de " + meta.maxChildren,
+        cls: "",
+        progress: progressCard(children, meta.maxChildren, "limit"),
+      },
+      {
+        label: "Adultos",
+        value: adults,
+        note: "de " + meta.maxAdults,
+        cls: "",
+        progress: progressCard(adults, meta.maxAdults, "limit"),
+      },
     ]
       .map(
         (c) =>
-          '<div class="stat-card ' + (c.cls || "") + '"><span class="label">' + c.label +
-          '</span><span class="value">' + c.value + '</span><span class="note">' + c.note + "</span></div>"
+          '<div class="stat-card guest-stat ' + (c.cls || "") + '"><span class="label">' + c.label +
+          '</span><span class="value">' + c.value + '</span><span class="note">' + c.note + "</span>" +
+          (c.progress || "") + "</div>"
       )
       .join("");
-
-    renderGuestLimits();
 
     const counts = {
       all: guests.length,
@@ -2432,6 +2518,7 @@
       renderBudget();
       renderCloudBar();
     });
+    $("#exportPartyPdfBtn").addEventListener("click", exportPartyPdf);
 
     /* Checklist */
     $("#checklist").addEventListener("change", (event) => {

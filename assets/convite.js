@@ -20,7 +20,7 @@
     age: 5,
     date: "2026-12-05",
     time: "16:00",
-    location: "",
+    location: "Enjoy Kids, Liv Mall Shopping — Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005",
     theme: "Toy Story",
     rsvpUrl: "",
     mapsUrl: "",
@@ -128,12 +128,16 @@
   function normalizeMeta(raw) {
     const base = Object.assign({}, FALLBACK_META, raw && typeof raw === "object" ? raw : {});
     const url = String(base.rsvpUrl || "").trim();
+    let location = String(base.location || FALLBACK_META.location);
+    if (["enjoy livmall", "buffet alegria — salão 2"].includes(location.trim().toLowerCase())) {
+      location = FALLBACK_META.location;
+    }
     return {
       name: String(base.name || "Ben").slice(0, 40),
       age: Math.min(99, Math.max(1, parseInt(base.age, 10) || 5)),
       date: /^\d{4}-\d{2}-\d{2}$/.test(base.date) ? base.date : FALLBACK_META.date,
       time: /^\d{2}:\d{2}$/.test(base.time) ? base.time : FALLBACK_META.time,
-      location: String(base.location || ""),
+      location,
       theme: String(base.theme || "Toy Story"),
       rsvpUrl: /^https?:\/\//i.test(url) ? url : "",
       mapsUrl: /^https?:\/\//i.test(String(base.mapsUrl || "").trim())
@@ -220,7 +224,6 @@
           esc(place) + " ↗</a>"
         : '<span class="invite-chip">📍 ' + esc(place) + "</span>"
     );
-    chips.push('<span class="invite-chip">🤠 ' + esc(meta.theme) + "</span>");
     $("#inviteMeta").innerHTML = chips.join("");
   }
 

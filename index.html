@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261105" />
 </head>
 <body>
   <header class="hero">
@@ -99,10 +99,13 @@
           <h2>Orçamento da festa</h2>
           <p class="muted">Acompanhe o previsto, o que já foi contratado e o que falta pagar.</p>
         </div>
-        <label class="budget-edit">
-          <span>Orçamento total (R$)</span>
-          <input id="budgetInput" class="input money-input" type="number" min="0" step="50" inputmode="decimal" />
-        </label>
+        <div class="budget-head-actions">
+          <label class="budget-edit">
+            <span>Orçamento total (R$)</span>
+            <input id="budgetInput" class="input money-input" type="number" min="0" step="50" inputmode="decimal" />
+          </label>
+          <button class="btn btn-ghost" id="exportPartyPdfBtn" type="button">📄 Exportar resumo PDF</button>
+        </div>
       </div>
 
       <div id="budgetCards" class="stat-grid"></div>
@@ -159,8 +162,6 @@
       </div>
 
       <div id="guestStats" class="stat-grid small"></div>
-
-      <div id="guestLimits" class="guest-limits" aria-label="Ocupação dos limites de convidados"></div>
 
       <div class="guest-tools">
         <div class="guest-filters" role="group" aria-label="Filtrar convidados">
@@ -486,7 +487,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/guest-id.js?v=20261104"></script>
-  <script src="assets/app.js?v=20261104"></script>
+  <script src="assets/guest-id.js?v=20261105"></script>
+  <script src="assets/app.js?v=20261105"></script>
 </body>
 </html>

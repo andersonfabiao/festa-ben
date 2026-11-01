@@ -10,7 +10,8 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
 - **Convidados** — lista com criança/adulto, confirmação de presença, WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros **Todos / Adultos / Crianças / Confirmados / Pendentes / Não vão** e busca por nome. O botão **＋ Adicionar convidado** abre o mesmo modal de edição, com tipo, confirmação, WhatsApp, observações e vínculos. Importação de lista em `.txt`, `.csv` ou `.json`.
 - **Convite digital** — página própria com a data, o local (com link para o **Google Maps**) e botões **Vou comemorar** / **Não poderei ir**, com recado opcional. O convite não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, estrelas sobem pela tela em comemoração.
-- **Limite de convidados** — barra de ocupação para **adultos** e **crianças**, com percentual e cor que vai do verde ao vermelho ao chegar no limite. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Ajustes → Limite de convidados**.
+- **Limite de convidados** — os cards de **Adultos** e **Crianças** mostram a ocupação do limite, com percentual e cor que vai do verde ao vermelho ao chegar no máximo. O card **Confirmados** mostra o percentual de presença confirmada, com progresso verde crescente. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Ajustes → Limite de convidados**.
+- **Resumo em PDF** — em **💰 Orçamento → 📄 Exportar resumo PDF**, abra a impressão e escolha **Salvar como PDF** para gerar um relatório com dados da festa, resumo financeiro, itens do checklist/orçamento e convidados separados por adultos e crianças.
 - **Olho dos valores** — o botão **👁️ Valores** no topo esconde (desfoca) todos os valores da página com um clique; a escolha fica salva no aparelho. Na aba **Convidados** os valores nem aparecem: ela é só para configurações e informações da lista.
 - **Contagem regressiva** para a festa.
 - **Salvamento automático** no navegador (localStorage).
@@ -142,7 +143,7 @@ O convite fica em **`convite.html`** (ex.: `https://andersonfabiao.github.io/fes
 
 ### Local com link para o Google Maps
 
-Em **⚙️ Ajustes → Festa**, preencha o **Local** (ex.: `Buffet Alegria — Salão 2`). O app e o convite transformam o local em um link que abre o **Google Maps** já buscando o endereço. Se você tiver o link exato do lugar, cole em **Link do Google Maps (opcional)** — ele tem prioridade sobre a busca automática. O mesmo link aparece no texto do **📋 Copiar convite**.
+O local da festa está definido como **Enjoy Kids**, dentro do **Liv Mall Shopping**, na Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005. O chip de localização abre o Google Maps com esse endereço. Se você tiver um link exato do local, cole em **⚙️ Ajustes → Link do Google Maps (opcional)** — ele tem prioridade sobre a busca automática. O mesmo link aparece no texto do **📋 Copiar convite**.
 
 ### Editar convidados e vincular crianças
 
