@@ -295,6 +295,7 @@
       budget: 7000,
       theme: "Toy Story",
       rsvpUrl: "",
+      mapsUrl: "",
       inviteMode: "search",
     };
   }
@@ -381,6 +382,7 @@
     meta.budget = parseMoney(meta.budget);
     meta.theme = String(meta.theme || "Toy Story");
     meta.rsvpUrl = safeUrl(meta.rsvpUrl);
+    meta.mapsUrl = safeUrl(meta.mapsUrl);
     meta.inviteMode = meta.inviteMode === "links" ? "links" : "search";
 
     const items = raw.items
@@ -416,6 +418,52 @@
   let autoTimer = null;
   let savingCloud = false;
   let toastTimer = null;
+  let activeView = "checklist";
+
+  const GUEST_VIEW_KEY = "ben-guest-view-v1";
+  const HIDE_VALUES_KEY = "ben-hide-values-v1";
+  let guestFilter = "all";
+  let guestSort = "az";
+  let valuesHidden = false;
+
+  function loadGuestView() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(GUEST_VIEW_KEY) || "{}");
+      guestFilter = raw.filter === "adult" || raw.filter === "child" ? raw.filter : "all";
+      guestSort = raw.sort === "status" ? "status" : "az";
+    } catch (e) {
+      guestFilter = "all";
+      guestSort = "az";
+    }
+  }
+
+  function saveGuestView() {
+    try {
+      localStorage.setItem(
+        GUEST_VIEW_KEY,
+        JSON.stringify({ filter: guestFilter, sort: guestSort })
+      );
+    } catch (e) {
+      /* ignora */
+    }
+  }
+
+  function loadHiddenValues() {
+    try {
+      valuesHidden = localStorage.getItem(HIDE_VALUES_KEY) === "1";
+    } catch (e) {
+      valuesHidden = false;
+    }
+  }
+
+  function applyValuesHidden() {
+    document.body.classList.toggle("hide-values", valuesHidden);
+    const btn = $("#toggleValuesBtn");
+    if (!btn) return;
+    btn.textContent = valuesHidden ? "🙈 Valores" : "👁️ Valores";
+    btn.setAttribute("aria-pressed", valuesHidden ? "true" : "false");
+    btn.title = valuesHidden ? "Mostrar valores" : "Ocultar valores";
+  }
 
   function loadLocal() {
     try {
@@ -513,8 +561,15 @@
     const chips = [];
     chips.push('<span class="chip">📅 ' + esc(longDate(meta.date)) + "</span>");
     if (meta.time) chips.push('<span class="chip">⏰ ' + esc(meta.time.replace(":", "h")) + "</span>");
+
+    const map = mapsLink();
+    const place = meta.location || (map ? "Ver no mapa" : "Local a definir");
     chips.push(
-      '<span class="chip">📍 ' + esc(meta.location || "Local a definir") + "</span>"
+      map
+        ? '<a class="chip chip-link" href="' + esc(map) +
+          '" target="_blank" rel="noopener noreferrer" title="Abrir no Google Maps">📍 ' +
+          esc(place) + " ↗</a>"
+        : '<span class="chip">📍 ' + esc(place) + "</span>"
     );
     chips.push('<span class="chip">🤠 ' + esc(meta.theme) + "</span>");
     $("#heroMeta").innerHTML = chips.join("");
@@ -526,21 +581,44 @@
     $("#progressPct").textContent = s.pct + "%";
     $("#progressFill").style.width = s.pct + "%";
 
+    if (activeView === "guests") {
+      const guests = state.guests;
+      const confirmed = guests.filter((g) => g.status === "confirmed").length;
+      const children = guests.filter((g) => g.type === "child").length;
+      const adults = guests.filter((g) => g.type === "adult").length;
+      const stats = [
+        { label: "Na lista", value: guests.length, cls: "" },
+        { label: "Confirmados", value: confirmed, cls: "good" },
+        { label: "Crianças", value: children, cls: "" },
+        { label: "Adultos", value: adults, cls: "" },
+      ];
+      $("#heroStats").innerHTML = stats
+        .map(
+          (st) =>
+            '<div class="hero-stat ' + st.cls + '"><span class="label">' +
+            st.label + '</span><span class="value">' + st.value + "</span></div>"
+        )
+        .join("");
+      return;
+    }
+
     const stats = [
       { label: "Concluídos", value: s.done + "/" + s.total, cls: "" },
-      { label: "Orçamento", value: money(s.budget), cls: "accent" },
-      { label: "Já pago", value: money(s.pago), cls: "good" },
+      { label: "Orçamento", value: money(s.budget), cls: "accent", money: true },
+      { label: "Já pago", value: money(s.pago), cls: "good", money: true },
       {
         label: "A pagar",
         value: money(s.aPagar),
         cls: s.aPagar > 0 ? "" : "good",
+        money: true,
       },
     ];
     $("#heroStats").innerHTML = stats
       .map(
         (st) =>
           '<div class="hero-stat ' + st.cls + '"><span class="label">' +
-          st.label + '</span><span class="value">' + st.value + "</span></div>"
+          st.label + '</span><span class="value' + (st.money ? " money" : "") + '">' +
+          st.value + "</span></div>"
       )
       .join("");
   }
@@ -665,9 +743,9 @@
         '<div class="item-side">' +
           '<div class="item-money">' +
             (num(item.cost) > 0
-              ? "<strong>" + money(item.cost) + "</strong>"
+              ? '<strong class="money">' + money(item.cost) + "</strong>"
               : '<span class="muted">sem custo</span>') +
-            (num(item.paid) > 0 ? "<span>pago " + money(item.paid) + "</span>" : "") +
+            (num(item.paid) > 0 ? '<span class="money">pago ' + money(item.paid) + "</span>" : "") +
           "</div>" +
           '<select class="status-select" data-status="' + esc(item.id) +
             '" style="--sc:' + st.color + ";--sb:" + st.bg + '" aria-label="Status do item">' +
@@ -734,7 +812,7 @@
               stage.icon + "</span>" +
             '<span class="stage-title"><h2>' + stage.name + "</h2>" +
               '<span class="stage-sub">' + done + "/" + total + " concluídos" +
-              (subtotal ? " · " + money(subtotal) : "") + "</span></span>" +
+              (subtotal ? ' · <span class="money">' + money(subtotal) + "</span>" : "") + "</span></span>" +
             '<span class="stage-progress"><div style="width:' + pct + "%;background:" + stage.color + '"></div></span>' +
             '<span class="stage-chevron">⌄</span>' +
           "</button>" +
@@ -801,7 +879,7 @@
       .map(
         (c) =>
           '<div class="stat-card ' + c.cls + '"><span class="label">' + c.label +
-          '</span><span class="value">' + c.value + '</span><span class="note">' + c.note + "</span></div>"
+          '</span><span class="value money">' + c.value + '</span><span class="note">' + c.note + "</span></div>"
       )
       .join("");
 
@@ -837,7 +915,7 @@
             '<div class="bd-track"><div class="bd-fill" style="width:' + wPrev + '%"></div>' +
               (r.pago > 0 ? '<div class="bd-paid" style="width:' + wPaid + '%"></div>' : "") +
             "</div>" +
-            '<div class="bd-values"><strong>' + money(r.previsto) + "</strong>" +
+            '<div class="bd-values money"><strong>' + money(r.previsto) + "</strong>" +
               (r.pago > 0 ? "<span>pago " + money(r.pago) + "</span>" : "") +
             "</div>" +
           "</div>"
@@ -883,10 +961,10 @@
               stage.icon + " " + stage.name + "</span></td>" +
             '<td><span class="status-cell"><span class="status-dot" style="background:' + st.color +
               '"></span>' + st.label + "</span></td>" +
-            '<td class="num">' + (num(item.cost) ? money(item.cost) : "—") + "</td>" +
-            '<td class="num' + (num(item.paid) ? " paid" : "") + '">' +
+            '<td class="num' + (num(item.cost) ? " money" : "") + '">' + (num(item.cost) ? money(item.cost) : "—") + "</td>" +
+            '<td class="num' + (num(item.paid) ? " paid money" : "") + '">' +
               (num(item.paid) ? money(item.paid) : "—") + "</td>" +
-            '<td class="num' + (falta ? " due" : "") + '">' +
+            '<td class="num' + (falta ? " due money" : "") + '">' +
               (falta ? money(falta) : "—") + "</td>" +
           "</tr>"
         );
@@ -904,6 +982,68 @@
           GUEST_STATUS[key].label + "</option>"
       )
       .join("");
+  }
+
+  function guestRowHtml(g) {
+    const guests = state.guests;
+    const gs = GUEST_STATUS[g.status] || GUEST_STATUS.pending;
+    const link = guestInviteUrl(g);
+    const rsvpNote = g.rsvpAt
+      ? '<div class="guest-rsvp-time">' +
+        (g.rsvpSource === "owner" ? "Atualizado " : "Respondeu ") +
+        esc(timeAgo(g.rsvpAt)) + "</div>"
+      : "";
+    const rsvpMsg = g.rsvpMessage
+      ? '<div class="guest-rsvp-msg">“' + esc(g.rsvpMessage) + "”</div>"
+      : "";
+    const phone = g.phone
+      ? '<div class="guest-contact">📱 ' + esc(g.phone) +
+        (waLink(g.phone)
+          ? ' · <a href="' + esc(waLink(g.phone)) +
+            '" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>'
+          : "") +
+        "</div>"
+      : "";
+    const notes = g.notes ? '<div class="guest-notes">' + esc(g.notes) + "</div>" : "";
+
+    const guardians =
+      g.type === "child"
+        ? guests.filter((a) => a.type === "adult" && g.guardians.includes(a.id))
+        : [];
+    const kids =
+      g.type === "adult"
+        ? guests.filter((c) => c.type === "child" && c.guardians.includes(g.id))
+        : [];
+    const guardianLine = guardians.length
+      ? '<div class="guest-links">👨‍👩‍👧 ' +
+        (guardians.length > 1 ? "Responsáveis: " : "Responsável: ") +
+        guardians.map((a) => esc(a.name)).join(", ") + "</div>"
+      : "";
+    const kidsLine = kids.length
+      ? '<div class="guest-links">🧒 Crianças: ' +
+        kids.map((c) => esc(c.name)).join(", ") + "</div>"
+      : "";
+
+    return (
+      '<div class="guest-row">' +
+        '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
+        '<div class="guest-main"><div class="guest-name">' + esc(g.name) + "</div>" +
+          '<div class="guest-type">' + (g.type === "child" ? "Criança" : "Adulto") +
+          " · " + gs.label + "</div>" + phone + notes + guardianLine + kidsLine +
+          rsvpNote + rsvpMsg + "</div>" +
+        '<select class="status-select" data-guest-status="' + esc(g.id) +
+          '" style="--sc:' + gs.color + ";--sb:" + gs.bg + '" aria-label="Confirmação de ' +
+          esc(g.name) + '">' + guestStatusOptions(g.status) + "</select>" +
+        '<button class="icon-btn" type="button" data-guest-edit="' + esc(g.id) +
+          '" aria-label="Editar ' + esc(g.name) + '" title="Editar convidado">✏️</button>' +
+        '<button class="icon-btn" type="button" data-guest-link="' + esc(g.id) +
+          '" data-link="' + esc(link) +
+          '" aria-label="Copiar link do convite de ' + esc(g.name) +
+          '" title="Copiar link do convite">🔗</button>' +
+        '<button class="icon-btn" type="button" data-guest-del="' + esc(g.id) +
+          '" aria-label="Remover ' + esc(g.name) + '">🗑</button>' +
+      "</div>"
+    );
   }
 
   function renderGuests() {
@@ -925,6 +1065,19 @@
       )
       .join("");
 
+    const counts = { all: guests.length, adult: adults, child: children };
+    const labels = { all: "Todos", adult: "Adultos", child: "Crianças" };
+    $$("[data-guest-filter]").forEach((btn) => {
+      const key = btn.dataset.guestFilter;
+      if (!(key in counts)) return;
+      btn.innerHTML = labels[key] + ' <span class="filter-count">' + counts[key] + "</span>";
+      const on = key === guestFilter;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    const sortSelect = $("#guestSort");
+    if (sortSelect) sortSelect.value = guestSort;
+
     const list = $("#guestList");
     if (!guests.length) {
       list.innerHTML =
@@ -933,72 +1086,48 @@
       return;
     }
 
-    const sorted = guests.slice().sort((a, b) => {
-      const rank = { confirmed: 0, pending: 1, declined: 2 };
-      return (rank[a.status] || 1) - (rank[b.status] || 1);
-    });
+    const visible =
+      guestFilter === "all" ? guests.slice() : guests.filter((g) => g.type === guestFilter);
+    if (!visible.length) {
+      list.innerHTML =
+        '<div class="empty"><span class="emoji">' + (guestFilter === "child" ? "🧒" : "🧑") +
+        "</span><h3>Nenhum " + (guestFilter === "child" ? "criança" : "adulto") + " na lista</h3>" +
+        "<p>Troque o filtro para ver todos os convidados.</p></div>";
+      return;
+    }
 
-    list.innerHTML = sorted
-      .map((g) => {
-        const gs = GUEST_STATUS[g.status] || GUEST_STATUS.pending;
-        const link = guestInviteUrl(g);
-        const rsvpNote = g.rsvpAt
-          ? '<div class="guest-rsvp-time">' +
-            (g.rsvpSource === "owner" ? "Atualizado " : "Respondeu ") +
-            esc(timeAgo(g.rsvpAt)) + "</div>"
-          : "";
-        const rsvpMsg = g.rsvpMessage
-          ? '<div class="guest-rsvp-msg">“' + esc(g.rsvpMessage) + "”</div>"
-          : "";
-        const phone = g.phone
-          ? '<div class="guest-contact">📱 ' + esc(g.phone) +
-            (waLink(g.phone)
-              ? ' · <a href="' + esc(waLink(g.phone)) +
-                '" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>'
-              : "") +
-            "</div>"
-          : "";
-        const notes = g.notes ? '<div class="guest-notes">' + esc(g.notes) + "</div>" : "";
+    const byName = (a, b) =>
+      a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
+    const rank = { confirmed: 0, pending: 1, declined: 2 };
+    const compare =
+      guestSort === "status"
+        ? (a, b) => (rank[a.status] || 1) - (rank[b.status] || 1) || byName(a, b)
+        : byName;
 
-        const guardians =
-          g.type === "child"
-            ? guests.filter((a) => a.type === "adult" && g.guardians.includes(a.id))
-            : [];
-        const kids =
-          g.type === "adult"
-            ? guests.filter((c) => c.type === "child" && c.guardians.includes(g.id))
-            : [];
-        const guardianLine = guardians.length
-          ? '<div class="guest-links">👨‍👩‍👧 ' +
-            (guardians.length > 1 ? "Responsáveis: " : "Responsável: ") +
-            guardians.map((a) => esc(a.name)).join(", ") + "</div>"
-          : "";
-        const kidsLine = kids.length
-          ? '<div class="guest-links">🧒 Crianças: ' +
-            kids.map((c) => esc(c.name)).join(", ") + "</div>"
-          : "";
+    const groups = [
+      {
+        id: "adult",
+        title: "Adultos",
+        icon: "🧑",
+        items: visible.filter((g) => g.type === "adult").sort(compare),
+      },
+      {
+        id: "child",
+        title: "Crianças",
+        icon: "🧒",
+        items: visible.filter((g) => g.type === "child").sort(compare),
+      },
+    ].filter((group) => group.items.length);
 
-        return (
-          '<div class="guest-row">' +
-            '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
-            '<div class="guest-main"><div class="guest-name">' + esc(g.name) + "</div>" +
-              '<div class="guest-type">' + (g.type === "child" ? "Criança" : "Adulto") +
-              " · " + gs.label + "</div>" + phone + notes + guardianLine + kidsLine +
-              rsvpNote + rsvpMsg + "</div>" +
-            '<select class="status-select" data-guest-status="' + esc(g.id) +
-              '" style="--sc:' + gs.color + ";--sb:" + gs.bg + '" aria-label="Confirmação de ' +
-              esc(g.name) + '">' + guestStatusOptions(g.status) + "</select>" +
-            '<button class="icon-btn" type="button" data-guest-edit="' + esc(g.id) +
-              '" aria-label="Editar ' + esc(g.name) + '" title="Editar convidado">✏️</button>' +
-            '<button class="icon-btn" type="button" data-guest-link="' + esc(g.id) +
-              '" data-link="' + esc(link) +
-              '" aria-label="Copiar link do convite de ' + esc(g.name) +
-              '" title="Copiar link do convite">🔗</button>' +
-            '<button class="icon-btn" type="button" data-guest-del="' + esc(g.id) +
-              '" aria-label="Remover ' + esc(g.name) + '">🗑</button>' +
+    list.innerHTML = groups
+      .map(
+        (group) =>
+          '<div class="guest-group">' +
+            '<h3 class="guest-group-title">' + group.icon + " " + group.title +
+              ' <span class="guest-group-count">' + group.items.length + "</span></h3>" +
+            group.items.map(guestRowHtml).join("") +
           "</div>"
-        );
-      })
+      )
       .join("");
   }
 
@@ -1648,6 +1777,7 @@
     $("#setDate").value = meta.date;
     $("#setTime").value = meta.time;
     $("#setLocation").value = meta.location || "";
+    $("#setMapsUrl").value = meta.mapsUrl || "";
     $("#setBudget").value = meta.budget ? String(meta.budget).replace(".", ",") : "";
     $("#setOwner").value = cloud.owner || (guess ? guess.owner : "");
     $("#setRepo").value = cloud.repo || (guess ? guess.repo : "");
@@ -1702,6 +1832,7 @@
     meta.date = $("#setDate").value || meta.date;
     meta.time = $("#setTime").value || "16:00";
     meta.location = $("#setLocation").value.trim();
+    meta.mapsUrl = safeUrl($("#setMapsUrl").value.trim());
     meta.budget = parseMoney($("#setBudget").value);
     const rsvpValue = $("#setRsvpUrl").value.trim();
     meta.rsvpUrl = safeUrl(rsvpValue);
@@ -1813,6 +1944,14 @@
     return invitePageUrl() + "?convite=" + encodeURIComponent(key);
   }
 
+  function mapsLink() {
+    const custom = safeUrl(state.meta.mapsUrl);
+    if (custom) return custom;
+    const query = String(state.meta.location || "").trim();
+    if (!query) return "";
+    return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query);
+  }
+
   async function copyText(text) {
     try {
       await navigator.clipboard.writeText(text);
@@ -1837,12 +1976,14 @@
 
   async function copyInvite() {
     const m = state.meta;
+    const map = mapsLink();
     const text =
       "🎉 " + m.name + " faz " + m.age + " anos!\n" +
       "Tema: " + m.theme + " 🤠🚀\n" +
       "📅 " + longDate(m.date) + (m.time ? " às " + m.time.replace(":", "h") : "") + "\n" +
-      "📍 " + (m.location || "Local a definir") + "\n\n" +
-      "Confirme sua presença: " + invitePageUrl();
+      "📍 " + (m.location || "Local a definir") + "\n" +
+      (map ? "🗺️ Mapa: " + map + "\n" : "") +
+      "\nConfirme sua presença: " + invitePageUrl();
 
     const ok = await copyText(text);
     toast(ok ? "Convite com o link copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
@@ -2105,6 +2246,7 @@
   function showView(name) {
     const views = { checklist: "#view-checklist", budget: "#view-budget", guests: "#view-guests" };
     if (!views[name]) name = "checklist";
+    activeView = name;
 
     $$(".tab").forEach((tab) => {
       const active = tab.dataset.view === name;
@@ -2122,6 +2264,7 @@
       renderGuests();
       refreshGuestResponses();
     }
+    renderHero();
 
     try {
       const hash = name === "checklist" ? "" : "#" + name;
@@ -2145,6 +2288,37 @@
     $("#addItemBtn").addEventListener("click", () => openItemModal());
     $("#settingsBtn").addEventListener("click", openSettings);
     $("#heroEditBtn").addEventListener("click", openSettings);
+    $("#settingsGuestsBtn").addEventListener("click", openSettings);
+
+    $("#toggleValuesBtn").addEventListener("click", () => {
+      valuesHidden = !valuesHidden;
+      try {
+        localStorage.setItem(HIDE_VALUES_KEY, valuesHidden ? "1" : "0");
+      } catch (e) {
+        /* ignora */
+      }
+      applyValuesHidden();
+      renderHero();
+      renderBudget();
+    });
+
+    $("#saveCloudGuestsBtn").addEventListener("click", () => {
+      if (!hasCloud()) openSettings();
+      else saveCloud();
+    });
+
+    $$("[data-guest-filter]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        guestFilter = btn.dataset.guestFilter;
+        saveGuestView();
+        renderGuests();
+      });
+    });
+    $("#guestSort").addEventListener("change", (event) => {
+      guestSort = event.target.value === "status" ? "status" : "az";
+      saveGuestView();
+      renderGuests();
+    });
 
     $("#saveCloudBtn").addEventListener("click", () => {
       if (!hasCloud()) openSettings();
@@ -2430,6 +2604,9 @@
   }
 
   function init() {
+    loadGuestView();
+    loadHiddenValues();
+    applyValuesHidden();
     fillStageSelects();
     bindEvents();
     renderAll();

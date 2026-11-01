@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261102" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261103" />
 </head>
 <body>
   <header class="hero">
@@ -34,7 +34,10 @@
           <h1><span id="heroName">Ben</span> faz <span class="hl" id="heroAge">5</span>!</h1>
           <p class="hero-sub">Checklist da festa, orçamento e convidados em um só lugar.</p>
         </div>
-        <button class="btn btn-ghost hero-edit" id="heroEditBtn" type="button">✏️ Editar festa</button>
+        <div class="hero-actions">
+          <button class="btn btn-ghost hero-edit" id="toggleValuesBtn" type="button" aria-pressed="false" title="Ocultar valores">👁️ Valores</button>
+          <button class="btn btn-ghost hero-edit" id="heroEditBtn" type="button">✏️ Editar festa</button>
+        </div>
       </div>
 
       <div class="hero-meta" id="heroMeta"></div>
@@ -149,11 +152,28 @@
           <button class="btn btn-ghost" id="copyInviteLinkBtn" type="button">🔗 Link do convite</button>
           <button class="btn btn-ghost" id="importBundledGuestsBtn" type="button">📥 Lista do Ben (69)</button>
           <button class="btn btn-ghost" id="importGuestsBtn" type="button">📂 Importar arquivo</button>
+          <button class="btn btn-cloud" id="saveCloudGuestsBtn" type="button">☁️ Salvar na nuvem</button>
+          <button class="btn btn-ghost" id="settingsGuestsBtn" type="button">⚙️ Ajustes</button>
           <input type="file" id="guestImportFile" accept=".txt,.csv,.json,text/plain,text/csv,application/json" hidden />
         </div>
       </div>
 
       <div id="guestStats" class="stat-grid small"></div>
+
+      <div class="guest-tools">
+        <div class="guest-filters" role="group" aria-label="Filtrar convidados">
+          <button class="filter-chip is-active" type="button" data-guest-filter="all">Todos</button>
+          <button class="filter-chip" type="button" data-guest-filter="adult">Adultos</button>
+          <button class="filter-chip" type="button" data-guest-filter="child">Crianças</button>
+        </div>
+        <label class="guest-sort">
+          <span>Ordenar</span>
+          <select id="guestSort" class="input" aria-label="Ordenar convidados">
+            <option value="az">A–Z</option>
+            <option value="status">Status</option>
+          </select>
+        </label>
+      </div>
 
       <div class="guest-sync">
         <button class="btn btn-ghost btn-sm" id="refreshGuestsBtn" type="button">🔄 Atualizar respostas</button>
@@ -268,6 +288,10 @@
         <label class="field-label">Local
           <input id="setLocation" class="input" maxlength="120" placeholder="Ex.: Buffet Alegria — Salão 2" />
         </label>
+        <label class="field-label">Link do Google Maps (opcional)
+          <input id="setMapsUrl" class="input" type="url" placeholder="https://maps.app.goo.gl/…" autocomplete="off" />
+        </label>
+        <p class="hint">Se ficar vazio, o convite cria sozinho um link de busca no Google Maps com o local acima.</p>
         <label class="field-label">Orçamento total (R$)
           <input id="setBudget" class="input" inputmode="decimal" placeholder="0,00" />
         </label>
@@ -459,7 +483,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/guest-id.js?v=20261102"></script>
-  <script src="assets/app.js?v=20261102"></script>
+  <script src="assets/guest-id.js?v=20261103"></script>
+  <script src="assets/app.js?v=20261103"></script>
 </body>
 </html>

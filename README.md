@@ -8,8 +8,9 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Status por item** — a fazer, em andamento, contratado e concluído, com checkbox para marcar rápido.
 - **Valores** — custo previsto, valor já pago, fornecedor, link, data limite e observações.
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
-- **Convidados** — lista com criança/adulto, confirmação de presença, WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. Edite qualquer convidado pelo **✏️** da lista. Importação de lista em `.txt`, `.csv` ou `.json`.
-- **Convite digital** — página própria com a data, o local e botões **Vou comemorar** / **Não poderei ir**, com recado opcional. O convite não mostra a lista completa: os nomes aparecem só depois de digitar 2 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados.
+- **Convidados** — lista com criança/adulto, confirmação de presença, WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. A lista vem agrupada em **Adultos** e **Crianças**, em ordem **A–Z**, com filtros por tipo e opção de ordenar por **status**. Edite qualquer convidado pelo **✏️** da lista. Importação de lista em `.txt`, `.csv` ou `.json`.
+- **Convite digital** — página própria com a data, o local (com link para o **Google Maps**) e botões **Vou comemorar** / **Não poderei ir**, com recado opcional. O convite não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, os personagens do Toy Story atravessam a tela em comemoração.
+- **Olho dos valores** — o botão **👁️ Valores** no topo esconde (desfoca) todos os valores da página com um clique; a escolha fica salva no aparelho. Na aba **Convidados** os valores nem aparecem: ela é só para configurações e informações da lista.
 - **Contagem regressiva** para a festa.
 - **Salvamento automático** no navegador (localStorage).
 - **Sincronização opcional com GitHub** para abrir em qualquer aparelho e ver os mesmos dados.
@@ -138,6 +139,10 @@ O arquivo `convidados.json` na raiz já contém a lista atual (69 pessoas: 50 ad
 
 O convite fica em **`convite.html`** (ex.: `https://andersonfabiao.github.io/festa-ben/convite.html`). Ele mostra a data, a hora, o local e o tema, e deixa o convidado confirmar ou recusar com um recado opcional.
 
+### Local com link para o Google Maps
+
+Em **⚙️ Ajustes → Festa**, preencha o **Local** (ex.: `Buffet Alegria — Salão 2`). O app e o convite transformam o local em um link que abre o **Google Maps** já buscando o endereço. Se você tiver o link exato do lugar, cole em **Link do Google Maps (opcional)** — ele tem prioridade sobre a busca automática. O mesmo link aparece no texto do **📋 Copiar convite**.
+
 ### Editar convidados e vincular crianças
 
 Na aba **🎟️ Convidados**, clique no **✏️** ao lado de qualquer nome para abrir a edição. Ali você pode:
@@ -156,7 +161,7 @@ O vínculo é feito nos dois sentidos: marcar um adulto na criança também faz 
 
 ### Links do convite
 
-- **Link único (para o grupo)** — o convidado abre o convite e digita pelo menos 2 letras do nome; só então aparecem as opções (no máximo 12). A lista completa nunca é exibida. Use **🔗 Link do convite** na aba **Convidados** ou o campo em **Ajustes → Convite e RSVP**.
+- **Link único (para o grupo)** — o convidado abre o convite e digita pelo menos 3 letras do nome; só então aparecem as opções (no máximo 12). A lista completa nunca é exibida. Use **🔗 Link do convite** na aba **Convidados** ou o campo em **Ajustes → Convite e RSVP**.
 - **Link individual** — cada convidado tem um link próprio, que já abre o convite com o nome dele. Clique no **🔗** ao lado do nome na lista para copiar. O link usa um ID estável salvo no convidado, então **continua o mesmo mesmo se o nome for alterado**.
 - **Modo somente links** — em **Ajustes → Convite e RSVP → Como o convidado encontra o nome**, escolha **Somente link individual**. O convite deixa de ter busca e pede o link pessoal, sem expor nenhum nome. Ideal para grupos menores ou quando a privacidade for prioridade.
 
@@ -164,11 +169,11 @@ O botão **📋 Copiar convite** copia um texto pronto com data, local e o link 
 
 ### Como o convidado responde
 
-1. Abre o link e digita 2 letras do nome (ou já cai no nome, se for link individual).
+1. Abre o link e digita 3 letras do nome (ou já cai no nome, se for link individual).
 2. Escreve um recado, se quiser.
 3. Se for adulto responsável, escolhe a presença de cada criança vinculada.
 4. Toca em **🎉 Vou comemorar** ou **😢 Não poderei ir**.
-5. A resposta (e a das crianças) é gravada no `data.json` e aparece na lista dos anfitriões com status, hora e recado.
+5. A resposta (e a das crianças) é gravada no `data.json` e aparece na lista dos anfitriões com status, hora e recado. Ao confirmar, uma animação com personagens do Toy Story cruza a tela (respeita a opção de reduzir movimento do sistema).
 
 No app, a lista se atualiza sozinha a cada minuto (e ao voltar para a aba). Também dá para forçar com **🔄 Atualizar respostas**. Ao salvar na nuvem, o app preserva as respostas que chegaram pelo convite e ainda não estavam no aparelho.
 

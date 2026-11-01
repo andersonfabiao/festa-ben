@@ -23,6 +23,7 @@
     location: "",
     theme: "Toy Story",
     rsvpUrl: "",
+    mapsUrl: "",
     inviteMode: "search",
   };
 
@@ -96,6 +97,48 @@
     }, 3600);
   }
 
+  /* Personagens do Toy Story desfilando quando a presença é confirmada. */
+  function celebrate() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const old = $("#partyParade");
+    if (old) old.remove();
+
+    const layer = document.createElement("div");
+    layer.className = "party-parade";
+    layer.id = "partyParade";
+    layer.setAttribute("aria-hidden", "true");
+
+    const characters = ["🤠", "🚀", "🤖", "🐻", "🐷", "🦖", "🐕", "👽", "🎈", "⭐"];
+    const lanes = [12, 24, 36, 48, 60, 72, 84];
+
+    characters.forEach((char, i) => {
+      const el = document.createElement("span");
+      el.className = "parade-char";
+      el.textContent = char;
+      el.style.setProperty("--lane", lanes[i % lanes.length] + "vh");
+      el.style.setProperty("--dur", (2.4 + Math.random() * 1.9).toFixed(2) + "s");
+      el.style.setProperty("--delay", (Math.random() * 1.1).toFixed(2) + "s");
+      el.style.setProperty("--size", Math.round(24 + Math.random() * 26) + "px");
+      layer.appendChild(el);
+    });
+
+    for (let i = 0; i < 16; i++) {
+      const spark = document.createElement("span");
+      spark.className = "parade-spark";
+      spark.textContent = i % 3 === 0 ? "✨" : "⭐";
+      spark.style.setProperty("--x", Math.round(Math.random() * 100) + "vw");
+      spark.style.setProperty("--dur", (1.6 + Math.random() * 1.6).toFixed(2) + "s");
+      spark.style.setProperty("--delay", (Math.random() * 1.4).toFixed(2) + "s");
+      spark.style.setProperty("--size", Math.round(12 + Math.random() * 14) + "px");
+      layer.appendChild(spark);
+    }
+
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 5600);
+  }
+
   function normalizeMeta(raw) {
     const base = Object.assign({}, FALLBACK_META, raw && typeof raw === "object" ? raw : {});
     const url = String(base.rsvpUrl || "").trim();
@@ -107,8 +150,18 @@
       location: String(base.location || ""),
       theme: String(base.theme || "Toy Story"),
       rsvpUrl: /^https?:\/\//i.test(url) ? url : "",
+      mapsUrl: /^https?:\/\//i.test(String(base.mapsUrl || "").trim())
+        ? String(base.mapsUrl).trim()
+        : "",
       inviteMode: base.inviteMode === "links" ? "links" : "search",
     };
+  }
+
+  function mapsLink() {
+    if (meta.mapsUrl) return meta.mapsUrl;
+    const query = String(meta.location || "").trim();
+    if (!query) return "";
+    return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query);
   }
 
   async function loadData() {
@@ -172,7 +225,15 @@
     if (meta.time) {
       chips.push('<span class="invite-chip">🕒 ' + esc(meta.time.replace(":", "h")) + "</span>");
     }
-    chips.push('<span class="invite-chip">📍 ' + esc(meta.location || "Local a definir") + "</span>");
+    const map = mapsLink();
+    const place = meta.location || (map ? "Ver no mapa" : "Local a definir");
+    chips.push(
+      map
+        ? '<a class="invite-chip invite-chip-link" href="' + esc(map) +
+          '" target="_blank" rel="noopener noreferrer" title="Abrir no Google Maps">📍 ' +
+          esc(place) + " ↗</a>"
+        : '<span class="invite-chip">📍 ' + esc(place) + "</span>"
+    );
     chips.push('<span class="invite-chip">🤠 ' + esc(meta.theme) + "</span>");
     $("#inviteMeta").innerHTML = chips.join("");
   }
@@ -214,9 +275,9 @@
     if (!list) return;
 
     const q = norm(query);
-    if (q.length < 2) {
+    if (q.length < 3) {
       list.innerHTML =
-        '<p class="invite-hint invite-search-hint">Digite pelo menos 2 letras do seu nome para ver as opções.</p>';
+        '<p class="invite-hint invite-search-hint">Digite pelo menos 3 letras do seu nome para ver as opções.</p>';
       return;
     }
 
@@ -484,6 +545,7 @@
 
       sending = false;
       renderRsvp(guest);
+      if (status === "confirmed") celebrate();
 
       const el = $("#rsvpStatus");
       if (el) {
