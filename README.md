@@ -8,8 +8,8 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Status por item** — a fazer, em andamento, contratado e concluído, com checkbox para marcar rápido.
 - **Valores** — custo previsto, valor já pago, fornecedor, link, data limite e observações.
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
-- **Convidados** — lista com criança/adulto, confirmação de presença e resumo, com importação de lista em `.txt`, `.csv` ou `.json`.
-- **Convite digital** — página própria com a data, o local e botões **Vou comemorar** / **Não poderei ir**, com recado opcional. A resposta cai direto na lista de convidados.
+- **Convidados** — lista com criança/adulto, confirmação de presença, WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. Edite qualquer convidado pelo **✏️** da lista. Importação de lista em `.txt`, `.csv` ou `.json`.
+- **Convite digital** — página própria com a data, o local e botões **Vou comemorar** / **Não poderei ir**, com recado opcional. O convite não mostra a lista completa: os nomes aparecem só depois de digitar 2 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados.
 - **Contagem regressiva** para a festa.
 - **Salvamento automático** no navegador (localStorage).
 - **Sincronização opcional com GitHub** para abrir em qualquer aparelho e ver os mesmos dados.
@@ -132,25 +132,43 @@ Pedro;criança;pendente
 
 Tipos aceitos: `adulto`/`adult`, `criança`/`child`. Status: `pendente`, `confirmado`, `não vai`.
 
-O arquivo `convidados.json` na raiz já contém a lista atual (69 pessoas: 50 adultos e 19 crianças), pronto para importar em qualquer aparelho. Depois de importar, use **☁️ Salvar na nuvem** para levar a lista aos outros aparelhos.
+O arquivo `convidados.json` na raiz já contém a lista atual (69 pessoas: 50 adultos e 19 crianças), pronto para importar em qualquer aparelho. Depois de importar, use **✏️** em cada convidado para completar WhatsApp, observações e vínculos de responsáveis, e então **☁️ Salvar na nuvem** para levar a lista aos outros aparelhos.
 
 ## Convite digital e confirmação de presença (RSVP)
 
 O convite fica em **`convite.html`** (ex.: `https://andersonfabiao.github.io/festa-ben/convite.html`). Ele mostra a data, a hora, o local e o tema, e deixa o convidado confirmar ou recusar com um recado opcional.
 
+### Editar convidados e vincular crianças
+
+Na aba **🎟️ Convidados**, clique no **✏️** ao lado de qualquer nome para abrir a edição. Ali você pode:
+
+- corrigir o nome e o tipo (criança/adulto);
+- preencher **WhatsApp** e **observações**;
+- mudar a confirmação manualmente;
+- **vincular uma criança a um ou mais adultos** (na criança, marque os responsáveis) ou marcar, no adulto, quais crianças ele leva;
+- copiar o **link individual** do convite.
+
+O vínculo é feito nos dois sentidos: marcar um adulto na criança também faz a criança aparecer na lista daquele adulto. Ao abrir o convite, o adulto vê as crianças vinculadas e pode confirmar a presença de cada uma junto com a dele.
+
+> ⚠️ O WhatsApp e as observações ficam salvos no `data.json`. Se o repositório for público, **esses dados também ficam públicos**. Preencha só o que você não se importa em deixar visível.
+>
+> A tela do convite não mostra a lista completa, mas o arquivo `data.json` continua público no repositório. Quem abrir esse arquivo consegue ver os nomes. Para esconder de verdade, use um repositório privado e publique o site por outro meio.
+
 ### Links do convite
 
-- **Link único (para o grupo)** — o convidado abre o convite, busca o próprio nome na lista e responde. Use **🔗 Link do convite** na aba **Convidados** ou o campo em **Ajustes → Convite e RSVP**.
-- **Link individual** — cada convidado tem um link próprio, que já abre o convite com o nome dele. Clique no **🔗** ao lado do nome na lista para copiar. O link usa um ID estável (nome + tipo), então continua o mesmo depois de reimportar a lista — mas muda se o nome for alterado.
+- **Link único (para o grupo)** — o convidado abre o convite e digita pelo menos 2 letras do nome; só então aparecem as opções (no máximo 12). A lista completa nunca é exibida. Use **🔗 Link do convite** na aba **Convidados** ou o campo em **Ajustes → Convite e RSVP**.
+- **Link individual** — cada convidado tem um link próprio, que já abre o convite com o nome dele. Clique no **🔗** ao lado do nome na lista para copiar. O link usa um ID estável salvo no convidado, então **continua o mesmo mesmo se o nome for alterado**.
+- **Modo somente links** — em **Ajustes → Convite e RSVP → Como o convidado encontra o nome**, escolha **Somente link individual**. O convite deixa de ter busca e pede o link pessoal, sem expor nenhum nome. Ideal para grupos menores ou quando a privacidade for prioridade.
 
 O botão **📋 Copiar convite** copia um texto pronto com data, local e o link único para colar no WhatsApp.
 
 ### Como o convidado responde
 
-1. Abre o link e escolhe o nome (ou já cai no nome, se for link individual).
+1. Abre o link e digita 2 letras do nome (ou já cai no nome, se for link individual).
 2. Escreve um recado, se quiser.
-3. Toca em **🎉 Vou comemorar** ou **😢 Não poderei ir**.
-4. A resposta é gravada no `data.json` e aparece na lista dos anfitriões com status, hora e recado.
+3. Se for adulto responsável, escolhe a presença de cada criança vinculada.
+4. Toca em **🎉 Vou comemorar** ou **😢 Não poderei ir**.
+5. A resposta (e a das crianças) é gravada no `data.json` e aparece na lista dos anfitriões com status, hora e recado.
 
 No app, a lista se atualiza sozinha a cada minuto (e ao voltar para a aba). Também dá para forçar com **🔄 Atualizar respostas**. Ao salvar na nuvem, o app preserva as respostas que chegaram pelo convite e ainda não estavam no aparelho.
 
@@ -174,7 +192,7 @@ Sem essa URL, o convite abre normalmente, mas os botões ficam desativados e apa
 3. Abra o link do convite no celular e envie uma resposta de teste.
 4. Confira em **🎟️ Convidados → 🔄 Atualizar respostas**.
 
-> O repositório é público, então nomes, confirmações e recados no `data.json` também são públicos. O token do GitHub **não** vai para o site: fica só no navegador (app) e nas Propriedades do script (RSVP).
+> O repositório é público, então nomes, confirmações, recados, **WhatsApp e observações** no `data.json` também são públicos. O token do GitHub **não** vai para o site: fica só no navegador (app) e nas Propriedades do script (RSVP).
 
 ## Backup e impressão
 
@@ -216,7 +234,7 @@ lista_convidados.txt  mesma lista em texto simples
 | Dados diferentes entre celular e computador | Falta sincronizar: **Carregar** no aparelho ou **Salvar** no que está atualizado. |
 | Botões do convite desativados | Falta configurar a URL do Apps Script em **Ajustes → Convite e RSVP** e clicar em **Salvar**. |
 | Resposta do convite não aparece | Clique em **🔄 Atualizar respostas**. Se persistir, teste `SUA_URL/exec?ping=1` e veja [`apps-script/README.md`](apps-script/README.md). |
-| Convite diz “não encontrei esse convite” | O nome do convidado mudou depois do link ser copiado. Copie o link novo pelo **🔗** na lista. |
+| Convite diz "não encontrei esse convite" | O convite foi removido da lista ou o `data.json` ainda não foi atualizado | Importe/edite a lista, clique em **☁️ Salvar na nuvem** e copie o link novo pelo **🔗**. |
 | Página em branco no GitHub Pages | Confira se o Pages está em **main / (root)** e se os arquivos estão na raiz do repositório. |
 
 Feito com 💙 para a festa do Ben.

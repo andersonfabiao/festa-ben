@@ -140,6 +140,24 @@
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  function normalizePhone(value) {
+    return String(value == null ? "" : value)
+      .replace(/[^\d+()\-\s]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 40);
+  }
+
+  function phoneDigits(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function waLink(value) {
+    const digits = phoneDigits(value);
+    if (!digits) return "";
+    return "https://wa.me/" + (digits.length <= 11 ? "55" + digits : digits);
+  }
+
   function b64encode(str) {
     const bytes = new TextEncoder().encode(str);
     let bin = "";
@@ -247,7 +265,18 @@
   }
 
   function seedGuests() {
-    const g = (name, type, status) => ({ id: guestKey(name, type), name, type, status });
+    const g = (name, type, status) => ({
+      id: guestKey(name, type),
+      name,
+      type,
+      status,
+      phone: "",
+      notes: "",
+      guardians: [],
+      rsvpAt: "",
+      rsvpMessage: "",
+      rsvpSource: "",
+    });
     return [
       g("Tia Ana", "adult", "confirmed"),
       g("Lucas", "child", "confirmed"),
@@ -266,6 +295,7 @@
       budget: 7000,
       theme: "Toy Story",
       rsvpUrl: "",
+      inviteMode: "search",
     };
   }
 
@@ -280,6 +310,65 @@
     };
   }
 
+  function makeGuestRecord(raw, usedIds) {
+    const g = raw && typeof raw === "object" ? raw : {};
+    const name = cleanGuestName(g.name || g.nome || "").slice(0, 80);
+    if (!name) return null;
+    const type = g.type === "adult" ? "adult" : g.type === "child" ? "child" : "adult";
+    const used = usedIds || new Set();
+
+    let id = String(g.id || "").trim();
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) id = guestKey(name, type);
+    const base = id;
+    let n = 2;
+    while (used.has(id)) {
+      id = base + "-" + n;
+      n++;
+    }
+    used.add(id);
+
+    const rsvpAt =
+      typeof g.rsvpAt === "string" && !isNaN(Date.parse(g.rsvpAt)) ? g.rsvpAt : "";
+    const status = GUEST_STATUS[g.status] ? g.status : "pending";
+
+    return {
+      id,
+      name,
+      type,
+      status,
+      phone: normalizePhone(g.phone || g.whatsapp || g.tel),
+      notes: String(g.notes || g.observacoes || "").slice(0, 500),
+      guardians: Array.isArray(g.guardians) ? g.guardians.map(String) : [],
+      rsvpAt,
+      rsvpMessage: String(g.rsvpMessage || "").slice(0, 280),
+      rsvpSource:
+        rsvpAt && (g.rsvpSource === "owner" || g.rsvpSource === "guest")
+          ? g.rsvpSource
+          : rsvpAt
+            ? "guest"
+            : "",
+    };
+  }
+
+  function normalizeGuestList(rawGuests) {
+    const usedIds = new Set();
+    const guests = (Array.isArray(rawGuests) ? rawGuests : [])
+      .map((g) => makeGuestRecord(g, usedIds))
+      .filter(Boolean);
+
+    const adultIds = new Set(guests.filter((g) => g.type === "adult").map((g) => g.id));
+    guests.forEach((g) => {
+      if (g.type !== "child") {
+        g.guardians = [];
+        return;
+      }
+      g.guardians = Array.from(new Set(g.guardians)).filter(
+        (id) => id !== g.id && adultIds.has(id)
+      );
+    });
+    return guests;
+  }
+
   function normalizeState(raw) {
     if (!raw || typeof raw !== "object" || !Array.isArray(raw.items)) return null;
     const base = defaultMeta();
@@ -292,6 +381,7 @@
     meta.budget = parseMoney(meta.budget);
     meta.theme = String(meta.theme || "Toy Story");
     meta.rsvpUrl = safeUrl(meta.rsvpUrl);
+    meta.inviteMode = meta.inviteMode === "links" ? "links" : "search";
 
     const items = raw.items
       .filter((i) => i && typeof i === "object")
@@ -309,25 +399,7 @@
         createdAt: i.createdAt || nowISO(),
       }));
 
-    const guests = Array.isArray(raw.guests)
-      ? raw.guests
-          .filter((g) => g && typeof g === "object" && g.name)
-          .map((g) => {
-            const name = String(g.name).slice(0, 80);
-            const type = g.type === "adult" ? "adult" : "child";
-            const rsvpAt =
-              typeof g.rsvpAt === "string" && !isNaN(Date.parse(g.rsvpAt)) ? g.rsvpAt : "";
-            return {
-              id: guestKey(name, type),
-              name,
-              type,
-              status: GUEST_STATUS[g.status] ? g.status : "pending",
-              rsvpAt,
-              rsvpMessage: String(g.rsvpMessage || "").slice(0, 280),
-              rsvpSource: rsvpAt && (g.rsvpSource === "owner" || g.rsvpSource === "guest") ? g.rsvpSource : rsvpAt ? "guest" : "",
-            };
-          })
-      : [];
+    const guests = normalizeGuestList(raw.guests);
 
     return { version: 1, meta, items, guests, updatedAt: raw.updatedAt || nowISO() };
   }
@@ -878,15 +950,46 @@
         const rsvpMsg = g.rsvpMessage
           ? '<div class="guest-rsvp-msg">“' + esc(g.rsvpMessage) + "”</div>"
           : "";
+        const phone = g.phone
+          ? '<div class="guest-contact">📱 ' + esc(g.phone) +
+            (waLink(g.phone)
+              ? ' · <a href="' + esc(waLink(g.phone)) +
+                '" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>'
+              : "") +
+            "</div>"
+          : "";
+        const notes = g.notes ? '<div class="guest-notes">' + esc(g.notes) + "</div>" : "";
+
+        const guardians =
+          g.type === "child"
+            ? guests.filter((a) => a.type === "adult" && g.guardians.includes(a.id))
+            : [];
+        const kids =
+          g.type === "adult"
+            ? guests.filter((c) => c.type === "child" && c.guardians.includes(g.id))
+            : [];
+        const guardianLine = guardians.length
+          ? '<div class="guest-links">👨‍👩‍👧 ' +
+            (guardians.length > 1 ? "Responsáveis: " : "Responsável: ") +
+            guardians.map((a) => esc(a.name)).join(", ") + "</div>"
+          : "";
+        const kidsLine = kids.length
+          ? '<div class="guest-links">🧒 Crianças: ' +
+            kids.map((c) => esc(c.name)).join(", ") + "</div>"
+          : "";
+
         return (
           '<div class="guest-row">' +
             '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
             '<div class="guest-main"><div class="guest-name">' + esc(g.name) + "</div>" +
               '<div class="guest-type">' + (g.type === "child" ? "Criança" : "Adulto") +
-              " · " + gs.label + "</div>" + rsvpNote + rsvpMsg + "</div>" +
+              " · " + gs.label + "</div>" + phone + notes + guardianLine + kidsLine +
+              rsvpNote + rsvpMsg + "</div>" +
             '<select class="status-select" data-guest-status="' + esc(g.id) +
               '" style="--sc:' + gs.color + ";--sb:" + gs.bg + '" aria-label="Confirmação de ' +
               esc(g.name) + '">' + guestStatusOptions(g.status) + "</select>" +
+            '<button class="icon-btn" type="button" data-guest-edit="' + esc(g.id) +
+              '" aria-label="Editar ' + esc(g.name) + '" title="Editar convidado">✏️</button>' +
             '<button class="icon-btn" type="button" data-guest-link="' + esc(g.id) +
               '" data-link="' + esc(link) +
               '" aria-label="Copiar link do convite de ' + esc(g.name) +
@@ -1367,6 +1470,165 @@
     toast("Item excluído.", "ok");
   }
 
+  /* ---------- Convidado: editar / excluir ---------- */
+
+  function guestById(id) {
+    return state.guests.find((g) => g.id === id) || null;
+  }
+
+  function relationItem(kind, id, name, detail, checked) {
+    return (
+      '<label class="relation-item">' +
+        '<input type="checkbox" data-' + kind + '-id="' + esc(id) + '"' +
+          (checked ? " checked" : "") + " />" +
+        '<span class="relation-name">' + esc(name) + "</span>" +
+        (detail ? '<span class="relation-detail">' + esc(detail) + "</span>" : "") +
+      "</label>"
+    );
+  }
+
+  function renderGuestRelations(guest) {
+    const isChild = guest.type === "child";
+    const guardiansField = $("#guestGuardiansField");
+    const childrenField = $("#guestChildrenField");
+    guardiansField.hidden = !isChild;
+    childrenField.hidden = isChild;
+
+    if (isChild) {
+      const adults = state.guests
+        .filter((g) => g.type === "adult" && g.id !== guest.id)
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+      $("#guestGuardiansList").innerHTML = adults.length
+        ? adults
+            .map((a) =>
+              relationItem(
+                "guardian",
+                a.id,
+                a.name,
+                a.phone || "",
+                guest.guardians.includes(a.id)
+              )
+            )
+            .join("")
+        : '<p class="hint">Nenhum adulto na lista ainda. Adicione os adultos primeiro para vinculá-los.</p>';
+      return;
+    }
+
+    const children = state.guests
+      .filter((g) => g.type === "child" && g.id !== guest.id)
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    $("#guestChildrenList").innerHTML = children.length
+      ? children
+          .map((c) =>
+            relationItem(
+              "child",
+              c.id,
+              c.name,
+              c.guardians.includes(guest.id) ? "já vinculada" : "",
+              c.guardians.includes(guest.id)
+            )
+          )
+          .join("")
+      : '<p class="hint">Nenhuma criança na lista ainda. Adicione as crianças primeiro para vinculá-las.</p>';
+  }
+
+  function openGuestModal(id) {
+    const guest = guestById(id);
+    if (!guest) return;
+
+    $("#guestEditId").value = guest.id;
+    $("#guestEditName").value = guest.name;
+    $("#guestEditType").value = guest.type;
+    $("#guestEditStatus").value = guest.status;
+    $("#guestEditPhone").value = guest.phone || "";
+    $("#guestEditNotes").value = guest.notes || "";
+    $("#guestEditLink").value = guestInviteUrl(guest);
+    $("#guestEditDelete").hidden = false;
+
+    renderGuestRelations(guest);
+    openModal($("#guestModal"));
+  }
+
+  function handleGuestEditSubmit(event) {
+    event.preventDefault();
+    const guest = guestById($("#guestEditId").value);
+    if (!guest) return;
+
+    const name = cleanGuestName($("#guestEditName").value).slice(0, 80);
+    if (!name) {
+      $("#guestEditName").focus();
+      return;
+    }
+    const type = $("#guestEditType").value === "adult" ? "adult" : "child";
+    const status = GUEST_STATUS[$("#guestEditStatus").value]
+      ? $("#guestEditStatus").value
+      : "pending";
+    const typeChanged = type !== guest.type;
+
+    if (typeChanged) {
+      state.guests.forEach((g) => {
+        if (g.type === "child" && Array.isArray(g.guardians)) {
+          g.guardians = g.guardians.filter((id) => id !== guest.id);
+        }
+      });
+    }
+
+    guest.name = name;
+    guest.type = type;
+    guest.status = status;
+    guest.phone = normalizePhone($("#guestEditPhone").value);
+    guest.notes = String($("#guestEditNotes").value || "").trim().slice(0, 500);
+
+    if (type === "child") {
+      const selected = $$("#guestGuardiansList [data-guardian-id]:checked").map(
+        (el) => el.dataset.guardianId
+      );
+      guest.guardians = Array.from(new Set(selected)).filter((id) => {
+        const adult = guestById(id);
+        return adult && adult.type === "adult" && adult.id !== guest.id;
+      });
+    } else {
+      guest.guardians = [];
+      const selected = new Set(
+        $$("#guestChildrenList [data-child-id]:checked").map((el) => el.dataset.childId)
+      );
+      state.guests.forEach((child) => {
+        if (child.type !== "child") return;
+        const has = child.guardians.includes(guest.id);
+        const want = selected.has(child.id);
+        if (want && !has) child.guardians.push(guest.id);
+        if (!want && has) child.guardians = child.guardians.filter((id) => id !== guest.id);
+      });
+    }
+
+    touch();
+    closeModal($("#guestModal"));
+    renderGuests();
+    renderHero();
+    renderCloudBar();
+    toast("Convidado atualizado.", "ok");
+  }
+
+  function deleteGuest(id) {
+    const guest = guestById(id);
+    if (!guest) return;
+    if (!window.confirm('Remover "' + guest.name + '" da lista?')) return;
+
+    state.guests = state.guests.filter((g) => g.id !== guest.id);
+    state.guests.forEach((g) => {
+      if (g.type === "child" && Array.isArray(g.guardians)) {
+        g.guardians = g.guardians.filter((x) => x !== guest.id);
+      }
+    });
+
+    touch();
+    closeModal($("#guestModal"));
+    renderGuests();
+    renderHero();
+    renderCloudBar();
+    toast("Convidado removido.", "ok");
+  }
+
   /* ---------- Configurações ---------- */
 
   function guessRepoFromHost() {
@@ -1395,6 +1657,7 @@
     $("#setAuto").checked = !!cloud.auto;
     $("#setInviteLink").value = invitePageUrl();
     $("#setRsvpUrl").value = meta.rsvpUrl || "";
+    $("#setInviteMode").value = meta.inviteMode === "links" ? "links" : "search";
 
     const help = $("#rsvpHelpLink");
     if (help) {
@@ -1445,6 +1708,7 @@
     if (rsvpValue && !meta.rsvpUrl) {
       toast("A URL do Apps Script precisa começar com https://.", "warn");
     }
+    meta.inviteMode = $("#setInviteMode").value === "links" ? "links" : "search";
 
     readCloudForm();
 
@@ -1545,7 +1809,7 @@
   }
 
   function guestInviteUrl(guest) {
-    const key = guestKey(guest.name, guest.type);
+    const key = guest && guest.id ? String(guest.id) : guestKey(guest.name, guest.type);
     return invitePageUrl() + "?convite=" + encodeURIComponent(key);
   }
 
@@ -1635,9 +1899,16 @@
             }
             const o = g && typeof g === "object" ? g : {};
             return {
+              id: o.id ? String(o.id).slice(0, 40) : "",
               name: cleanGuestName(o.name || o.nome),
               type: parseGuestType(o.type || o.tipo, "adult"),
-              status: parseGuestStatus(o.status || o.confirmacao || o.confirmacao),
+              status: parseGuestStatus(o.status || o.confirmacao),
+              phone: o.phone || o.whatsapp || o.tel || "",
+              notes: o.notes || o.observacoes || "",
+              guardians: Array.isArray(o.guardians) ? o.guardians.map(String) : [],
+              rsvpAt: o.rsvpAt || "",
+              rsvpMessage: o.rsvpMessage || "",
+              rsvpSource: o.rsvpSource || "",
             };
           })
           .filter((g) => g.name);
@@ -1784,30 +2055,24 @@
     let skipped = 0;
 
     if (mode === "replace") {
-      state.guests = list.map((g) => ({
-        id: guestKey(g.name, g.type),
-        name: g.name,
-        type: g.type,
-        status: g.status,
-      }));
+      state.guests = normalizeGuestList(list);
       added = state.guests.length;
     } else {
       const existing = new Set(state.guests.map((g) => norm(g.name) + "|" + g.type));
+      const usedIds = new Set(state.guests.map((g) => g.id));
       list.forEach((g) => {
         const key = norm(g.name) + "|" + g.type;
         if (existing.has(key)) {
           skipped++;
           return;
         }
+        const record = makeGuestRecord(g, usedIds);
+        if (!record) return;
         existing.add(key);
-        state.guests.push({
-          id: guestKey(g.name, g.type),
-          name: g.name,
-          type: g.type,
-          status: g.status,
-        });
+        state.guests.push(record);
         added++;
       });
+      state.guests = normalizeGuestList(state.guests);
     }
 
     pendingGuestImport = null;
@@ -1969,25 +2234,30 @@
     /* Convidados */
     $("#guestForm").addEventListener("submit", (event) => {
       event.preventDefault();
-      const name = $("#guestName").value.trim();
+      const name = cleanGuestName($("#guestName").value);
       if (!name) {
         $("#guestName").focus();
         return;
       }
       const type = $("#guestType").value === "adult" ? "adult" : "child";
-      state.guests.push({
-        id: guestKey(name, type),
-        name,
-        type,
-        status: GUEST_STATUS[$("#guestStatus").value] ? $("#guestStatus").value : "pending",
-      });
+      const usedIds = new Set(state.guests.map((g) => g.id));
+      const guest = makeGuestRecord(
+        {
+          name,
+          type,
+          status: GUEST_STATUS[$("#guestStatus").value] ? $("#guestStatus").value : "pending",
+        },
+        usedIds
+      );
+      if (!guest) return;
+      state.guests.push(guest);
       $("#guestName").value = "";
       touch();
       renderGuests();
       renderHero();
       renderCloudBar();
       $("#guestName").focus();
-      toast("Convidado adicionado.", "ok");
+      toast("Convidado adicionado. Use ✏️ para completar os dados.", "ok");
     });
 
     $("#guestList").addEventListener("change", (event) => {
@@ -2004,6 +2274,12 @@
     });
 
     $("#guestList").addEventListener("click", (event) => {
+      const edit = event.target.closest("[data-guest-edit]");
+      if (edit) {
+        openGuestModal(edit.dataset.guestEdit);
+        return;
+      }
+
       const link = event.target.closest("[data-guest-link]");
       if (link) {
         const guest = state.guests.find((g) => g.id === link.dataset.guestLink);
@@ -2019,15 +2295,27 @@
       }
 
       const del = event.target.closest("[data-guest-del]");
-      if (!del) return;
-      const guest = state.guests.find((g) => g.id === del.dataset.guestDel);
+      if (del) deleteGuest(del.dataset.guestDel);
+    });
+
+    /* Modal de convidado */
+    $("#guestEditForm").addEventListener("submit", handleGuestEditSubmit);
+    $("#guestEditType").addEventListener("change", () => {
+      const guest = guestById($("#guestEditId").value);
       if (!guest) return;
-      if (!window.confirm('Remover "' + guest.name + '" da lista?')) return;
-      state.guests = state.guests.filter((g) => g.id !== guest.id);
-      touch();
-      renderGuests();
-      renderCloudBar();
-      toast("Convidado removido.", "ok");
+      renderGuestRelations({
+        id: guest.id,
+        type: $("#guestEditType").value === "adult" ? "adult" : "child",
+        guardians: guest.guardians || [],
+      });
+    });
+    $("#guestEditCopyLink").addEventListener("click", () => {
+      copyText($("#guestEditLink").value).then((ok) => {
+        toast(ok ? "Link do convite copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
+      });
+    });
+    $("#guestEditDelete").addEventListener("click", () => {
+      deleteGuest($("#guestEditId").value);
     });
 
     $("#copyInviteBtn").addEventListener("click", copyInvite);

@@ -196,6 +196,18 @@ function updateGuest_(body) {
   var type = body.type === 'adult' ? 'adult' : 'child';
   var message = body.message ? String(body.message).slice(0, 280) : '';
 
+  // Crianças vinculadas ao adulto (o convite envia só as que mudaram).
+  var childUpdates = [];
+  if (Array.isArray(body.children)) {
+    body.children.slice(0, 30).forEach(function (item) {
+      if (!item || typeof item !== 'object') return;
+      var childId = item.id ? String(item.id).slice(0, 40) : '';
+      var childStatus = String(item.status || '').trim();
+      if (!childId || STATUS_OK.indexOf(childStatus) === -1) return;
+      childUpdates.push({ id: childId, status: childStatus });
+    });
+  }
+
   var cfg = config_();
   var lastError = null;
 
@@ -213,22 +225,46 @@ function updateGuest_(body) {
       throw new Error('Convidado não encontrado. O nome pode ter sido atualizado.');
     }
 
+    var now = new Date().toISOString();
     guest.id = guest.id || guestKey_(guest.name, guest.type);
     guest.status = status;
-    guest.rsvpAt = new Date().toISOString();
+    guest.rsvpAt = now;
     guest.rsvpMessage = message;
     guest.rsvpSource = 'guest';
-    data.updatedAt = guest.rsvpAt;
+    data.updatedAt = now;
+
+    // Só permite alterar crianças que tenham este adulto como responsável.
+    var updatedChildren = [];
+    childUpdates.forEach(function (update) {
+      var child = findGuest_(data.guests, update.id, '', 'child');
+      if (!child || child.type !== 'child') return;
+      var guardians = Array.isArray(child.guardians) ? child.guardians.map(String) : [];
+      if (guardians.indexOf(guest.id) === -1) return;
+      child.id = child.id || guestKey_(child.name, child.type);
+      child.status = update.status;
+      child.rsvpAt = now;
+      child.rsvpSource = 'guest';
+      updatedChildren.push({
+        id: child.id,
+        name: child.name,
+        type: 'child',
+        status: child.status,
+        rsvpAt: child.rsvpAt,
+      });
+    });
 
     var res = writeFile_(cfg, data, file.sha);
     if (res.code === 200 || res.code === 201) {
       return {
-        id: guest.id,
-        name: guest.name,
-        type: guest.type,
-        status: guest.status,
-        rsvpAt: guest.rsvpAt,
-        rsvpMessage: guest.rsvpMessage,
+        guest: {
+          id: guest.id,
+          name: guest.name,
+          type: guest.type,
+          status: guest.status,
+          rsvpAt: guest.rsvpAt,
+          rsvpMessage: guest.rsvpMessage,
+        },
+        children: updatedChildren,
       };
     }
 
@@ -277,8 +313,8 @@ function doPost(e) {
       throw new Error('Muitas respostas ao mesmo tempo. Tente de novo em instantes.');
     }
     try {
-      var guest = updateGuest_(body);
-      return json_({ ok: true, guest: guest });
+      var result = updateGuest_(body);
+      return json_({ ok: true, guest: result.guest, children: result.children });
     } finally {
       lock.releaseLock();
     }

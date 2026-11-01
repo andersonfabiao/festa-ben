@@ -944,8 +944,45 @@ textarea.input { resize: vertical; min-height: 78px; }
 .guest-main { flex: 1; min-width: 0; }
 .guest-name { font-weight: 800; font-size: 0.94rem; color: #26344f; overflow-wrap: anywhere; }
 .guest-type { font-size: 0.74rem; font-weight: 700; color: var(--muted); }
+.guest-contact { margin-top: 3px; font-size: 0.75rem; font-weight: 700; color: #31506f; overflow-wrap: anywhere; }
+.guest-contact a { color: var(--blue); font-weight: 800; text-decoration: none; }
+.guest-contact a:hover { text-decoration: underline; }
+.guest-notes { margin-top: 3px; font-size: 0.76rem; color: #5c6b82; overflow-wrap: anywhere; }
+.guest-links { margin-top: 3px; font-size: 0.74rem; font-weight: 700; color: #5a7794; overflow-wrap: anywhere; }
 .guest-row .status-select { flex: none; }
 .guest-row .icon-btn:hover { color: var(--red); }
+
+/* Relações criança ↔ adultos */
+
+.relation-list {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+  max-height: 210px;
+  overflow-y: auto;
+  padding: 8px;
+  background: #f7fbff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.relation-list .hint { margin: 0; }
+.relation-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #33445f;
+  cursor: pointer;
+}
+.relation-item:has(input:checked) { border-color: #9cc9f2; background: #eef7ff; }
+.relation-item input { flex: none; width: 17px; height: 17px; accent-color: var(--blue); }
+.relation-name { flex: 1; overflow-wrap: anywhere; }
+.relation-detail { flex: none; font-size: 0.7rem; font-weight: 700; color: var(--muted); }
 
 /* ---------- Importar convidados ---------- */
 
@@ -1307,6 +1344,26 @@ body.no-scroll { overflow: hidden; }
 .invite-answer.no { background: #eef4ff; color: #31506f; }
 .invite-answer span { font-size: 0.72rem; font-weight: 700; opacity: 0.8; }
 .invite-hint { font-size: 0.82rem; color: #5c6b82; margin: 0 0 12px; text-align: center; }
+.invite-search-hint { padding: 14px 8px; background: #f7fbff; border: 1px dashed #c9dcef; border-radius: 12px; }
+.invite-kids {
+  margin: 0 0 14px;
+  padding: 12px;
+  background: #fff9e8;
+  border: 1px solid #f0dca8;
+  border-radius: 14px;
+}
+.invite-kids h2 { font-size: 0.95rem; margin: 0 0 4px; color: #7a5a00; }
+.invite-kids .invite-hint { margin-bottom: 8px; text-align: left; font-size: 0.76rem; }
+.invite-kid-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 0;
+  border-top: 1px solid #f0e4c4;
+}
+.invite-kid-row:first-of-type { border-top: 0; }
+.invite-kid-name { flex: 1; font-size: 0.84rem; font-weight: 800; color: #3f4657; overflow-wrap: anywhere; }
+.invite-kid-select { flex: none; width: auto; min-width: 132px; padding: 7px 9px; font-size: 0.78rem; }
 .invite-textarea { width: 100%; min-height: 84px; }
 .invite-actions { display: grid; gap: 10px; margin-top: 14px; }
 .invite-btn { width: 100%; padding: 14px 16px; font-size: 1rem; }
@@ -1445,6 +1502,10 @@ body.no-scroll { overflow: hidden; }
   .invite-actions { gap: 8px; }
   .invite-btn { padding: 13px 14px; font-size: 0.94rem; }
   .invite-textarea { min-height: 76px; }
+  .invite-kid-row { flex-wrap: wrap; }
+  .invite-kid-name { flex: 1 1 120px; }
+  .invite-kid-select { flex: 1 1 100%; width: 100%; }
+  .relation-list { max-height: 240px; }
   .copy-field { flex-wrap: wrap; }
   .copy-field .btn { flex: 1 1 100%; }
 }

@@ -23,6 +23,7 @@
     location: "",
     theme: "Toy Story",
     rsvpUrl: "",
+    inviteMode: "search",
   };
 
   const esc = (value) =>
@@ -106,6 +107,7 @@
       location: String(base.location || ""),
       theme: String(base.theme || "Toy Story"),
       rsvpUrl: /^https?:\/\//i.test(url) ? url : "",
+      inviteMode: base.inviteMode === "links" ? "links" : "search",
     };
   }
 
@@ -131,13 +133,16 @@
           .map((g) => {
             const name = String(g.name).slice(0, 80);
             const type = g.type === "adult" ? "adult" : "child";
+            let key = String(g.id || "").trim();
+            if (!/^[A-Za-z0-9_-]{1,40}$/.test(key)) key = guestKey(name, type);
             const rsvpAt =
               typeof g.rsvpAt === "string" && !isNaN(Date.parse(g.rsvpAt)) ? g.rsvpAt : "";
             return {
-              key: guestKey(name, type),
+              key,
               name,
               type,
               status: GUEST_STATUS[g.status] ? g.status : "pending",
+              guardians: Array.isArray(g.guardians) ? g.guardians.map(String) : [],
               rsvpAt,
               rsvpMessage: String(g.rsvpMessage || "").slice(0, 280),
             };
@@ -174,12 +179,23 @@
 
   function renderPicker() {
     current = null;
+
+    if (meta.inviteMode === "links") {
+      $("#inviteSub").textContent = "Abra o link pessoal que você recebeu.";
+      $("#inviteContent").innerHTML =
+        '<div class="invite-error">' +
+          '<p>Para confirmar sua presença, use o <strong>link individual</strong> que os anfitriões enviaram. 💌</p>' +
+          '<p class="invite-hint">Não encontrou seu link? Fale com os anfitriões. 💬</p>' +
+        "</div>";
+      return;
+    }
+
     $("#inviteSub").textContent = "Encontre seu nome para confirmar a presença.";
 
     $("#inviteContent").innerHTML =
       '<div class="invite-picker">' +
         '<label class="field-label invite-search">🔎' +
-          '<input id="guestSearch" class="input" type="search" placeholder="Buscar seu nome…" autocomplete="off" />' +
+          '<input id="guestSearch" class="input" type="search" placeholder="Digite seu nome…" autocomplete="off" />' +
         "</label>" +
         '<div id="guestPickList" class="invite-guest-list"></div>' +
         '<p class="invite-hint">Não encontrou seu nome? Fale com os anfitriões. 💬</p>' +
@@ -194,12 +210,29 @@
   }
 
   function renderPickList(query) {
+    const list = $("#guestPickList");
+    if (!list) return;
+
     const q = norm(query);
-    const filter = (g) => !q || norm(g.name).includes(q);
+    if (q.length < 2) {
+      list.innerHTML =
+        '<p class="invite-hint invite-search-hint">Digite pelo menos 2 letras do seu nome para ver as opções.</p>';
+      return;
+    }
+
+    const matches = guests
+      .filter((g) => norm(g.name).includes(q))
+      .sort((a, b) => {
+        const aStarts = norm(a.name).startsWith(q) ? 0 : 1;
+        const bStarts = norm(b.name).startsWith(q) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        return a.name.localeCompare(b.name, "pt-BR");
+      })
+      .slice(0, 12);
 
     const groups = [
-      { title: "Adultos", items: guests.filter((g) => g.type === "adult" && filter(g)) },
-      { title: "Crianças", items: guests.filter((g) => g.type === "child" && filter(g)) },
+      { title: "Adultos", items: matches.filter((g) => g.type === "adult") },
+      { title: "Crianças", items: matches.filter((g) => g.type === "child") },
     ];
 
     const html = groups
@@ -221,8 +254,33 @@
       )
       .join("");
 
-    const list = $("#guestPickList");
-    if (list) list.innerHTML = html || '<p class="invite-hint">Nenhum nome encontrado.</p>';
+    list.innerHTML =
+      html || '<p class="invite-hint">Nenhum nome encontrado com essas letras. Tente outro trecho do nome.</p>';
+  }
+
+  function linkedChildren(guest) {
+    if (!guest || guest.type !== "adult") return [];
+    return guests.filter(
+      (c) =>
+        c.type === "child" &&
+        Array.isArray(c.guardians) &&
+        c.guardians.includes(guest.key)
+    );
+  }
+
+  function childStatusOptions(selected) {
+    const options = [
+      { value: "pending", label: "Ainda não sei" },
+      { value: "confirmed", label: "Vai comigo" },
+      { value: "declined", label: "Não vai" },
+    ];
+    return options
+      .map(
+        (o) =>
+          '<option value="' + o.value + '"' +
+          (o.value === selected ? " selected" : "") + ">" + o.label + "</option>"
+      )
+      .join("");
   }
 
   function renderRsvp(guest) {
@@ -245,11 +303,45 @@
         ? "Sua resposta ajuda a organizar tudo. Escolha uma opção:"
         : "Mudou de ideia? É só responder de novo.";
 
+    const kids = linkedChildren(guest);
+    const kidsHtml = kids.length
+      ? '<div class="invite-kids">' +
+          '<h2>🧒 Crianças com você</h2>' +
+          '<p class="invite-hint">Confirme também a presença das crianças pelas quais você é responsável.</p>' +
+          kids
+            .map(
+              (child) =>
+                '<label class="invite-kid-row">' +
+                  '<span class="invite-guest-avatar child">' + esc(initials(child.name)) + "</span>" +
+                  '<span class="invite-kid-name">' + esc(child.name) + "</span>" +
+                  '<select class="input invite-kid-select" data-child-status="' + esc(child.key) +
+                    '" aria-label="Presença de ' + esc(child.name) + '">' +
+                    childStatusOptions(child.status) +
+                  "</select>" +
+                "</label>"
+            )
+            .join("") +
+        "</div>"
+      : "";
+
+    let guardianNote = "";
+    if (guest.type === "child" && Array.isArray(guest.guardians) && guest.guardians.length) {
+      const names = guests
+        .filter((a) => a.type === "adult" && guest.guardians.includes(a.key))
+        .map((a) => a.name);
+      if (names.length) {
+        guardianNote =
+          '<p class="invite-hint">Responsável: <strong>' + esc(names.join(", ")) + "</strong></p>";
+      }
+    }
+
     $("#inviteContent").innerHTML =
       '<div class="invite-rsvp">' +
         '<p class="invite-hello">Olá, <strong>' + esc(guest.name) + "</strong>! 🎉</p>" +
         answer +
+        guardianNote +
         '<p class="invite-hint">' + hint + "</p>" +
+        kidsHtml +
         '<label class="field-label">Recado para os anfitriões (opcional)' +
           '<textarea id="rsvpMessage" class="input invite-textarea" maxlength="280" rows="3" ' +
             'placeholder="Ex.: Vamos adorar! O Ben está ansioso?">' +
@@ -268,8 +360,10 @@
         (configured
           ? ""
           : '<p class="invite-warning">A confirmação online ainda não foi configurada. Fale com os anfitriões para avisar.</p>') +
-        '<button class="invite-link-btn" type="button" data-change-name>Não sou ' +
-          esc(guest.name) + " · escolher outro nome</button>" +
+        (meta.inviteMode === "links"
+          ? ""
+          : '<button class="invite-link-btn" type="button" data-change-name>Não sou ' +
+            esc(guest.name) + " · escolher outro nome</button>") +
       "</div>";
   }
 
@@ -348,6 +442,14 @@
     const message = (messageEl ? messageEl.value : "").trim().slice(0, 280);
     const guest = current;
 
+    const childUpdates = [];
+    $$("[data-child-status]").forEach((select) => {
+      const child = guests.find((g) => g.key === select.dataset.childStatus);
+      if (!child || child.status === select.value) return;
+      if (select.value !== "confirmed" && select.value !== "declined") return;
+      childUpdates.push({ id: child.key, status: select.value });
+    });
+
     sending = true;
     $$("[data-rsvp]").forEach((btn) => { btn.disabled = true; });
     const statusEl = $("#rsvpStatus");
@@ -360,6 +462,7 @@
         type: guest.type,
         status,
         message,
+        children: childUpdates,
       });
 
       guest.status = status;
@@ -369,6 +472,15 @@
         result.guest && typeof result.guest.rsvpMessage === "string"
           ? result.guest.rsvpMessage
           : message;
+
+      // Atualiza as crianças localmente (o servidor devolve o que conseguiu gravar).
+      const savedChildren = Array.isArray(result.children) ? result.children : childUpdates;
+      savedChildren.forEach((update) => {
+        const child = guests.find((g) => g.key === update.id);
+        if (!child) return;
+        child.status = update.status;
+        child.rsvpAt = update.rsvpAt || new Date().toISOString();
+      });
 
       sending = false;
       renderRsvp(guest);
@@ -440,7 +552,10 @@
       $("#inviteContent").innerHTML =
         '<div class="invite-error"><p>Este link não corresponde a nenhum convidado. ' +
         "Talvez o nome tenha sido atualizado.</p>" +
-        '<button class="btn btn-primary" type="button" data-change-name>Ver lista de convidados</button></div>';
+        (meta.inviteMode === "links"
+          ? '<p class="invite-hint">Confira o link com os anfitriões. 💬</p>'
+          : '<button class="btn btn-primary" type="button" data-change-name>Ver lista de convidados</button>') +
+        "</div>";
       return;
     }
 

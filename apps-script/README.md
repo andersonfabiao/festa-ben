@@ -79,15 +79,16 @@ A partir daí, o convite mostra os botões **🎉 Vou comemorar** e **😢 Não 
 
 ## 7. Conferir a resposta
 
-1. Abra o convite, escolha um nome, responda e deixe um recado.
-2. No site, aba **🎟️ Convidados**, clique em **🔄 Atualizar respostas** (ou recarregue a página).
-3. O status, a hora e o recado do convidado devem aparecer na lista.
+1. Abra o convite, digite 2 letras do nome (ou use o link individual), responda e deixe um recado.
+2. Se for um adulto com crianças vinculadas, ajuste a presença de cada criança antes de enviar.
+3. No site, aba **🎟️ Convidados**, clique em **🔄 Atualizar respostas** (ou recarregue a página).
+4. O status, a hora e o recado do convidado — e o status das crianças — devem aparecer na lista.
 
 ## Como funciona por dentro
 
 - `doGet(?ping=1)` só lê o `data.json` e devolve a configuração + quantidade de convidados.
-- `doPost` recebe `{ id, name, type, status, message }`, valida o status (`confirmed`/`declined`), encontra o convidado pelo ID estável e grava `status`, `rsvpAt`, `rsvpMessage` e `rsvpSource: "guest"`.
-- O ID do convidado é o mesmo gerado por `assets/guest-id.js` (nome + tipo, FNV-1a). Se o nome for alterado no app, o link antigo deixa de encontrar a pessoa.
+- `doPost` recebe `{ id, name, type, status, message, children }`, valida o status (`confirmed`/`declined`), encontra o convidado pelo ID estável e grava `status`, `rsvpAt`, `rsvpMessage` e `rsvpSource: "guest"`. Se vierem `children: [{ id, status }]`, atualiza também as crianças **vinculadas a esse adulto** na mesma gravação.
+- O ID do convidado fica salvo no próprio convidado (gerado por `assets/guest-id.js` na primeira criação). Renomear não muda o ID nem o link individual.
 - Usa `LockService` para evitar duas gravações simultâneas e tenta de novo em caso de conflito (`409`/`422`).
 - O site também tenta de novo em modo `no-cors` quando o navegador bloqueia a leitura da resposta; nesse caso a confirmação pode levar alguns segundos para aparecer na lista dos anfitriões.
 

@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261101" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261102" />
 </head>
 <body>
   <header class="hero">
@@ -331,6 +331,16 @@
           Sem essa URL, o convite mostra os botões desativados.
           <a id="rsvpHelpLink" href="https://github.com/andersonfabiao/festa-ben/blob/main/apps-script/README.md" target="_blank" rel="noopener noreferrer">Passo a passo para configurar ↗</a>
         </p>
+        <label class="field-label">Como o convidado encontra o nome
+          <select id="setInviteMode" class="input">
+            <option value="search">Buscar pelo nome (mostra só depois de 2 letras)</option>
+            <option value="links">Somente link individual (sem busca)</option>
+          </select>
+        </label>
+        <p class="hint">
+          No modo busca, a lista completa nunca aparece: os nomes surgem apenas quando a pessoa digita pelo menos 2 letras.
+          No modo somente link, o convite pede o link individual — útil para não expor nenhum nome.
+        </p>
 
         <h3 class="form-section">Dados</h3>
         <div class="data-actions">
@@ -384,9 +394,72 @@
     </div>
   </div>
 
+  <!-- Modal de edição de convidado -->
+  <div class="modal" id="guestModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle">
+      <div class="modal-head">
+        <h2 id="guestModalTitle">Editar convidado</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <form id="guestEditForm">
+        <input type="hidden" id="guestEditId" />
+        <label class="field-label">Nome
+          <input id="guestEditName" class="input" required maxlength="80" autocomplete="off" />
+        </label>
+        <div class="grid-2">
+          <label class="field-label">Tipo
+            <select id="guestEditType" class="input">
+              <option value="child">Criança</option>
+              <option value="adult">Adulto</option>
+            </select>
+          </label>
+          <label class="field-label">Confirmação
+            <select id="guestEditStatus" class="input">
+              <option value="pending">Pendente</option>
+              <option value="confirmed">Confirmado</option>
+              <option value="declined">Não vai</option>
+            </select>
+          </label>
+        </div>
+        <label class="field-label">WhatsApp (opcional)
+          <input id="guestEditPhone" class="input" inputmode="tel" maxlength="40" placeholder="(11) 99999-9999" />
+        </label>
+        <label class="field-label">Observações (opcional)
+          <textarea id="guestEditNotes" class="input" rows="2" maxlength="500" placeholder="Ex.: vai com 2 acompanhantes, restrição alimentar…"></textarea>
+        </label>
+
+        <div id="guestGuardiansField" hidden>
+          <h3 class="form-section">Quem é responsável por esta criança?</h3>
+          <p class="hint">Marque um ou mais adultos. Quando um deles abrir o convite, esta criança aparecerá para confirmar junto.</p>
+          <div class="relation-list" id="guestGuardiansList"></div>
+        </div>
+
+        <div id="guestChildrenField" hidden>
+          <h3 class="form-section">Crianças sob responsabilidade deste adulto</h3>
+          <p class="hint">Essas crianças aparecem no convite deste adulto para ele confirmar a presença de todas de uma vez.</p>
+          <div class="relation-list" id="guestChildrenList"></div>
+        </div>
+
+        <label class="field-label">Link individual do convite
+          <span class="copy-field">
+            <input id="guestEditLink" class="input" readonly />
+            <button type="button" class="btn btn-ghost btn-sm" id="guestEditCopyLink">Copiar</button>
+          </span>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger-ghost" id="guestEditDelete">Excluir</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar convidado</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/guest-id.js?v=20261101"></script>
-  <script src="assets/app.js?v=20261101"></script>
+  <script src="assets/guest-id.js?v=20261102"></script>
+  <script src="assets/app.js?v=20261102"></script>
 </body>
 </html>
