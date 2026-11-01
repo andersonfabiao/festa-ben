@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261103" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104" />
 </head>
 <body>
   <header class="hero">
@@ -160,19 +160,17 @@
 
       <div id="guestStats" class="stat-grid small"></div>
 
+      <div id="guestLimits" class="guest-limits" aria-label="Ocupação dos limites de convidados"></div>
+
       <div class="guest-tools">
         <div class="guest-filters" role="group" aria-label="Filtrar convidados">
           <button class="filter-chip is-active" type="button" data-guest-filter="all">Todos</button>
           <button class="filter-chip" type="button" data-guest-filter="adult">Adultos</button>
           <button class="filter-chip" type="button" data-guest-filter="child">Crianças</button>
+          <button class="filter-chip" type="button" data-guest-filter="confirmed">Confirmados</button>
+          <button class="filter-chip" type="button" data-guest-filter="pending">Pendentes</button>
+          <button class="filter-chip" type="button" data-guest-filter="declined">Não vão</button>
         </div>
-        <label class="guest-sort">
-          <span>Ordenar</span>
-          <select id="guestSort" class="input" aria-label="Ordenar convidados">
-            <option value="az">A–Z</option>
-            <option value="status">Status</option>
-          </select>
-        </label>
       </div>
 
       <div class="guest-sync">
@@ -180,19 +178,13 @@
         <span class="muted" id="guestSyncState"></span>
       </div>
 
-      <form id="guestForm" class="card guest-form">
-        <input id="guestName" class="input" placeholder="Nome do convidado" maxlength="80" autocomplete="off" aria-label="Nome do convidado" />
-        <select id="guestType" class="input" aria-label="Tipo de convidado">
-          <option value="child">Criança</option>
-          <option value="adult">Adulto</option>
-        </select>
-        <select id="guestStatus" class="input" aria-label="Confirmação">
-          <option value="pending">Pendente</option>
-          <option value="confirmed">Confirmado</option>
-          <option value="declined">Não vai</option>
-        </select>
-        <button class="btn btn-primary" type="submit">＋ Adicionar</button>
-      </form>
+      <div class="guest-actions">
+        <label class="guest-search">
+          <span aria-hidden="true">🔎</span>
+          <input id="guestSearch" class="guest-search-input" type="search" placeholder="Buscar convidado pelo nome…" autocomplete="off" aria-label="Buscar convidado pelo nome" />
+        </label>
+        <button class="btn btn-primary" id="addGuestBtn" type="button">＋ Adicionar convidado</button>
+      </div>
 
       <div id="guestList" class="guest-list"></div>
     </section>
@@ -296,6 +288,17 @@
           <input id="setBudget" class="input" inputmode="decimal" placeholder="0,00" />
         </label>
 
+        <h3 class="form-section">Limite de convidados</h3>
+        <div class="grid-2">
+          <label class="field-label">Máximo de adultos
+            <input id="setMaxAdults" class="input" type="number" min="1" max="999" inputmode="numeric" />
+          </label>
+          <label class="field-label">Máximo de crianças
+            <input id="setMaxChildren" class="input" type="number" min="1" max="999" inputmode="numeric" />
+          </label>
+        </div>
+        <p class="hint">A aba Convidados mostra uma barra de ocupação de cada limite. Ao chegar no total, a barra fica vermelha.</p>
+
         <h3 class="form-section">Sincronização com GitHub <span class="tag-optional">opcional</span></h3>
         <p class="hint">Assim você abre a página em qualquer aparelho e vê os mesmos dados. O token fica salvo somente neste navegador — ele nunca vai para o repositório.</p>
 
@@ -357,12 +360,12 @@
         </p>
         <label class="field-label">Como o convidado encontra o nome
           <select id="setInviteMode" class="input">
-            <option value="search">Buscar pelo nome (mostra só depois de 2 letras)</option>
+            <option value="search">Buscar pelo nome (mostra só depois de 3 letras)</option>
             <option value="links">Somente link individual (sem busca)</option>
           </select>
         </label>
         <p class="hint">
-          No modo busca, a lista completa nunca aparece: os nomes surgem apenas quando a pessoa digita pelo menos 2 letras.
+          No modo busca, a lista completa nunca aparece: os nomes surgem apenas quando a pessoa digita pelo menos 3 letras.
           No modo somente link, o convite pede o link individual — útil para não expor nenhum nome.
         </p>
 
@@ -464,7 +467,7 @@
           <div class="relation-list" id="guestChildrenList"></div>
         </div>
 
-        <label class="field-label">Link individual do convite
+        <label class="field-label" id="guestEditLinkField">Link individual do convite
           <span class="copy-field">
             <input id="guestEditLink" class="input" readonly />
             <button type="button" class="btn btn-ghost btn-sm" id="guestEditCopyLink">Copiar</button>
@@ -475,7 +478,7 @@
           <button type="button" class="btn btn-danger-ghost" id="guestEditDelete">Excluir</button>
           <span class="spacer"></span>
           <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar convidado</button>
+          <button type="submit" class="btn btn-primary" id="guestEditSubmit">Salvar convidado</button>
         </div>
       </form>
     </div>
@@ -483,7 +486,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/guest-id.js?v=20261103"></script>
-  <script src="assets/app.js?v=20261103"></script>
+  <script src="assets/guest-id.js?v=20261104"></script>
+  <script src="assets/app.js?v=20261104"></script>
 </body>
 </html>

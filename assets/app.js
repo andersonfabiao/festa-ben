@@ -297,6 +297,8 @@
       rsvpUrl: "",
       mapsUrl: "",
       inviteMode: "search",
+      maxAdults: 50,
+      maxChildren: 25,
     };
   }
 
@@ -384,6 +386,8 @@
     meta.rsvpUrl = safeUrl(meta.rsvpUrl);
     meta.mapsUrl = safeUrl(meta.mapsUrl);
     meta.inviteMode = meta.inviteMode === "links" ? "links" : "search";
+    meta.maxAdults = Math.min(999, Math.max(1, parseInt(meta.maxAdults, 10) || 50));
+    meta.maxChildren = Math.min(999, Math.max(1, parseInt(meta.maxChildren, 10) || 25));
 
     const items = raw.items
       .filter((i) => i && typeof i === "object")
@@ -422,27 +426,23 @@
 
   const GUEST_VIEW_KEY = "ben-guest-view-v1";
   const HIDE_VALUES_KEY = "ben-hide-values-v1";
+  const GUEST_FILTERS = ["all", "adult", "child", "confirmed", "pending", "declined"];
   let guestFilter = "all";
-  let guestSort = "az";
+  let guestQuery = "";
   let valuesHidden = false;
 
   function loadGuestView() {
     try {
       const raw = JSON.parse(localStorage.getItem(GUEST_VIEW_KEY) || "{}");
-      guestFilter = raw.filter === "adult" || raw.filter === "child" ? raw.filter : "all";
-      guestSort = raw.sort === "status" ? "status" : "az";
+      guestFilter = GUEST_FILTERS.includes(raw.filter) ? raw.filter : "all";
     } catch (e) {
       guestFilter = "all";
-      guestSort = "az";
     }
   }
 
   function saveGuestView() {
     try {
-      localStorage.setItem(
-        GUEST_VIEW_KEY,
-        JSON.stringify({ filter: guestFilter, sort: guestSort })
-      );
+      localStorage.setItem(GUEST_VIEW_KEY, JSON.stringify({ filter: guestFilter }));
     } catch (e) {
       /* ignora */
     }
@@ -1046,17 +1046,59 @@
     );
   }
 
+  function renderGuestLimits() {
+    const wrap = $("#guestLimits");
+    if (!wrap) return;
+    const meta = state.meta;
+    const adults = state.guests.filter((g) => g.type === "adult").length;
+    const children = state.guests.filter((g) => g.type === "child").length;
+
+    const rows = [
+      { icon: "🧑", label: "Adultos", count: adults, max: meta.maxAdults },
+      { icon: "🧒", label: "Crianças", count: children, max: meta.maxChildren },
+    ];
+
+    wrap.innerHTML = rows
+      .map((row) => {
+        const pct = row.max > 0 ? Math.round((row.count / row.max) * 100) : 0;
+        const fill = Math.max(0, Math.min(100, pct));
+        const over = row.count > row.max;
+        const full = row.count >= row.max;
+        const status = over
+          ? "limite ultrapassado"
+          : full
+          ? "limite atingido"
+          : "dentro do limite";
+        return (
+          '<div class="limit-row' + (over ? " is-over" : full ? " is-full" : "") + '">' +
+            '<span class="limit-label">' + row.icon + " " + row.label + "</span>" +
+            '<span class="limit-count">' + row.count + "/" + row.max + "</span>" +
+            '<span class="limit-track" role="img" aria-label="' +
+              esc(row.label + ": " + row.count + " de " + row.max + ", " + pct + "%, " + status) + '">' +
+              '<span class="limit-fill"></span>' +
+              '<span class="limit-rest" style="width:' + (100 - fill) + '%"></span>' +
+            "</span>" +
+            '<span class="limit-pct">' + pct + "%</span>" +
+          "</div>"
+        );
+      })
+      .join("");
+  }
+
   function renderGuests() {
     const guests = state.guests;
     const confirmed = guests.filter((g) => g.status === "confirmed").length;
+    const pending = guests.filter((g) => g.status === "pending").length;
+    const declined = guests.filter((g) => g.status === "declined").length;
     const children = guests.filter((g) => g.type === "child").length;
     const adults = guests.filter((g) => g.type === "adult").length;
+    const meta = state.meta;
 
     $("#guestStats").innerHTML = [
       { label: "Na lista", value: guests.length, note: "convidados" },
       { label: "Confirmados", value: confirmed, note: guests.length ? Math.round((confirmed / guests.length) * 100) + "% da lista" : "—", cls: "good" },
-      { label: "Crianças", value: children, note: "na lista" },
-      { label: "Adultos", value: adults, note: "na lista" },
+      { label: "Crianças", value: children, note: "de " + meta.maxChildren },
+      { label: "Adultos", value: adults, note: "de " + meta.maxAdults },
     ]
       .map(
         (c) =>
@@ -1065,8 +1107,24 @@
       )
       .join("");
 
-    const counts = { all: guests.length, adult: adults, child: children };
-    const labels = { all: "Todos", adult: "Adultos", child: "Crianças" };
+    renderGuestLimits();
+
+    const counts = {
+      all: guests.length,
+      adult: adults,
+      child: children,
+      confirmed,
+      pending,
+      declined,
+    };
+    const labels = {
+      all: "Todos",
+      adult: "Adultos",
+      child: "Crianças",
+      confirmed: "Confirmados",
+      pending: "Pendentes",
+      declined: "Não vão",
+    };
     $$("[data-guest-filter]").forEach((btn) => {
       const key = btn.dataset.guestFilter;
       if (!(key in counts)) return;
@@ -1075,8 +1133,6 @@
       btn.classList.toggle("is-active", on);
       btn.setAttribute("aria-pressed", on ? "true" : "false");
     });
-    const sortSelect = $("#guestSort");
-    if (sortSelect) sortSelect.value = guestSort;
 
     const list = $("#guestList");
     if (!guests.length) {
@@ -1086,36 +1142,43 @@
       return;
     }
 
-    const visible =
-      guestFilter === "all" ? guests.slice() : guests.filter((g) => g.type === guestFilter);
+    const q = norm(guestQuery);
+    const visible = guests.filter((g) => {
+      if (guestFilter === "adult" || guestFilter === "child") {
+        if (g.type !== guestFilter) return false;
+      } else if (guestFilter !== "all") {
+        if (g.status !== guestFilter) return false;
+      }
+      if (q && !norm(g.name).includes(q)) return false;
+      return true;
+    });
+
     if (!visible.length) {
       list.innerHTML =
-        '<div class="empty"><span class="emoji">' + (guestFilter === "child" ? "🧒" : "🧑") +
-        "</span><h3>Nenhum " + (guestFilter === "child" ? "criança" : "adulto") + " na lista</h3>" +
-        "<p>Troque o filtro para ver todos os convidados.</p></div>";
+        '<div class="empty"><span class="emoji">🔎</span><h3>Nenhum convidado encontrado</h3>' +
+        "<p>" +
+        (q
+          ? "Nenhum nome combina com “" + esc(guestQuery.trim()) + "” nesse filtro."
+          : "Nenhum convidado nesse filtro.") +
+        " Troque o filtro ou limpe a busca.</p></div>";
       return;
     }
 
     const byName = (a, b) =>
       a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
-    const rank = { confirmed: 0, pending: 1, declined: 2 };
-    const compare =
-      guestSort === "status"
-        ? (a, b) => (rank[a.status] || 1) - (rank[b.status] || 1) || byName(a, b)
-        : byName;
 
     const groups = [
       {
         id: "adult",
         title: "Adultos",
         icon: "🧑",
-        items: visible.filter((g) => g.type === "adult").sort(compare),
+        items: visible.filter((g) => g.type === "adult").sort(byName),
       },
       {
         id: "child",
         title: "Crianças",
         icon: "🧒",
-        items: visible.filter((g) => g.type === "child").sort(compare),
+        items: visible.filter((g) => g.type === "child").sort(byName),
       },
     ].filter((group) => group.items.length);
 
@@ -1662,26 +1725,39 @@
   }
 
   function openGuestModal(id) {
-    const guest = guestById(id);
-    if (!guest) return;
+    const guest = id ? guestById(id) : null;
+    if (id && !guest) return;
 
-    $("#guestEditId").value = guest.id;
-    $("#guestEditName").value = guest.name;
-    $("#guestEditType").value = guest.type;
-    $("#guestEditStatus").value = guest.status;
-    $("#guestEditPhone").value = guest.phone || "";
-    $("#guestEditNotes").value = guest.notes || "";
-    $("#guestEditLink").value = guestInviteUrl(guest);
-    $("#guestEditDelete").hidden = false;
+    const draft = guest || {
+      id: "",
+      name: "",
+      type: "adult",
+      status: "pending",
+      phone: "",
+      notes: "",
+      guardians: [],
+    };
 
-    renderGuestRelations(guest);
+    $("#guestEditId").value = guest ? guest.id : "";
+    $("#guestEditName").value = draft.name;
+    $("#guestEditType").value = draft.type;
+    $("#guestEditStatus").value = draft.status;
+    $("#guestEditPhone").value = draft.phone || "";
+    $("#guestEditNotes").value = draft.notes || "";
+    $("#guestEditLink").value = guest ? guestInviteUrl(guest) : "";
+    $("#guestEditLinkField").hidden = !guest;
+    $("#guestEditDelete").hidden = !guest;
+    $("#guestModalTitle").textContent = guest ? "Editar convidado" : "Novo convidado";
+    $("#guestEditSubmit").textContent = guest ? "Salvar convidado" : "Adicionar convidado";
+
+    renderGuestRelations(draft);
     openModal($("#guestModal"));
   }
 
   function handleGuestEditSubmit(event) {
     event.preventDefault();
-    const guest = guestById($("#guestEditId").value);
-    if (!guest) return;
+    const existing = guestById($("#guestEditId").value);
+    const isNew = !existing;
 
     const name = cleanGuestName($("#guestEditName").value).slice(0, 80);
     if (!name) {
@@ -1692,9 +1768,14 @@
     const status = GUEST_STATUS[$("#guestEditStatus").value]
       ? $("#guestEditStatus").value
       : "pending";
-    const typeChanged = type !== guest.type;
 
-    if (typeChanged) {
+    let guest = existing;
+    if (!guest) {
+      const usedIds = new Set(state.guests.map((g) => g.id));
+      guest = makeGuestRecord({ name, type, status }, usedIds);
+      if (!guest) return;
+      state.guests.push(guest);
+    } else if (type !== guest.type) {
       state.guests.forEach((g) => {
         if (g.type === "child" && Array.isArray(g.guardians)) {
           g.guardians = g.guardians.filter((id) => id !== guest.id);
@@ -1735,6 +1816,23 @@
     renderGuests();
     renderHero();
     renderCloudBar();
+
+    if (isNew) {
+      const max = type === "adult" ? state.meta.maxAdults : state.meta.maxChildren;
+      const count = state.guests.filter((g) => g.type === type).length;
+      if (count > max) {
+        toast(
+          "Convidado adicionado, mas o limite de " +
+            (type === "adult" ? "adultos" : "crianças") +
+            " foi ultrapassado (" + count + "/" + max + ").",
+          "err"
+        );
+        return;
+      }
+      toast("Convidado adicionado.", "ok");
+      return;
+    }
+
     toast("Convidado atualizado.", "ok");
   }
 
@@ -1779,6 +1877,8 @@
     $("#setLocation").value = meta.location || "";
     $("#setMapsUrl").value = meta.mapsUrl || "";
     $("#setBudget").value = meta.budget ? String(meta.budget).replace(".", ",") : "";
+    $("#setMaxAdults").value = meta.maxAdults;
+    $("#setMaxChildren").value = meta.maxChildren;
     $("#setOwner").value = cloud.owner || (guess ? guess.owner : "");
     $("#setRepo").value = cloud.repo || (guess ? guess.repo : "");
     $("#setBranch").value = cloud.branch || "main";
@@ -1834,6 +1934,8 @@
     meta.location = $("#setLocation").value.trim();
     meta.mapsUrl = safeUrl($("#setMapsUrl").value.trim());
     meta.budget = parseMoney($("#setBudget").value);
+    meta.maxAdults = Math.min(999, Math.max(1, parseInt($("#setMaxAdults").value, 10) || 50));
+    meta.maxChildren = Math.min(999, Math.max(1, parseInt($("#setMaxChildren").value, 10) || 25));
     const rsvpValue = $("#setRsvpUrl").value.trim();
     meta.rsvpUrl = safeUrl(rsvpValue);
     if (rsvpValue && !meta.rsvpUrl) {
@@ -2309,15 +2411,12 @@
 
     $$("[data-guest-filter]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        guestFilter = btn.dataset.guestFilter;
+        guestFilter = GUEST_FILTERS.includes(btn.dataset.guestFilter)
+          ? btn.dataset.guestFilter
+          : "all";
         saveGuestView();
         renderGuests();
       });
-    });
-    $("#guestSort").addEventListener("change", (event) => {
-      guestSort = event.target.value === "status" ? "status" : "az";
-      saveGuestView();
-      renderGuests();
     });
 
     $("#saveCloudBtn").addEventListener("click", () => {
@@ -2406,33 +2505,12 @@
     });
 
     /* Convidados */
-    $("#guestForm").addEventListener("submit", (event) => {
-      event.preventDefault();
-      const name = cleanGuestName($("#guestName").value);
-      if (!name) {
-        $("#guestName").focus();
-        return;
-      }
-      const type = $("#guestType").value === "adult" ? "adult" : "child";
-      const usedIds = new Set(state.guests.map((g) => g.id));
-      const guest = makeGuestRecord(
-        {
-          name,
-          type,
-          status: GUEST_STATUS[$("#guestStatus").value] ? $("#guestStatus").value : "pending",
-        },
-        usedIds
-      );
-      if (!guest) return;
-      state.guests.push(guest);
-      $("#guestName").value = "";
-      touch();
+    $("#guestSearch").addEventListener("input", (event) => {
+      guestQuery = event.target.value;
       renderGuests();
-      renderHero();
-      renderCloudBar();
-      $("#guestName").focus();
-      toast("Convidado adicionado. Use ✏️ para completar os dados.", "ok");
     });
+
+    $("#addGuestBtn").addEventListener("click", () => openGuestModal());
 
     $("#guestList").addEventListener("change", (event) => {
       const select = event.target.closest("[data-guest-status]");
@@ -2475,12 +2553,12 @@
     /* Modal de convidado */
     $("#guestEditForm").addEventListener("submit", handleGuestEditSubmit);
     $("#guestEditType").addEventListener("change", () => {
-      const guest = guestById($("#guestEditId").value);
-      if (!guest) return;
+      const id = $("#guestEditId").value;
+      const guest = guestById(id);
       renderGuestRelations({
-        id: guest.id,
+        id,
         type: $("#guestEditType").value === "adult" ? "adult" : "child",
-        guardians: guest.guardians || [],
+        guardians: guest ? guest.guardians || [] : [],
       });
     });
     $("#guestEditCopyLink").addEventListener("click", () => {

@@ -79,7 +79,7 @@ A partir daí, o convite mostra os botões **🎉 Vou comemorar** e **😢 Não 
 
 ## 7. Conferir a resposta
 
-1. Abra o convite, digite 2 letras do nome (ou use o link individual), responda e deixe um recado.
+1. Abra o convite, digite 3 letras do nome (ou use o link individual), responda e deixe um recado.
 2. Se for um adulto com crianças vinculadas, ajuste a presença de cada criança antes de enviar.
 3. No site, aba **🎟️ Convidados**, clique em **🔄 Atualizar respostas** (ou recarregue a página).
 4. O status, a hora e o recado do convidado — e o status das crianças — devem aparecer na lista.

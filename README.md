@@ -8,8 +8,9 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Status por item** — a fazer, em andamento, contratado e concluído, com checkbox para marcar rápido.
 - **Valores** — custo previsto, valor já pago, fornecedor, link, data limite e observações.
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
-- **Convidados** — lista com criança/adulto, confirmação de presença, WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. A lista vem agrupada em **Adultos** e **Crianças**, em ordem **A–Z**, com filtros por tipo e opção de ordenar por **status**. Edite qualquer convidado pelo **✏️** da lista. Importação de lista em `.txt`, `.csv` ou `.json`.
-- **Convite digital** — página própria com a data, o local (com link para o **Google Maps**) e botões **Vou comemorar** / **Não poderei ir**, com recado opcional. O convite não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, os personagens do Toy Story atravessam a tela em comemoração.
+- **Convidados** — lista com criança/adulto, confirmação de presença, WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros **Todos / Adultos / Crianças / Confirmados / Pendentes / Não vão** e busca por nome. O botão **＋ Adicionar convidado** abre o mesmo modal de edição, com tipo, confirmação, WhatsApp, observações e vínculos. Importação de lista em `.txt`, `.csv` ou `.json`.
+- **Convite digital** — página própria com a data, o local (com link para o **Google Maps**) e botões **Vou comemorar** / **Não poderei ir**, com recado opcional. O convite não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, estrelas sobem pela tela em comemoração.
+- **Limite de convidados** — barra de ocupação para **adultos** e **crianças**, com percentual e cor que vai do verde ao vermelho ao chegar no limite. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Ajustes → Limite de convidados**.
 - **Olho dos valores** — o botão **👁️ Valores** no topo esconde (desfoca) todos os valores da página com um clique; a escolha fica salva no aparelho. Na aba **Convidados** os valores nem aparecem: ela é só para configurações e informações da lista.
 - **Contagem regressiva** para a festa.
 - **Salvamento automático** no navegador (localStorage).
@@ -173,7 +174,7 @@ O botão **📋 Copiar convite** copia um texto pronto com data, local e o link 
 2. Escreve um recado, se quiser.
 3. Se for adulto responsável, escolhe a presença de cada criança vinculada.
 4. Toca em **🎉 Vou comemorar** ou **😢 Não poderei ir**.
-5. A resposta (e a das crianças) é gravada no `data.json` e aparece na lista dos anfitriões com status, hora e recado. Ao confirmar, uma animação com personagens do Toy Story cruza a tela (respeita a opção de reduzir movimento do sistema).
+5. A resposta (e a das crianças) é gravada no `data.json` e aparece na lista dos anfitriões com status, hora e recado. Ao confirmar, estrelas sobem pela tela (respeita a opção de reduzir movimento do sistema).
 
 No app, a lista se atualiza sozinha a cada minuto (e ao voltar para a aba). Também dá para forçar com **🔄 Atualizar respostas**. Ao salvar na nuvem, o app preserva as respostas que chegaram pelo convite e ainda não estavam no aparelho.
 

@@ -97,7 +97,7 @@
     }, 3600);
   }
 
-  /* Personagens do Toy Story desfilando quando a presença é confirmada. */
+  /* Estrelas subindo quando a presença é confirmada. */
   function celebrate() {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
@@ -110,28 +110,14 @@
     layer.id = "partyParade";
     layer.setAttribute("aria-hidden", "true");
 
-    const characters = ["🤠", "🚀", "🤖", "🐻", "🐷", "🦖", "🐕", "👽", "🎈", "⭐"];
-    const lanes = [12, 24, 36, 48, 60, 72, 84];
-
-    characters.forEach((char, i) => {
-      const el = document.createElement("span");
-      el.className = "parade-char";
-      el.textContent = char;
-      el.style.setProperty("--lane", lanes[i % lanes.length] + "vh");
-      el.style.setProperty("--dur", (2.4 + Math.random() * 1.9).toFixed(2) + "s");
-      el.style.setProperty("--delay", (Math.random() * 1.1).toFixed(2) + "s");
-      el.style.setProperty("--size", Math.round(24 + Math.random() * 26) + "px");
-      layer.appendChild(el);
-    });
-
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 26; i++) {
       const spark = document.createElement("span");
       spark.className = "parade-spark";
-      spark.textContent = i % 3 === 0 ? "✨" : "⭐";
+      spark.textContent = i % 4 === 0 ? "✨" : i % 3 === 0 ? "🌟" : "⭐";
       spark.style.setProperty("--x", Math.round(Math.random() * 100) + "vw");
-      spark.style.setProperty("--dur", (1.6 + Math.random() * 1.6).toFixed(2) + "s");
-      spark.style.setProperty("--delay", (Math.random() * 1.4).toFixed(2) + "s");
-      spark.style.setProperty("--size", Math.round(12 + Math.random() * 14) + "px");
+      spark.style.setProperty("--dur", (2.2 + Math.random() * 1.8).toFixed(2) + "s");
+      spark.style.setProperty("--delay", (Math.random() * 1.6).toFixed(2) + "s");
+      spark.style.setProperty("--size", Math.round(14 + Math.random() * 18) + "px");
       layer.appendChild(spark);
     }
 
