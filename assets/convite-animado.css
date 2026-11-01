@@ -375,8 +375,8 @@ button { color: inherit; }
 .final-invite {
   z-index: 40;
   display: grid;
-  place-items: center;
-  padding: max(64px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+  place-items: start center;
+  padding: max(24px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
   overflow: auto;
   overflow-x: hidden;
   opacity: 0;
@@ -411,29 +411,18 @@ button { color: inherit; }
   position: absolute;
   z-index: 3;
   top: 150px;
-  left: calc(50% + 252px);
+  right: calc(50% + 252px);
+  left: auto;
   width: 270px;
   height: auto;
   opacity: 0;
   mix-blend-mode: multiply;
   filter: drop-shadow(0 16px 12px rgba(27, 73, 100, .2));
-  transform: translateX(80px);
+  transform: translateX(-80px);
   pointer-events: none;
 }
 
 .is-final .peek-duo-art { animation: peek-arrives .9s .65s cubic-bezier(.15,.9,.25,1.1) forwards; }
-
-.side-cast-art {
-  position: absolute;
-  z-index: 1;
-  left: -35px;
-  top: 390px;
-  width: 190px;
-  height: auto;
-  opacity: .82;
-  mix-blend-mode: multiply;
-  pointer-events: none;
-}
 
 .base-cast-art {
   position: absolute;
@@ -441,20 +430,20 @@ button { color: inherit; }
   left: 0;
   right: 0;
   bottom: 0;
-  height: 225px;
+  height: clamp(132px, 33.4vw, 225px);
   overflow: hidden;
   pointer-events: none;
 }
 
 .base-cast-art img {
   position: absolute;
-  left: 50%;
-  top: 51%;
-  width: 365px;
+  left: 0;
+  bottom: 0;
+  top: auto;
+  width: 100%;
   height: auto;
   mix-blend-mode: multiply;
-  transform: translate(-50%, -50%) rotate(-90deg);
-  transform-origin: center;
+  transform: none;
   filter: drop-shadow(0 -9px 7px rgba(42, 65, 76, .12));
 }
 
@@ -543,14 +532,10 @@ button { color: inherit; }
   .orbit-potato { right: 4%; top: 27%; }
   .skip-animation { padding: 8px 10px; font-size: .68rem; }
   .round-control { width: 38px; height: 38px; }
-  .final-invite { place-items: start center; }
-  .invite-card { min-height: 940px; padding: 27px 17px 245px; }
+  .invite-card { min-height: 940px; padding: 27px 17px clamp(124px, 34vw, 200px); }
   .invite-message { margin-top: 16px; }
   .card-logo { font-size: clamp(4.1rem, 21vw, 5.5rem); }
-  .peek-duo-art { top: 72px; left: auto; right: -9px; width: 92px; opacity: 0; }
-  .side-cast-art { left: -28px; top: 480px; width: 118px; opacity: .62; }
-  .base-cast-art { height: 225px; }
-  .base-cast-art img { width: 250px; }
+  .peek-duo-art { top: 72px; left: -10px; right: auto; width: 96px; opacity: 0; }
   .gift-options { grid-template-columns: 1fr 1fr; }
   .gift-options .gift-theme { grid-column: 1 / -1; }
 }
