@@ -216,8 +216,19 @@
   }
 
   function renderMeta() {
-    $("#inviteName").textContent = meta.name;
-    $("#inviteAge").textContent = meta.age;
+    const name = $("#inviteName");
+    if (name) {
+      name.replaceChildren();
+      name.setAttribute("aria-label", meta.name);
+      Array.from(meta.name.toUpperCase()).forEach((letter) => {
+        const block = document.createElement("span");
+        block.textContent = letter === " " ? "\u00a0" : letter;
+        if (letter === " ") block.className = "is-space";
+        name.appendChild(block);
+      });
+    }
+    const ageBadge = $("#inviteAge");
+    if (ageBadge) ageBadge.textContent = meta.age;
     $("#inviteAgeText").textContent = meta.age;
     document.title = "Confirmação de presença · " + meta.name + " faz " + meta.age + "!";
 
