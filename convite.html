@@ -29,7 +29,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/styles.css?v=20261107" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261108" />
 </head>
 <body class="invite-body room-theme">
   <a class="skip-link" href="#inviteContent">Ir para a confirmação</a>
@@ -84,15 +84,21 @@
 
         <div class="invite-meta" id="inviteMeta"></div>
 
-        <div class="invite-divider" aria-hidden="true"><span>★</span></div>
-        <h2 class="rsvp-title">Confirme sua missão</h2>
-
-        <div id="inviteContent" aria-live="polite">
-          <div class="invite-loading">
-            <span class="invite-spinner" aria-hidden="true"></span>
-            <p>Preparando seu convite…</p>
+        <section class="rsvp-panel" aria-labelledby="rsvpTitle">
+          <div class="invite-divider" aria-hidden="true"><span>★</span></div>
+          <div class="rsvp-heading">
+            <span class="rsvp-step-badge">SUA RESPOSTA</span>
+            <h2 class="rsvp-title" id="rsvpTitle">Confirme sua presença</h2>
+            <p class="rsvp-intro">É rapidinho — encontre seu nome e conte pra gente se você vai!</p>
           </div>
-        </div>
+
+          <div id="inviteContent" aria-live="polite">
+            <div class="invite-loading">
+              <span class="invite-spinner" aria-hidden="true"></span>
+              <p>Preparando seu convite…</p>
+            </div>
+          </div>
+        </section>
       </div>
     </section>
 
@@ -102,6 +108,6 @@
   <div class="toast" id="inviteToast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261031"></script>
-  <script src="assets/convite.js?v=20261106"></script>
+  <script src="assets/convite.js?v=20261108"></script>
 </body>
 </html>

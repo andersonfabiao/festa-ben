@@ -250,8 +250,9 @@
 
     $("#inviteContent").innerHTML =
       '<div class="invite-picker">' +
+        '<p class="invite-step-label"><span>1</span> Digite 3 letras e escolha seu nome</p>' +
         '<label class="field-label invite-search">🔎' +
-          '<input id="guestSearch" class="input" type="search" placeholder="Digite seu nome…" autocomplete="off" aria-label="Digite seu nome para confirmar presença" />' +
+          '<input id="guestSearch" class="input" type="search" placeholder="Digite seu nome para confirmar…" autocomplete="off" aria-label="Digite seu nome para confirmar presença" />' +
         "</label>" +
         '<div id="guestPickList" class="invite-guest-list"></div>' +
         '<p class="invite-hint">Não encontrou seu nome? Fale com os anfitriões. 💬</p>' +
@@ -403,8 +404,9 @@
             esc(guest.rsvpMessage || "") +
           "</textarea>" +
         "</label>" +
+        '<p class="invite-step-label"><span>2</span> Escolha sua resposta</p>' +
         '<div class="invite-actions">' +
-          '<button class="btn btn-primary invite-btn' + (guest.status === "confirmed" ? " is-current" : "") +
+          '<button class="btn btn-primary invite-btn invite-confirm-btn' + (guest.status === "confirmed" ? " is-current" : "") +
             '" type="button" data-rsvp="confirmed"' + (configured ? "" : " disabled") + ">🎉 Vou comemorar</button>" +
           '<button class="btn btn-ghost invite-btn' + (guest.status === "declined" ? " is-current" : "") +
             '" type="button" data-rsvp="declined"' + (configured ? "" : " disabled") + ">😢 Não poderei ir</button>" +

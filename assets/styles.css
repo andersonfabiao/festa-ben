@@ -177,6 +177,40 @@ strong { font-weight: 800; }
   box-shadow: 0 6px 0 rgba(242, 169, 0, 0.5);
 }
 
+.hero-name-blocks {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.035em;
+  vertical-align: -0.045em;
+  margin-right: 0.06em;
+  perspective: 500px;
+  white-space: nowrap;
+}
+.hero-name-block {
+  position: relative;
+  display: inline-grid;
+  min-width: 0.64em;
+  height: 0.8em;
+  place-items: center;
+  padding: 0 0.045em;
+  border: 0.055em solid #fff;
+  border-radius: 0.11em;
+  color: #fff;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 0.74em;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 rgba(0,0,0,.12);
+  box-shadow: inset 0 0.055em 0 rgba(255,255,255,.35), 0 0.09em 0 #8c4234, 0 0.16em 0.22em rgba(20,43,74,.24);
+  transform: rotate(-4deg) translateY(-0.025em);
+  background: linear-gradient(145deg, #f45a4b, #d93832 76%);
+}
+.hero-name-block:nth-child(2n) { transform: rotate(3deg) translateY(-0.07em); }
+.hero-name-block:nth-child(3n) { transform: rotate(-1deg) translateY(-0.015em); }
+.hero-name-block.block-1 { background: linear-gradient(145deg, #55a9f0, #2773c7 76%); box-shadow: inset 0 0.055em 0 rgba(255,255,255,.35), 0 0.09em 0 #24518a, 0 0.16em 0.22em rgba(20,43,74,.24); }
+.hero-name-block.block-2 { background: linear-gradient(145deg, #ffd94d, #eba90d 76%); box-shadow: inset 0 0.055em 0 rgba(255,255,255,.35), 0 0.09em 0 #a76d05, 0 0.16em 0.22em rgba(20,43,74,.24); }
+
 .hero-sub {
   margin: 6px 0 0;
   font-size: 0.98rem;
@@ -270,6 +304,19 @@ strong { font-weight: 800; }
   backdrop-filter: blur(8px);
   box-shadow: 0 8px 24px rgba(23, 38, 74, 0.08);
 }
+
+.hero .cloud-bar {
+  margin: 17px 0 0;
+  padding: 10px 13px;
+  border: 1px solid rgba(255,255,255,.92);
+  border-radius: 16px;
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 7px 20px rgba(31,72,112,.1);
+  backdrop-filter: blur(9px);
+}
+.hero .cloud-status { font-size: .88rem; color: #24476b; }
+.hero .cloud-actions .btn { min-height: 36px; padding: 7px 12px; }
+.hero .cloud-actions .btn-cloud { background: #e7f1ff; border-color: #c6dcff; }
 .progress-head {
   display: flex;
   justify-content: space-between;
@@ -1259,6 +1306,9 @@ body.hide-values .money-input:focus {
   padding: 2px 8px;
   margin-left: 6px;
 }
+.stage-names-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+.stage-name-field { margin: 0; }
+.stage-name-field .input { margin-top: 4px; }
 .hint { margin: 4px 0 12px; font-size: 0.78rem; color: var(--muted); line-height: 1.45; }
 
 .cloud-help {
@@ -1629,6 +1679,10 @@ body.no-scroll { overflow: hidden; }
   .hero-stat { padding: 8px 10px; border-radius: 13px; }
   .hero-stat .value { font-size: 1.02rem; }
   .hero-stat .label { font-size: 0.58rem; }
+  .hero .cloud-bar { display: grid; gap: 9px; margin-top: 14px; padding: 10px; }
+  .hero .cloud-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero .cloud-actions .btn { width: 100%; font-size: .72rem; padding: 7px 6px; }
+  .stage-names-grid { grid-template-columns: 1fr; }
 
   .shell { padding: 0 12px 30px; margin-top: -32px; }
   .tabs { width: 100%; justify-content: space-between; }
@@ -2042,6 +2096,74 @@ body.no-scroll { overflow: hidden; }
 .invite-divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #d8e2ed); }
 .invite-divider::after { background: linear-gradient(90deg, #d8e2ed, transparent); }
 .rsvp-title { margin: 12px 0 11px; color: #112b50; font-size: 1.35rem; }
+.rsvp-panel {
+  margin-top: 17px;
+  padding: 20px 18px 18px;
+  border: 2px solid #f4d36d;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #fffdf5, #fff 68%, #f2f8ff);
+  box-shadow: 0 10px 28px rgba(30, 72, 120, .11), inset 0 0 0 4px rgba(255,255,255,.86);
+  text-align: center;
+}
+.rsvp-heading { margin: 3px 0 14px; }
+.rsvp-step-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: #fff0b7;
+  color: #815900;
+  font-size: .62rem;
+  font-weight: 1000;
+  letter-spacing: .13em;
+}
+.rsvp-panel .rsvp-title { margin: 7px 0 3px; font-size: 1.55rem; }
+.rsvp-intro { margin: 0; color: #5a6b82; font-size: .83rem; font-weight: 700; }
+.invite-step-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 8px;
+  color: #23466f;
+  font-size: .82rem;
+  font-weight: 900;
+  text-align: left;
+}
+.invite-step-label span {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: #287fc3;
+  color: #fff;
+  font-size: .75rem;
+  box-shadow: 0 2px 0 #175a91;
+}
+.rsvp-panel .invite-search { margin-bottom: 8px; text-align: left; }
+.rsvp-panel .invite-search .input { min-height: 52px; border: 2px solid #9cc9ee; background: #fff; font-size: 1rem; }
+.rsvp-panel .invite-search .input:focus { border-color: #287fc3; box-shadow: 0 0 0 4px rgba(40,127,195,.15); }
+.rsvp-panel .invite-search-hint { padding: 10px 12px; border: 1px dashed #cbdced; border-radius: 12px; background: rgba(255,255,255,.76); }
+.rsvp-panel .invite-guest-btn { min-height: 49px; border: 1px solid #cadceb; background: #fff; }
+.rsvp-panel .invite-guest-btn:hover { border-color: #f0be38; background: #fff9e5; }
+.rsvp-panel .invite-rsvp { text-align: left; }
+.rsvp-panel .invite-hello { margin: 0 0 12px; padding: 11px 13px; border-radius: 13px; background: #eaf5ff; color: #164d7e; font-size: 1rem; font-weight: 900; }
+.rsvp-panel .invite-hint { text-align: left; }
+.rsvp-panel .field-label { text-align: left; }
+.rsvp-panel .invite-textarea { min-height: 76px; }
+.rsvp-panel .invite-actions { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+.rsvp-panel .invite-confirm-btn {
+  border-color: #24823c;
+  background: linear-gradient(135deg, #55b95d, #238943);
+  color: #fff;
+  font-size: 1.06rem;
+  box-shadow: 0 4px 0 #176d30, 0 8px 15px rgba(35,137,67,.18);
+}
+.rsvp-panel .invite-confirm-btn:hover { background: linear-gradient(135deg, #62c66a, #1f7e3c); }
+.rsvp-panel .invite-btn[data-rsvp="declined"] { border: 1px solid #d7e1ec; background: #fff; color: #53647a; box-shadow: none; }
+.rsvp-panel .invite-btn.is-current { outline-color: rgba(47,168,79,.5); }
+.rsvp-panel .invite-warning { padding: 10px; border-radius: 11px; }
 .invite-loading { padding: 18px 0; }
 .invite-spinner { border-color: #d4e5f4; border-top-color: #e6af20; }
 .invite-search .input { margin-top: 5px; }
@@ -2090,6 +2212,10 @@ body.no-scroll { overflow: hidden; }
   .invite-badge { right: 13px; bottom: 17px; width: 55px; height: 55px; }
   .invite-badge span { font-size: 1.4rem; }
   .invite-details { padding: 23px 15px 24px; }
+  .rsvp-panel { padding: 17px 12px 14px; border-radius: 18px; }
+  .rsvp-panel .rsvp-title { font-size: 1.35rem; }
+  .rsvp-panel .invite-actions { grid-template-columns: 1fr; }
+  .rsvp-panel .invite-confirm-btn { min-height: 54px; }
   .invite-sub { font-size: .88rem; }
   .invite-meta { gap: 6px; }
   .invite-chip { padding: 6px 7px; font-size: .67rem; }

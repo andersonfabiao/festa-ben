@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261106" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261108" />
 </head>
 <body>
   <header class="hero">
@@ -31,7 +31,7 @@
         <div class="badge-age" aria-hidden="true"><span id="badgeAge">5</span><small>anos</small></div>
         <div class="hero-copy">
           <p class="eyebrow">Uma aventura Toy Story</p>
-          <h1><span id="heroName">Ben</span> faz <span class="hl" id="heroAge">5</span>!</h1>
+          <h1><span id="heroName" class="hero-name-blocks" aria-label="Ben"></span> faz <span class="hl" id="heroAge">5</span>!</h1>
           <p class="hero-sub">Checklist da festa, orçamento e convidados em um só lugar.</p>
         </div>
         <div class="hero-actions">
@@ -42,6 +42,15 @@
 
       <div class="hero-meta" id="heroMeta"></div>
       <div class="countdown" id="countdown" aria-live="polite"></div>
+
+      <div class="cloud-bar" aria-label="Sincronização dos dados">
+        <div class="cloud-status"><span class="dot" id="cloudDot"></span><span id="cloudText">Salvo neste dispositivo</span></div>
+        <div class="cloud-actions">
+          <button class="btn btn-sm btn-ghost" id="pullBtn" type="button" hidden>⬇️ Carregar</button>
+          <button class="btn btn-sm btn-cloud" id="saveCloudBtn" type="button">☁️ Salvar na nuvem</button>
+          <button class="btn btn-sm btn-ghost" id="settingsBtn" type="button">⚙️ Ajustes</button>
+        </div>
+      </div>
 
       <div class="hero-progress">
         <div class="progress-head">
@@ -64,15 +73,6 @@
 
     <main>
     <section id="view-checklist" class="view" aria-label="Checklist">
-      <div class="cloud-bar">
-        <div class="cloud-status"><span class="dot" id="cloudDot"></span><span id="cloudText">Salvo neste dispositivo</span></div>
-        <div class="cloud-actions">
-          <button class="btn btn-sm btn-ghost" id="pullBtn" type="button" hidden>⬇️ Carregar</button>
-          <button class="btn btn-sm btn-cloud" id="saveCloudBtn" type="button">☁️ Salvar na nuvem</button>
-          <button class="btn btn-sm btn-ghost" id="settingsBtn" type="button">⚙️ Ajustes</button>
-        </div>
-      </div>
-
       <div class="toolbar">
         <div class="search-field">
           <span aria-hidden="true">🔎</span>
@@ -300,6 +300,10 @@
         </div>
         <p class="hint">A aba Convidados mostra uma barra de ocupação de cada limite. Ao chegar no total, a barra fica vermelha.</p>
 
+        <h3 class="form-section">Nomes das etapas do checklist</h3>
+        <p class="hint">Personalize os títulos das etapas. Os itens continuam vinculados às mesmas etapas.</p>
+        <div id="stageNamesFields" class="stage-names-grid"></div>
+
         <h3 class="form-section">Sincronização com GitHub <span class="tag-optional">opcional</span></h3>
         <p class="hint">Assim você abre a página em qualquer aparelho e vê os mesmos dados. O token fica salvo somente neste navegador — ele nunca vai para o repositório.</p>
 
@@ -488,6 +492,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261106"></script>
+  <script src="assets/app.js?v=20261108"></script>
 </body>
 </html>

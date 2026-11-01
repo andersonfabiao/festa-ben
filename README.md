@@ -5,6 +5,7 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 ## O que tem
 
 - **Checklist por etapas** — planejamento, local, decoração, convidados, comida, look do Ben, lembrancinhas, atividades e o dia da festa.
+- **Etapas personalizáveis** — renomeie as etapas em **Ajustes → Nomes das etapas do checklist**; os itens permanecem vinculados à etapa original.
 - **Status por item** — a fazer, em andamento, contratado e concluído, com checkbox para marcar rápido.
 - **Valores** — custo previsto, valor já pago, fornecedor, link, data limite e observações.
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
@@ -16,6 +17,7 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Contagem regressiva** para a festa.
 - **Salvamento automático** no navegador (localStorage).
 - **Sincronização opcional com GitHub** para abrir em qualquer aparelho e ver os mesmos dados.
+- **Status da sincronização** — aparece em destaque logo abaixo da contagem regressiva, com ações para carregar e salvar na nuvem.
 - **Exportar/importar JSON** para backup e **impressão** (útil para gerar um PDF).
 
 Os itens, valores e convidados que aparecem na primeira abertura são **exemplos** — edite ou apague tudo em **Ajustes → Dados**.

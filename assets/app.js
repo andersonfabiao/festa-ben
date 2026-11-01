@@ -39,7 +39,15 @@
 
   const PARTY_LOCATION = "Enjoy Kids, Liv Mall Shopping — Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005";
 
-  const stageById = (id) => STAGES.find((s) => s.id === id) || STAGES[0];
+  function stageList() {
+    const names = state && state.meta && state.meta.stageNames ? state.meta.stageNames : {};
+    return STAGES.map((stage) => ({
+      ...stage,
+      name: String(names[stage.id] || stage.name),
+    }));
+  }
+
+  const stageById = (id) => stageList().find((s) => s.id === id) || stageList()[0];
 
   /* ---------- Utilidades ---------- */
 
@@ -301,6 +309,7 @@
       inviteMode: "search",
       maxAdults: 50,
       maxChildren: 25,
+      stageNames: {},
     };
   }
 
@@ -393,6 +402,12 @@
     meta.inviteMode = meta.inviteMode === "links" ? "links" : "search";
     meta.maxAdults = Math.min(999, Math.max(1, parseInt(meta.maxAdults, 10) || 50));
     meta.maxChildren = Math.min(999, Math.max(1, parseInt(meta.maxChildren, 10) || 25));
+    const rawStageNames = meta.stageNames && typeof meta.stageNames === "object" ? meta.stageNames : {};
+    meta.stageNames = {};
+    STAGES.forEach((stage) => {
+      const custom = String(rawStageNames[stage.id] || "").trim().slice(0, 48);
+      if (custom && custom !== stage.name) meta.stageNames[stage.id] = custom;
+    });
 
     const items = raw.items
       .filter((i) => i && typeof i === "object")
@@ -557,7 +572,13 @@
     const meta = state.meta;
     const s = summary();
 
-    $("#heroName").textContent = meta.name;
+    const heroName = $("#heroName");
+    heroName.setAttribute("aria-label", meta.name);
+    heroName.innerHTML = Array.from(meta.name).map((letter, index) =>
+      '<span class="hero-name-block block-' + (index % 3) + '" aria-hidden="true">' +
+        esc(letter) +
+      "</span>"
+    ).join("");
     $("#heroAge").textContent = meta.age;
     $("#badgeAge").textContent = meta.age;
     $("#footerName").textContent = meta.name;
@@ -796,7 +817,7 @@
       return;
     }
 
-    const html = STAGES.map((stage) => {
+    const html = stageList().map((stage) => {
       const items = filtered.filter((i) => i.stage === stage.id);
       if (!items.length) return "";
       const sorted = sortItems(items);
@@ -814,7 +835,7 @@
             (!isCollapsed) + '">' +
             '<span class="stage-icon" style="background:' + stage.color + '22;color:' + stage.color + '">' +
               stage.icon + "</span>" +
-            '<span class="stage-title"><h2>' + stage.name + "</h2>" +
+            '<span class="stage-title"><h2>' + esc(stage.name) + "</h2>" +
               '<span class="stage-sub">' + done + "/" + total + " concluídos" +
               (subtotal ? ' · <span class="money">' + money(subtotal) + "</span>" : "") + "</span></span>" +
             '<span class="stage-progress"><div style="width:' + pct + "%;background:" + stage.color + '"></div></span>' +
@@ -932,7 +953,7 @@
         }).join("")
       : '<tr><td colspan="6">Nenhum item no checklist.</td></tr>';
 
-    const breakdownRows = STAGES.map((stage) => {
+    const breakdownRows = stageList().map((stage) => {
       const stageItems = state.items.filter((item) => item.stage === stage.id);
       const planned = stageItems.reduce((sum, item) => sum + num(item.cost), 0);
       const paid = stageItems.reduce((sum, item) => sum + num(item.paid), 0);
@@ -979,7 +1000,7 @@
   }
 
   function renderBreakdown() {
-    const rows = STAGES.map((stage) => {
+    const rows = stageList().map((stage) => {
       const items = state.items.filter((i) => i.stage === stage.id);
       const previsto = items.reduce((a, i) => a + num(i.cost), 0);
       const pago = items.reduce((a, i) => a + num(i.paid), 0);
@@ -1002,7 +1023,7 @@
         return (
           '<div class="bd-row">' +
             '<div class="bd-label"><span class="bd-icon">' + r.stage.icon +
-              '</span><span class="bd-name">' + r.stage.name + "</span></div>" +
+              '</span><span class="bd-name">' + esc(r.stage.name) + "</span></div>" +
             '<div class="bd-track"><div class="bd-fill" style="width:' + wPrev + '%"></div>' +
               (r.pago > 0 ? '<div class="bd-paid" style="width:' + wPaid + '%"></div>' : "") +
             "</div>" +
@@ -1049,7 +1070,7 @@
             '<td><span class="cell-title' + (item.status === "done" ? " done" : "") + '">' +
               esc(item.title) + "</span></td>" +
             '<td class="hide-sm"><span class="mini-stage" style="color:' + stage.color + '">' +
-              stage.icon + " " + stage.name + "</span></td>" +
+              stage.icon + " " + esc(stage.name) + "</span></td>" +
             '<td><span class="status-cell"><span class="status-dot" style="background:' + st.color +
               '"></span>' + st.label + "</span></td>" +
             '<td class="num' + (num(item.cost) ? " money" : "") + '">' + (num(item.cost) ? money(item.cost) : "—") + "</td>" +
@@ -1965,6 +1986,14 @@
     $("#setBudget").value = meta.budget ? String(meta.budget).replace(".", ",") : "";
     $("#setMaxAdults").value = meta.maxAdults;
     $("#setMaxChildren").value = meta.maxChildren;
+    $("#stageNamesFields").innerHTML = STAGES
+      .map((stage) => {
+        const name = meta.stageNames && meta.stageNames[stage.id] || stage.name;
+        return '<label class="field-label stage-name-field">' + esc(stage.name) +
+          '<input class="input" type="text" maxlength="48" data-stage-name="' + esc(stage.id) +
+          '" value="' + esc(name) + '" aria-label="Nome da etapa ' + esc(stage.name) + '" /></label>';
+      })
+      .join("");
     $("#setOwner").value = cloud.owner || (guess ? guess.owner : "");
     $("#setRepo").value = cloud.repo || (guess ? guess.repo : "");
     $("#setBranch").value = cloud.branch || "main";
@@ -2022,6 +2051,12 @@
     meta.budget = parseMoney($("#setBudget").value);
     meta.maxAdults = Math.min(999, Math.max(1, parseInt($("#setMaxAdults").value, 10) || 50));
     meta.maxChildren = Math.min(999, Math.max(1, parseInt($("#setMaxChildren").value, 10) || 25));
+    meta.stageNames = {};
+    $$('[data-stage-name]').forEach((input) => {
+      const stage = STAGES.find((s) => s.id === input.dataset.stageName);
+      const custom = String(input.value || "").trim().slice(0, 48);
+      if (stage && custom && custom !== stage.name) meta.stageNames[stage.id] = custom;
+    });
     const rsvpValue = $("#setRsvpUrl").value.trim();
     meta.rsvpUrl = safeUrl(rsvpValue);
     if (rsvpValue && !meta.rsvpUrl) {
@@ -2035,6 +2070,7 @@
 
     touch();
     closeModal($("#settingsModal"));
+    fillStageSelects();
     renderAll();
 
     if (needsUpload) {
@@ -2760,11 +2796,12 @@
   function fillStageSelects() {
     const filter = $("#stageFilter");
     const itemSelect = $("#itemStage");
+    const stages = stageList();
     filter.innerHTML =
       '<option value="">Todas as etapas</option>' +
-      STAGES.map((s) => '<option value="' + s.id + '">' + s.icon + " " + s.name + "</option>").join("");
-    itemSelect.innerHTML = STAGES.map(
-      (s) => '<option value="' + s.id + '">' + s.icon + " " + s.name + "</option>"
+      stages.map((s) => '<option value="' + s.id + '">' + s.icon + " " + esc(s.name) + "</option>").join("");
+    itemSelect.innerHTML = stages.map(
+      (s) => '<option value="' + s.id + '">' + s.icon + " " + esc(s.name) + "</option>"
     ).join("");
   }
 
