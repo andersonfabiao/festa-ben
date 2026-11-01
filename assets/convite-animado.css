@@ -150,7 +150,47 @@ button { color: inherit; }
   animation: opening-float 3s ease-in-out infinite;
 }
 
-.opening-logo { width: min(240px, 65vw); height: auto; filter: drop-shadow(0 8px 3px rgba(22,74,111,.15)); }
+.ben-story-logo {
+  position: relative;
+  display: inline-grid;
+  justify-items: center;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 900;
+  line-height: .8;
+  filter: drop-shadow(0 8px 3px rgba(22,74,111,.16));
+  transform: rotate(-2deg);
+}
+
+.ben-story-logo .ben-word {
+  position: relative;
+  z-index: 2;
+  color: #ffd629;
+  font-size: 1em;
+  letter-spacing: -.06em;
+  -webkit-text-stroke: .085em #15518f;
+  paint-order: stroke fill;
+  text-shadow: .04em .07em 0 #e9423b;
+}
+
+.ben-story-logo .story-word {
+  position: relative;
+  z-index: 1;
+  min-width: 2.7em;
+  margin-top: -.03em;
+  padding: .18em .28em .12em;
+  color: #ffd629;
+  font-size: .43em;
+  letter-spacing: .08em;
+  line-height: .8;
+  background: #e31830;
+  clip-path: polygon(5% 0, 95% 0, 100% 100%, 0 100%);
+  text-shadow: .03em .05em 0 #9d1525;
+}
+
+.opening-logo {
+  margin: 2px auto 18px;
+  font-size: clamp(5rem, 18vw, 8rem);
+}
 
 .eyebrow {
   margin: 18px 0 5px;
@@ -338,6 +378,7 @@ button { color: inherit; }
   place-items: center;
   padding: max(64px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
   overflow: auto;
+  overflow-x: hidden;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -351,8 +392,8 @@ button { color: inherit; }
 .invite-card {
   position: relative;
   width: min(100%, 660px);
-  min-height: min(800px, calc(100dvh - 85px));
-  padding: clamp(24px, 5vh, 45px) clamp(21px, 5vw, 48px) clamp(120px, 18vh, 170px);
+  min-height: 910px;
+  padding: clamp(24px, 5vh, 45px) clamp(21px, 5vw, 48px) 235px;
   border: 3px solid rgba(255,255,255,.9);
   border-radius: 12px;
   text-align: center;
@@ -366,11 +407,69 @@ button { color: inherit; }
 
 .is-final .invite-card { animation: card-reveal .9s .15s cubic-bezier(.15,.9,.25,1.1) forwards; }
 
+.peek-duo-art {
+  position: absolute;
+  z-index: 3;
+  top: 150px;
+  left: calc(50% + 252px);
+  width: 270px;
+  height: auto;
+  opacity: 0;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 16px 12px rgba(27, 73, 100, .2));
+  transform: translateX(80px);
+  pointer-events: none;
+}
+
+.is-final .peek-duo-art { animation: peek-arrives .9s .65s cubic-bezier(.15,.9,.25,1.1) forwards; }
+
+.side-cast-art {
+  position: absolute;
+  z-index: 1;
+  left: -35px;
+  top: 390px;
+  width: 190px;
+  height: auto;
+  opacity: .82;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.base-cast-art {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 225px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.base-cast-art img {
+  position: absolute;
+  left: 50%;
+  top: 51%;
+  width: 365px;
+  height: auto;
+  mix-blend-mode: multiply;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  transform-origin: center;
+  filter: drop-shadow(0 -9px 7px rgba(42, 65, 76, .12));
+}
+
 .tape { position: absolute; z-index: 2; top: 19px; width: 80px; height: 24px; opacity: .82; background: #f4d750; box-shadow: 0 3px 4px rgba(88,77,28,.13); }
 .tape-left { left: -15px; transform: rotate(-38deg); }
 .tape-right { right: -16px; transform: rotate(39deg); }
 
-.invite-heading > img { width: clamp(130px, 32vw, 210px); filter: drop-shadow(0 6px 3px rgba(34,70,97,.15)); }
+.invite-heading,
+.invite-message,
+.event-details,
+.gift-guide,
+.confirm-button,
+.confirm-note { position: relative; z-index: 4; }
+
+.card-logo { margin: 0 auto 12px; font-size: clamp(4.2rem, 13vw, 6.3rem); }
 .invite-heading > p { margin: 5px 0 8px; color: #db403c; font-size: clamp(.68rem, 2vw, .88rem); font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
 .invite-heading h2 { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px 15px; margin: 0; font-family: "Baloo 2", sans-serif; }
 
@@ -391,11 +490,28 @@ button { color: inherit; }
 .event-details small { color: #698094; font-size: .72rem; font-weight: 700; }
 .event-details .location { grid-column: 1 / -1; }
 
+.gift-guide {
+  max-width: 510px;
+  margin: 0 auto 19px;
+  padding: 10px;
+  border: 2px dashed rgba(225, 160, 31, .48);
+  border-radius: 15px;
+  background: rgba(255, 248, 214, .91);
+  box-shadow: 0 6px 15px rgba(135, 94, 27, .08);
+}
+
+.gift-title { display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 8px; color: #9b5c0d; font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; }
+.gift-title > span { font-size: 1.2rem; }
+.gift-options { display: grid; grid-template-columns: .78fr .65fr 1.65fr; gap: 7px; }
+.gift-options > span { display: grid; align-content: center; min-height: 50px; padding: 7px 9px; border-radius: 10px; background: rgba(255,255,255,.82); text-align: center; }
+.gift-options small { color: #8b775e; font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.gift-options b { color: #704718; font-size: .84rem; line-height: 1.12; }
+.gift-options .gift-theme b { color: #16588a; }
+
 .confirm-button { position: relative; z-index: 4; display: flex; align-items: center; justify-content: center; gap: 13px; width: min(100%, 350px); margin: 0 auto; padding: 14px 22px; border-radius: 999px; color: #fff; font-weight: 900; text-decoration: none; background: linear-gradient(135deg, #e94842, #ce3434); box-shadow: 0 7px 0 #a62829, 0 12px 22px rgba(205, 50, 50, .22); transition: transform .2s ease, box-shadow .2s ease; }
 .confirm-button:hover { transform: translateY(-2px); box-shadow: 0 9px 0 #a62829, 0 15px 25px rgba(205, 50, 50, .25); }
 .confirm-note { position: relative; z-index: 4; margin: 12px 0 0; color: #6e8498; font-size: .71rem; font-weight: 700; }
 
-.card-characters { position: absolute; z-index: 2; left: 50%; bottom: -34px; width: min(46%, 265px); transform: translateX(-50%); filter: drop-shadow(0 12px 7px rgba(40,60,70,.23)); animation: card-toys 3.4s ease-in-out infinite; }
 .card-star { position: absolute; color: #f4c52e; text-shadow: 0 2px 0 #d69b18; animation: twinkle 1.8s ease-in-out infinite; }
 .star-a { left: 8%; bottom: 17%; font-size: 28px; }
 .star-b { right: 9%; bottom: 23%; font-size: 22px; animation-delay: .5s; }
@@ -414,7 +530,7 @@ button { color: inherit; }
 @keyframes envelope-arrives { 70% { opacity: 1; transform: translate(-3vw, 2vh) rotate(-4deg) scale(1.04); } 100% { opacity: 1; transform: none; } }
 @keyframes star-pop { 0% { opacity: 0; transform: scale(.1) rotate(-80deg); } 60% { opacity: 1; transform: scale(1.25) rotate(15deg); } 100% { opacity: .8; transform: scale(1); } }
 @keyframes card-reveal { to { opacity: 1; transform: none; } }
-@keyframes card-toys { 50% { transform: translateX(-50%) translateY(-6px) rotate(.8deg); } }
+@keyframes peek-arrives { to { opacity: .98; transform: translateX(0); } }
 @keyframes twinkle { 50% { opacity: .35; transform: scale(.72) rotate(30deg); } }
 
 @media (max-width: 680px) {
@@ -428,9 +544,15 @@ button { color: inherit; }
   .skip-animation { padding: 8px 10px; font-size: .68rem; }
   .round-control { width: 38px; height: 38px; }
   .final-invite { place-items: start center; }
-  .invite-card { min-height: 740px; padding-bottom: 160px; }
+  .invite-card { min-height: 940px; padding: 27px 17px 245px; }
   .invite-message { margin-top: 16px; }
-  .card-characters { bottom: -28px; width: min(58%, 220px); }
+  .card-logo { font-size: clamp(4.1rem, 21vw, 5.5rem); }
+  .peek-duo-art { top: 72px; left: auto; right: -9px; width: 92px; opacity: 0; }
+  .side-cast-art { left: -28px; top: 480px; width: 118px; opacity: .62; }
+  .base-cast-art { height: 225px; }
+  .base-cast-art img { width: 250px; }
+  .gift-options { grid-template-columns: 1fr 1fr; }
+  .gift-options .gift-theme { grid-column: 1 / -1; }
 }
 
 @media (max-height: 700px) and (orientation: landscape) {

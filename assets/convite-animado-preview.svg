@@ -16,6 +16,11 @@
   <g filter="url(#shadow)">
     <rect x="72" y="70" width="680" height="445" rx="34" fill="#fffdf5" stroke="#fff" stroke-width="6"/>
     <text x="116" y="135" fill="#d83e3a" font-family="Arial,sans-serif" font-size="22" font-weight="800" letter-spacing="4">UMA AVENTURA ESPECIAL</text>
+    <g transform="translate(825 67) rotate(-2)">
+      <text x="0" y="40" fill="#ffd629" stroke="#15518f" stroke-width="7" paint-order="stroke fill" font-family="Arial,sans-serif" font-size="46" font-weight="900" letter-spacing="-3">BEN</text>
+      <path d="M-2 47h103l5 34H-7z" fill="#e31830"/>
+      <text x="49" y="72" text-anchor="middle" fill="#ffd629" font-family="Arial,sans-serif" font-size="22" font-weight="900" letter-spacing="3">STORY</text>
+    </g>
     <text x="115" y="202" fill="#173f67" font-family="Arial,sans-serif" font-size="56" font-weight="900">Você foi escolhido</text>
     <text x="115" y="260" fill="#173f67" font-family="Arial,sans-serif" font-size="56" font-weight="900">para esta missão!</text>
     <g transform="translate(116 295)">

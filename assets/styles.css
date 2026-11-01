@@ -2572,6 +2572,74 @@ body.no-scroll { overflow: hidden; }
 }
 .rsvp-copy { position: relative; z-index: 2; align-self: center; padding-bottom: 28px; text-align: left; }
 .rsvp-logo { display: block; width: 116px; height: auto; margin: 0 0 8px; }
+
+.rsvp-ben-story {
+  position: relative;
+  display: inline-grid;
+  justify-items: center;
+  margin: 0 0 10px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 4.15rem;
+  font-weight: 900;
+  line-height: .8;
+  filter: drop-shadow(0 5px 2px rgba(22,74,111,.15));
+  transform: rotate(-2deg);
+}
+
+.rsvp-ben-word {
+  position: relative;
+  z-index: 2;
+  color: #ffd629;
+  letter-spacing: -.06em;
+  -webkit-text-stroke: .085em #15518f;
+  paint-order: stroke fill;
+  text-shadow: .04em .07em 0 #e9423b;
+}
+
+.rsvp-story-word {
+  position: relative;
+  z-index: 1;
+  min-width: 2.7em;
+  margin-top: -.03em;
+  padding: .18em .28em .12em;
+  color: #ffd629;
+  font-size: .43em;
+  letter-spacing: .08em;
+  line-height: .8;
+  text-align: center;
+  background: #e31830;
+  clip-path: polygon(5% 0, 95% 0, 100% 100%, 0 100%);
+  text-shadow: .03em .05em 0 #9d1525;
+}
+
+.rsvp-music {
+  position: fixed;
+  z-index: 40;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+}
+
+.rsvp-music button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 2px solid rgba(255,255,255,.85);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(18, 68, 109, .9);
+  box-shadow: 0 8px 24px rgba(15, 61, 94, .28);
+  font-weight: 800;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.rsvp-music.needs-tap button { background: #df403b; animation: rsvp-music-pulse 1.8s ease-in-out infinite; }
+.rsvp-music button:focus-visible { outline: 4px solid #ffd947; outline-offset: 3px; }
+
+@keyframes rsvp-music-pulse {
+  50% { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(190, 45, 42, .36); }
+}
 .rsvp-eyebrow {
   margin: 0 0 2px;
   color: #b13730;
@@ -2663,6 +2731,7 @@ body.no-scroll { overflow: hidden; }
   .rsvp-hero { grid-template-columns: minmax(0, 1fr) 136px; align-items: end; min-height: 198px; padding: 15px 9px 0 16px; }
   .rsvp-copy { align-self: center; padding: 0 0 14px; text-align: left; }
   .rsvp-logo { width: 70px; margin: 0 0 5px; }
+  .rsvp-ben-story { margin-bottom: 7px; font-size: 2.7rem; }
   .rsvp-eyebrow { font-size: .52rem; letter-spacing: .1em; }
   .rsvp-hero h1 { flex-wrap: wrap; gap: 7px; font-size: clamp(1.2rem, 5.2vw, 1.55rem); line-height: 1.02; }
   .rsvp-name-blocks { gap: 2px; }
