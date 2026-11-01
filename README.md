@@ -11,6 +11,7 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
 - **Convidados** — lista com criança/adulto, confirmação de presença, parentesco/apelido opcional (ex.: “Vovô Tito”), WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. O parentesco aparece na busca e na saudação do convite. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros e busca por nome. Importação de lista em `.txt`, `.csv` ou `.json`.
 - **Página de confirmação** — página responsiva acessada pelo link enviado junto ao convite oficial. Mostra um resumo da festa e leva o convidado diretamente à busca do nome e aos botões **Vou comemorar** / **Não poderei ir**, com recado opcional. A página respeita a preferência do aparelho por menos movimento e não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, estrelas sobem pela tela em comemoração.
+- **Convite oficial animado** — experiência separada em `convite-animado.html`, com abertura no quarto do Andy, entrada dos personagens, envelope animado, música iniciada após o primeiro toque e botão que leva à página de confirmação.
 - **Limite de convidados** — os cards de **Adultos** e **Crianças** mostram a ocupação do limite: verde até 75%, amarelo de 76% a 95% e vermelho acima de 95%. O card **Confirmados** mostra o percentual de presença confirmada em verde. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Ajustes → Limite de convidados**.
 - **Resumo em PDF** — em **💰 Orçamento → 📄 Exportar resumo PDF**, abra a impressão e escolha **Salvar como PDF** para gerar um relatório com dados da festa, resumo financeiro, itens do checklist/orçamento e convidados separados por adultos e crianças.
 - **Olho dos valores** — o botão **👁️ Valores** no topo esconde (desfoca) todos os valores da página com um clique; a escolha fica salva no aparelho. Na aba **Convidados** os valores nem aparecem: ela é só para configurações e informações da lista.
@@ -141,7 +142,7 @@ O arquivo `convidados.json` na raiz já contém a lista atual (69 pessoas: 50 ad
 
 ## Convite digital e confirmação de presença (RSVP)
 
-A página de confirmação fica em **`convite.html`** (ex.: `https://andersonfabiao.github.io/festa-ben/convite.html`). O link deve ser incluído no convite oficial enviado pelo WhatsApp. A página mostra a data, a hora e o local, e deixa o convidado confirmar ou recusar com um recado opcional.
+O convite oficial fica em **`convite-animado.html`** (ex.: `https://andersonfabiao.github.io/festa-ben/convite-animado.html`). Esse é o link indicado para compartilhar pelo WhatsApp. Depois da animação, o botão **Confirmar presença** abre **`convite.html`**, que mostra a data, a hora e o local e permite ao convidado confirmar ou recusar com um recado opcional.
 
 O link também inclui título, descrição e uma imagem horizontal própria (`assets/convite-ben-5-preview.png`) para a prévia do WhatsApp e de outras redes. Depois de publicar uma nova versão, o WhatsApp pode manter a imagem anterior em cache por algum tempo.
 
@@ -222,11 +223,14 @@ Sem essa URL, o convite abre normalmente, mas os botões ficam desativados e apa
 
 ```
 index.html            página principal (checklist, orçamento, convidados)
-convite.html          convite digital com confirmação de presença
+convite-animado.html  convite oficial animado para compartilhar pelo WhatsApp
+convite.html          página de confirmação de presença
 assets/styles.css     visual (tema Toy Story, responsivo, impressão e convite)
+assets/convite-animado.css visual e animações do convite oficial
 assets/app.js         lógica, dados locais e sincronização GitHub
 assets/guest-id.js    ID estável do convidado (usado pelo app e pelo convite)
 assets/convite.js     carrega o convite e envia a resposta ao Apps Script
+assets/convite-animado.js controla cenas, áudio e repetição do convite
 apps-script/rsvp.gs   script do Google que grava a resposta no data.json
 apps-script/README.md passo a passo do Apps Script
 data.json             criado automaticamente na primeira sincronização

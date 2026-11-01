@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Uma aventura especial · Ben faz 5!</title>
+  <meta name="description" content="Abra o convite animado do aniversário de 5 anos do Ben e venha viver essa aventura com a gente!" />
+  <meta name="theme-color" content="#55b9e8" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:url" content="https://andersonfabiao.github.io/festa-ben/convite-animado.html" />
+  <meta property="og:title" content="Você foi chamado para uma aventura! · Ben faz 5" />
+  <meta property="og:description" content="Toque para abrir o convite animado do Ben." />
+  <meta property="og:image" content="https://andersonfabiao.github.io/festa-ben/assets/convite-animado-preview.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Convite animado Toy Story do aniversário de 5 anos do Ben" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Uma aventura especial · Ben faz 5!" />
+  <meta name="twitter:description" content="Toque para abrir o convite animado do Ben." />
+  <meta name="twitter:image" content="https://andersonfabiao.github.io/festa-ben/assets/convite-animado-preview.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=20261101b" />
+</head>
+<body>
+  <a class="skip-link" href="#finalInvite">Pular para o convite</a>
+
+  <div class="experience" id="experience">
+    <div class="room" aria-hidden="true">
+      <div class="wall-stars"></div>
+      <div class="room-cloud cloud-one"></div>
+      <div class="room-cloud cloud-two"></div>
+      <div class="room-cloud cloud-three"></div>
+      <div class="window">
+        <span class="window-sky"></span>
+        <span class="window-frame frame-v"></span>
+        <span class="window-frame frame-h"></span>
+      </div>
+      <div class="shelf">
+        <span class="book book-one"></span>
+        <span class="book book-two"></span>
+        <span class="book book-three"></span>
+        <span class="rocket">🚀</span>
+      </div>
+      <div class="baseboard"></div>
+      <div class="floor"></div>
+    </div>
+
+    <div class="opening-screen" id="openingScreen">
+      <div class="opening-card">
+        <img class="opening-logo" src="assets/pngall/logo-toy-story.png" alt="Toy Story" />
+        <p class="eyebrow">Uma mensagem especial chegou para você</p>
+        <h1>Prepare-se para uma<br /><strong>grande aventura!</strong></h1>
+        <button class="start-button" id="startButton" type="button">
+          <span class="start-icon" aria-hidden="true">▶</span>
+          <span>Abrir convite</span>
+        </button>
+        <p class="sound-hint"><span aria-hidden="true">♫</span> Ative o som para entrar na brincadeira</p>
+      </div>
+    </div>
+
+    <main class="stage" id="stage" aria-live="polite">
+      <div class="stage-controls" aria-label="Controles do convite">
+        <button class="round-control" id="soundButton" type="button" aria-label="Desativar som" aria-pressed="false">♫</button>
+        <button class="round-control" id="replayButton" type="button" aria-label="Repetir animação">↻</button>
+        <button class="skip-animation" id="skipButton" type="button">Pular animação</button>
+      </div>
+
+      <section class="intro-scene" id="introScene" aria-label="Abertura do convite">
+        <div class="intro-copy">
+          <p>No quarto do Andy...</p>
+          <h2>os brinquedos receberam<br />uma nova missão!</h2>
+        </div>
+        <img class="hero-characters" src="assets/pngall/personagens-toy-story.png" alt="Rex, Jessie, Buzz, Woody e Porquinho" />
+        <div class="character-orbit orbit-alien">
+          <img src="assets/personagens/alienigenas.jpg" alt="Alienígenas" />
+        </div>
+        <div class="character-orbit orbit-forky">
+          <img src="assets/personagens/garfinho.jpg" alt="Garfinho" />
+        </div>
+        <div class="character-orbit orbit-potato">
+          <img src="assets/personagens/sr-cabeca-de-batata.jpg" alt="Senhor Cabeça de Batata" />
+        </div>
+      </section>
+
+      <section class="envelope-scene" id="envelopeScene" aria-label="O convite está chegando">
+        <div class="trail-stars" aria-hidden="true">
+          <span>★</span><span>✦</span><span>★</span><span>✧</span>
+        </div>
+        <div class="envelope" id="envelope" aria-hidden="true">
+          <div class="envelope-back"></div>
+          <div class="envelope-letter-preview">
+            <span>Uma aventura espera por você!</span>
+          </div>
+          <div class="envelope-front"></div>
+          <div class="envelope-flap"></div>
+          <div class="envelope-seal">B</div>
+        </div>
+      </section>
+
+      <section class="final-invite" id="finalInvite" tabindex="-1" aria-label="Convite do aniversário do Ben">
+        <div class="invite-card">
+          <span class="tape tape-left" aria-hidden="true"></span>
+          <span class="tape tape-right" aria-hidden="true"></span>
+
+          <header class="invite-heading">
+            <img src="assets/pngall/logo-toy-story.png" alt="Toy Story" />
+            <p>Você foi escolhido para esta missão!</p>
+            <h2>
+              <span class="name-blocks" role="img" aria-label="Ben">
+                <span>B</span><span>E</span><span>N</span>
+              </span>
+              <span class="age-copy">faz <strong>5</strong> anos!</span>
+            </h2>
+          </header>
+
+          <p class="invite-message">Venha brincar, sorrir e viver uma aventura inesquecível com a gente.</p>
+
+          <div class="event-details">
+            <div><span aria-hidden="true">📅</span><strong>09 de janeiro de 2027</strong><small>Sábado</small></div>
+            <div><span aria-hidden="true">🕕</span><strong>18h</strong><small>Hora da missão</small></div>
+            <div class="location"><span aria-hidden="true">📍</span><strong>Enjoy Kids</strong><small>Liv Mall Shopping</small></div>
+          </div>
+
+          <a class="confirm-button" href="convite.html">
+            <span>Confirmar presença</span>
+            <span aria-hidden="true">→</span>
+          </a>
+          <p class="confirm-note">Clique no botão para encontrar seu nome e responder.</p>
+
+          <img class="card-characters" src="assets/pngall/personagens-toy-story.png" alt="" aria-hidden="true" />
+          <span class="card-star star-a" aria-hidden="true">★</span>
+          <span class="card-star star-b" aria-hidden="true">★</span>
+          <span class="card-star star-c" aria-hidden="true">✦</span>
+        </div>
+      </section>
+    </main>
+
+    <audio id="themeAudio" preload="metadata">
+      <source src="assets/audio/amigo-estou-aqui.mp3" type="audio/mpeg" />
+    </audio>
+  </div>
+
+  <noscript>
+    <div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div>
+  </noscript>
+  <script src="assets/convite-animado.js?v=20261101b"></script>
+</body>
+</html>
