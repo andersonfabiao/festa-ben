@@ -291,8 +291,8 @@
     return {
       name: "Ben",
       age: 5,
-      date: "2026-12-05",
-      time: "16:00",
+      date: "2027-01-09",
+      time: "18:00",
       location: PARTY_LOCATION,
       budget: 7000,
       theme: "Toy Story",
@@ -381,7 +381,7 @@
     meta.name = String(meta.name || "Ben").slice(0, 40);
     meta.age = Math.min(99, Math.max(1, parseInt(meta.age, 10) || 5));
     meta.date = /^\d{4}-\d{2}-\d{2}$/.test(meta.date) ? meta.date : base.date;
-    meta.time = /^\d{2}:\d{2}$/.test(meta.time) ? meta.time : "16:00";
+    meta.time = /^\d{2}:\d{2}$/.test(meta.time) ? meta.time : "18:00";
     meta.location = String(meta.location || "");
     if (["enjoy livmall", "buffet alegria — salão 2"].includes(meta.location.trim().toLowerCase())) {
       meta.location = PARTY_LOCATION;
@@ -631,7 +631,7 @@
     const meta = state.meta;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(meta.date)) return null;
     const [y, m, d] = meta.date.split("-").map(Number);
-    const [hh, mm] = (meta.time || "16:00").split(":").map(Number);
+    const [hh, mm] = (meta.time || "18:00").split(":").map(Number);
     return new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
   }
 
@@ -2016,7 +2016,7 @@
     meta.name = $("#setName").value.trim() || "Ben";
     meta.age = Math.min(99, Math.max(1, parseInt($("#setAge").value, 10) || 5));
     meta.date = $("#setDate").value || meta.date;
-    meta.time = $("#setTime").value || "16:00";
+    meta.time = $("#setTime").value || "18:00";
     meta.location = $("#setLocation").value.trim();
     meta.mapsUrl = safeUrl($("#setMapsUrl").value.trim());
     meta.budget = parseMoney($("#setBudget").value);

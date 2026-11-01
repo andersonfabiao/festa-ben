@@ -18,8 +18,8 @@
   const FALLBACK_META = {
     name: "Ben",
     age: 5,
-    date: "2026-12-05",
-    time: "16:00",
+    date: "2027-01-09",
+    time: "18:00",
     location: "Enjoy Kids, Liv Mall Shopping — Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005",
     theme: "Toy Story",
     rsvpUrl: "",
@@ -54,6 +54,12 @@
       year: "numeric",
     });
     return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function displayTime(value) {
+    const match = /^(\d{2}):(\d{2})$/.exec(String(value || ""));
+    if (!match) return value;
+    return match[2] === "00" ? match[1] + "h" : match[1] + "h" + match[2];
   }
 
   function initials(name) {
@@ -213,7 +219,7 @@
     const chips = [];
     chips.push('<span class="invite-chip">📅 ' + esc(longDate(meta.date)) + "</span>");
     if (meta.time) {
-      chips.push('<span class="invite-chip">🕒 ' + esc(meta.time.replace(":", "h")) + "</span>");
+      chips.push('<span class="invite-chip">🕒 ' + esc(displayTime(meta.time)) + "</span>");
     }
     const map = mapsLink();
     const place = meta.location || (map ? "Ver no mapa" : "Local a definir");
@@ -245,7 +251,7 @@
     $("#inviteContent").innerHTML =
       '<div class="invite-picker">' +
         '<label class="field-label invite-search">🔎' +
-          '<input id="guestSearch" class="input" type="search" placeholder="Digite seu nome…" autocomplete="off" />' +
+          '<input id="guestSearch" class="input" type="search" placeholder="Digite seu nome…" autocomplete="off" aria-label="Digite seu nome para confirmar presença" />' +
         "</label>" +
         '<div id="guestPickList" class="invite-guest-list"></div>' +
         '<p class="invite-hint">Não encontrou seu nome? Fale com os anfitriões. 💬</p>' +
@@ -255,7 +261,6 @@
     const search = $("#guestSearch");
     if (search) {
       search.addEventListener("input", () => renderPickList(search.value));
-      search.focus();
     }
   }
 
