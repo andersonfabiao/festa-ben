@@ -219,7 +219,7 @@
     $("#inviteName").textContent = meta.name;
     $("#inviteAge").textContent = meta.age;
     $("#inviteAgeText").textContent = meta.age;
-    document.title = "Convite · " + meta.name + " faz " + meta.age + "!";
+    document.title = "Confirmação de presença · " + meta.name + " faz " + meta.age + "!";
 
     const chips = [];
     chips.push('<span class="invite-chip">📅 ' + esc(longDate(meta.date)) + "</span>");

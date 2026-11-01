@@ -1,73 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
-  <title id="title">Ben faz 5 anos no quarto do Andy</title>
-  <desc id="desc">Convite inspirado no quarto do Andy para o aniversário do Ben em 9 de janeiro de 2027, às 18 horas.</desc>
+  <title id="title">Confirmação de presença — Ben faz 5 anos</title>
+  <desc id="desc">Página para confirmar presença no aniversário do Ben.</desc>
   <defs>
-    <pattern id="clouds" width="260" height="165" patternUnits="userSpaceOnUse">
-      <g fill="#fff" fill-opacity=".84">
-        <ellipse cx="78" cy="92" rx="61" ry="23"/>
-        <circle cx="50" cy="78" r="28"/>
-        <circle cx="85" cy="68" r="38"/>
-        <circle cx="118" cy="82" r="24"/>
-      </g>
-    </pattern>
-    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
-      <stop stop-color="#d89b53"/><stop offset="1" stop-color="#a55d28"/>
-    </linearGradient>
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
-      <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#31546b" flood-opacity=".3"/>
-    </filter>
-    <clipPath id="portrait"><circle cx="34" cy="34" r="31"/></clipPath>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#58bcea"/><stop offset="1" stop-color="#bceaff"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#14547e" flood-opacity=".24"/></filter>
   </defs>
-
-  <rect width="1200" height="630" fill="#6cc5ef"/>
-  <rect width="1200" height="500" fill="url(#clouds)"/>
-  <rect y="500" width="1200" height="130" fill="url(#floor)"/>
-  <path d="M0 510h1200" stroke="#fff0c9" stroke-width="20"/>
-  <path d="M0 521h1200" stroke="#7e411d" stroke-width="7" opacity=".7"/>
-  <g opacity=".3" stroke="#75401f" stroke-width="3">
-    <path d="M180 520l-20 110M430 520l8 110M720 520l-12 110M1010 520l20 110"/>
+  <rect width="1200" height="630" fill="url(#sky)"/>
+  <g fill="#fff" opacity=".62">
+    <ellipse cx="110" cy="135" rx="84" ry="28"/><circle cx="75" cy="112" r="39"/><circle cx="124" cy="99" r="52"/><circle cx="172" cy="119" r="33"/>
+    <ellipse cx="1088" cy="465" rx="92" ry="31"/><circle cx="1047" cy="440" r="43"/><circle cx="1102" cy="425" r="56"/><circle cx="1152" cy="448" r="35"/>
   </g>
+  <g fill="#ffe56d"><path d="M1064 90l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/><path d="M98 505l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/></g>
 
-  <g transform="translate(441 0)">
-    <path d="M0 0h53L27 57z" fill="#e8453c"/><path d="M53 0h53L80 57z" fill="#ffd13f"/>
-    <path d="M106 0h53l-26 57z" fill="#3b83d3"/><path d="M159 0h53l-26 57z" fill="#e8453c"/>
-    <path d="M212 0h53l-26 57z" fill="#ffd13f"/><path d="M265 0h53l-26 57z" fill="#3b83d3"/>
-  </g>
-
-  <g transform="translate(386 56) rotate(-1)">
-    <rect width="428" height="42" rx="6" fill="#fff5c8" stroke="#c79a54" stroke-width="2"/>
-    <text x="214" y="27" fill="#72501d" font-family="Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="3" text-anchor="middle">UM RECADO NO QUARTO DO ANDY</text>
-  </g>
-
-  <text x="600" y="139" fill="#174f80" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="4" text-anchor="middle">OS BRINQUEDOS ESTÃO PREPARANDO UMA FESTA</text>
-  <text x="600" y="281" fill="#ffd13f" stroke="#d93f35" stroke-width="5" paint-order="stroke" font-family="Arial Rounded MT Bold, Arial, sans-serif" font-size="148" font-weight="900" text-anchor="middle" filter="url(#shadow)">BEN</text>
-  <text x="600" y="335" fill="#174f80" font-family="Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="2" text-anchor="middle">FAZ <tspan fill="#e8453c" font-size="58">5</tspan> ANOS</text>
-  <text x="600" y="376" fill="#174f80" font-family="Arial, sans-serif" font-size="24" font-weight="700" text-anchor="middle">E você faz parte dessa brincadeira!</text>
-
-  <g transform="translate(358 395)" filter="url(#shadow)">
-    <g transform="translate(0 0)"><image href="personagens/rex.jpg" width="68" height="68" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/><circle cx="34" cy="34" r="32" fill="none" stroke="#fff" stroke-width="3"/></g>
-    <g transform="translate(70 0)"><image href="personagens/sr-cabeca-de-batata.jpg" width="68" height="68" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/><circle cx="34" cy="34" r="32" fill="none" stroke="#fff" stroke-width="3"/></g>
-    <g transform="translate(140 -8)"><image href="personagens/woody.jpg" width="68" height="68" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/><circle cx="34" cy="34" r="32" fill="none" stroke="#ffd13f" stroke-width="4"/></g>
-    <g transform="translate(210 -8)"><image href="personagens/buzz.jpg" width="68" height="68" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/><circle cx="34" cy="34" r="32" fill="none" stroke="#ffd13f" stroke-width="4"/></g>
-    <g transform="translate(280 -8)"><image href="personagens/jessie.jpg" width="68" height="68" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/><circle cx="34" cy="34" r="32" fill="none" stroke="#ffd13f" stroke-width="4"/></g>
-    <g transform="translate(350 0)"><image href="personagens/alienigenas.jpg" width="68" height="68" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/><circle cx="34" cy="34" r="32" fill="none" stroke="#fff" stroke-width="3"/></g>
-    <g transform="translate(420 0)"><image href="personagens/garfinho.jpg" width="68" height="68" preserveAspectRatio="xMidYMid slice" clip-path="url(#portrait)"/><circle cx="34" cy="34" r="32" fill="none" stroke="#fff" stroke-width="3"/></g>
-  </g>
-  <rect x="335" y="464" width="530" height="14" rx="4" fill="#b86b2e"/>
-  <rect x="335" y="476" width="530" height="8" rx="4" fill="#75401f"/>
-
-  <g transform="translate(43 538)">
-    <circle cx="34" cy="34" r="31" fill="#ffd641" stroke="#fff" stroke-width="5"/>
-    <path d="M13 14l42 42M55 14L13 56" stroke="#3c86d8" stroke-width="17"/>
-    <circle cx="34" cy="34" r="10" fill="#e83d3a"/>
-  </g>
-  <g transform="translate(1002 548) rotate(-4)"><rect width="48" height="48" rx="5" fill="#e8453c" stroke="#fff" stroke-width="3"/><text x="24" y="35" fill="#fff" font-family="Arial" font-size="29" font-weight="900" text-anchor="middle">B</text></g>
-  <g transform="translate(1052 542) rotate(3)"><rect width="48" height="48" rx="5" fill="#3b83d3" stroke="#fff" stroke-width="3"/><text x="24" y="35" fill="#fff" font-family="Arial" font-size="29" font-weight="900" text-anchor="middle">E</text></g>
-  <g transform="translate(1102 548) rotate(-2)"><rect width="48" height="48" rx="5" fill="#e5ad1f" stroke="#fff" stroke-width="3"/><text x="24" y="35" fill="#fff" font-family="Arial" font-size="29" font-weight="900" text-anchor="middle">N</text></g>
-
-  <g transform="translate(326 538)">
-    <rect width="548" height="64" rx="18" fill="#fff" opacity=".97"/>
-    <text x="274" y="26" fill="#17365d" font-family="Arial, sans-serif" font-size="17" font-weight="700" text-anchor="middle">9 DE JANEIRO DE 2027  •  18H</text>
-    <text x="274" y="49" fill="#315b82" font-family="Arial, sans-serif" font-size="16" text-anchor="middle">ENJOY — LIV MALL SHOPPING</text>
+  <g transform="translate(105 75)" filter="url(#shadow)">
+    <rect width="990" height="480" rx="38" fill="#fff"/>
+    <path d="M0 440h990v40H0z" fill="#f3f8fc"/>
+    <path d="M0 440h990" stroke="#e4edf4" stroke-width="2"/>
+    <g transform="translate(56 46)">
+      <image href="pngall/logo-toy-story.png" width="118" height="87" preserveAspectRatio="xMidYMid meet"/>
+      <text x="0" y="135" fill="#b13730" font-family="Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="4">CONFIRMAÇÃO DE PRESENÇA</text>
+      <text x="0" y="218" fill="#123a66" font-family="Arial Rounded MT Bold, Arial, sans-serif" font-size="56" font-weight="900">Ben faz <tspan fill="#e8453c">5</tspan> anos!</text>
+      <text x="0" y="264" fill="#345a7d" font-family="Arial, sans-serif" font-size="20" font-weight="600">Encontre seu nome e confirme se você vai.</text>
+      <g transform="translate(0 305)">
+        <rect width="405" height="68" rx="15" fill="#edf6fc" stroke="#d3e5f2" stroke-width="2"/>
+        <text x="202" y="28" fill="#17365d" font-family="Arial, sans-serif" font-size="17" font-weight="700" text-anchor="middle">9 DE JANEIRO DE 2027  •  18H</text>
+        <text x="202" y="51" fill="#315b82" font-family="Arial, sans-serif" font-size="16" text-anchor="middle">ENJOY — LIV MALL SHOPPING</text>
+      </g>
+    </g>
+    <g transform="translate(598 86)">
+      <circle cx="170" cy="180" r="170" fill="#e7f7ff"/>
+      <image href="pngall/personagens-toy-story.png" x="-5" y="42" width="355" height="285" preserveAspectRatio="xMidYMid meet"/>
+      <g transform="translate(289 -8) rotate(7)">
+        <circle cx="38" cy="38" r="37" fill="#ffcf3d" stroke="#fff" stroke-width="4"/>
+        <text x="38" y="38" fill="#7a4b00" font-family="Arial, sans-serif" font-size="29" font-weight="900" text-anchor="middle">5</text>
+        <text x="38" y="55" fill="#7a4b00" font-family="Arial, sans-serif" font-size="10" font-weight="800" letter-spacing="1" text-anchor="middle">ANOS</text>
+      </g>
+    </g>
+    <text x="495" y="465" fill="#537089" font-family="Arial, sans-serif" font-size="17" font-weight="700" text-anchor="middle">Resposta rápida e segura pelo link do convite</text>
   </g>
 </svg>
