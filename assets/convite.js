@@ -69,6 +69,10 @@
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  function displayGuestName(guest) {
+    return [String(guest.relation || "").trim(), guest.name].filter(Boolean).join(" ");
+  }
+
   function timeAgo(iso) {
     if (!iso) return "";
     const diff = Date.now() - new Date(iso).getTime();
@@ -189,6 +193,7 @@
             return {
               key,
               name,
+              relation: String(g.relation || g.parentesco || g.relationship || "").trim().slice(0, 32),
               type,
               status: GUEST_STATUS[g.status] ? g.status : "pending",
               guardians: Array.isArray(g.guardians) ? g.guardians.map(String) : [],
@@ -277,10 +282,10 @@
     }
 
     const matches = guests
-      .filter((g) => norm(g.name).includes(q))
+      .filter((g) => norm(displayGuestName(g)).includes(q))
       .sort((a, b) => {
-        const aStarts = norm(a.name).startsWith(q) ? 0 : 1;
-        const bStarts = norm(b.name).startsWith(q) ? 0 : 1;
+        const aStarts = norm(displayGuestName(a)).startsWith(q) ? 0 : 1;
+        const bStarts = norm(displayGuestName(b)).startsWith(q) ? 0 : 1;
         if (aStarts !== bStarts) return aStarts - bStarts;
         return a.name.localeCompare(b.name, "pt-BR");
       })
@@ -302,7 +307,7 @@
                 (g) =>
                   '<button class="invite-guest-btn" type="button" data-key="' + esc(g.key) + '">' +
                     '<span class="invite-guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</span>" +
-                    '<span class="invite-guest-name">' + esc(g.name) + "</span>" +
+                    '<span class="invite-guest-name">' + esc(displayGuestName(g)) + "</span>" +
                   "</button>"
               )
               .join("") +
@@ -341,7 +346,7 @@
 
   function renderRsvp(guest) {
     current = guest;
-    $("#inviteSub").textContent = "Olá, " + guest.name + "! Confirme sua presença.";
+    $("#inviteSub").textContent = "Olá, " + displayGuestName(guest) + "! Confirme sua presença.";
 
     const configured = !!meta.rsvpUrl;
     const status = GUEST_STATUS[guest.status] || GUEST_STATUS.pending;
@@ -369,9 +374,9 @@
               (child) =>
                 '<label class="invite-kid-row">' +
                   '<span class="invite-guest-avatar child">' + esc(initials(child.name)) + "</span>" +
-                  '<span class="invite-kid-name">' + esc(child.name) + "</span>" +
+                  '<span class="invite-kid-name">' + esc(displayGuestName(child)) + "</span>" +
                   '<select class="input invite-kid-select" data-child-status="' + esc(child.key) +
-                    '" aria-label="Presença de ' + esc(child.name) + '">' +
+                    '" aria-label="Presença de ' + esc(displayGuestName(child)) + '">' +
                     childStatusOptions(child.status) +
                   "</select>" +
                 "</label>"
@@ -384,7 +389,7 @@
     if (guest.type === "child" && Array.isArray(guest.guardians) && guest.guardians.length) {
       const names = guests
         .filter((a) => a.type === "adult" && guest.guardians.includes(a.key))
-        .map((a) => a.name);
+        .map((a) => displayGuestName(a));
       if (names.length) {
         guardianNote =
           '<p class="invite-hint">Responsável: <strong>' + esc(names.join(", ")) + "</strong></p>";
@@ -393,7 +398,7 @@
 
     $("#inviteContent").innerHTML =
       '<div class="invite-rsvp">' +
-        '<p class="invite-hello">Olá, <strong>' + esc(guest.name) + "</strong>! 🎉</p>" +
+        '<p class="invite-hello">Olá, <strong>' + esc(displayGuestName(guest)) + "</strong>! 🎉</p>" +
         answer +
         guardianNote +
         '<p class="invite-hint">' + hint + "</p>" +
@@ -420,7 +425,7 @@
         (meta.inviteMode === "links"
           ? ""
           : '<button class="invite-link-btn" type="button" data-change-name>Não sou ' +
-            esc(guest.name) + " · escolher outro nome</button>") +
+            esc(displayGuestName(guest)) + " · escolher outro nome</button>") +
       "</div>";
   }
 

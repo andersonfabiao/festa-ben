@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261108" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261109" />
 </head>
 <body>
   <header class="hero">
@@ -28,9 +28,7 @@
 
     <div class="hero-inner">
       <div class="hero-top">
-        <div class="badge-age" aria-hidden="true"><span id="badgeAge">5</span><small>anos</small></div>
         <div class="hero-copy">
-          <p class="eyebrow">Uma aventura Toy Story</p>
           <h1><span id="heroName" class="hero-name-blocks" aria-label="Ben"></span> faz <span class="hl" id="heroAge">5</span>!</h1>
           <p class="hero-sub">Checklist da festa, orçamento e convidados em um só lugar.</p>
         </div>
@@ -87,6 +85,7 @@
           <option value="done">Concluído</option>
         </select>
         <label class="check-inline"><input type="checkbox" id="pendingOnly" /> Só pendentes</label>
+        <button class="btn btn-ghost" id="editStageNamesBtn" type="button">✏️ Editar nomes das etapas</button>
         <button class="btn btn-primary" id="addItemBtn" type="button">＋ Novo item</button>
       </div>
 
@@ -300,7 +299,7 @@
         </div>
         <p class="hint">A aba Convidados mostra uma barra de ocupação de cada limite. Ao chegar no total, a barra fica vermelha.</p>
 
-        <h3 class="form-section">Nomes das etapas do checklist</h3>
+        <h3 class="form-section" id="stageNamesTitle">Nomes das etapas do checklist</h3>
         <p class="hint">Personalize os títulos das etapas. Os itens continuam vinculados às mesmas etapas.</p>
         <div id="stageNamesFields" class="stage-names-grid"></div>
 
@@ -438,6 +437,9 @@
         <label class="field-label">Nome
           <input id="guestEditName" class="input" required maxlength="80" autocomplete="off" />
         </label>
+        <label class="field-label">Parentesco ou como é conhecido (opcional)
+          <input id="guestEditRelation" class="input" maxlength="32" placeholder="Ex.: Vovô, Tia, Padrinho" autocomplete="off" />
+        </label>
         <div class="grid-2">
           <label class="field-label">Tipo
             <select id="guestEditType" class="input">
@@ -492,6 +494,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261108"></script>
+  <script src="assets/app.js?v=20261109"></script>
 </body>
 </html>

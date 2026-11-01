@@ -10,7 +10,7 @@
 
   const STORAGE_KEY = "ben-toy-story-checklist-v1";
   const CLOUD_KEY = "ben-toy-story-cloud-v1";
-  const COLLAPSE_KEY = "ben-toy-story-collapsed-v1";
+  const COLLAPSE_KEY = "ben-toy-story-collapsed-v2";
 
   const STAGES = [
     { id: "planejamento", name: "Planejamento", icon: "📋", color: "#2f80ed" },
@@ -351,6 +351,7 @@
       type,
       status,
       phone: normalizePhone(g.phone || g.whatsapp || g.tel),
+      relation: String(g.relation || g.parentesco || g.relationship || "").trim().slice(0, 32),
       notes: String(g.notes || g.observacoes || "").slice(0, 500),
       guardians: Array.isArray(g.guardians) ? g.guardians.map(String) : [],
       rsvpAt,
@@ -580,7 +581,6 @@
       "</span>"
     ).join("");
     $("#heroAge").textContent = meta.age;
-    $("#badgeAge").textContent = meta.age;
     $("#footerName").textContent = meta.name;
     document.title = meta.name + " faz " + meta.age + "! · Checklist Toy Story";
 
@@ -1096,6 +1096,10 @@
       .join("");
   }
 
+  function displayGuestName(guest) {
+    return [String(guest.relation || "").trim(), guest.name].filter(Boolean).join(" ");
+  }
+
   function guestRowHtml(g) {
     const guests = state.guests;
     const gs = GUEST_STATUS[g.status] || GUEST_STATUS.pending;
@@ -1129,17 +1133,17 @@
     const guardianLine = guardians.length
       ? '<div class="guest-links">👨‍👩‍👧 ' +
         (guardians.length > 1 ? "Responsáveis: " : "Responsável: ") +
-        guardians.map((a) => esc(a.name)).join(", ") + "</div>"
+        guardians.map((a) => esc(displayGuestName(a))).join(", ") + "</div>"
       : "";
     const kidsLine = kids.length
       ? '<div class="guest-links">🧒 Crianças: ' +
-        kids.map((c) => esc(c.name)).join(", ") + "</div>"
+        kids.map((c) => esc(displayGuestName(c))).join(", ") + "</div>"
       : "";
 
     return (
       '<div class="guest-row">' +
         '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
-        '<div class="guest-main"><div class="guest-name">' + esc(g.name) + "</div>" +
+        '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + "</div>" +
           '<div class="guest-type">' + (g.type === "child" ? "Criança" : "Adulto") +
           " · " + gs.label + "</div>" + phone + notes + guardianLine + kidsLine +
           rsvpNote + rsvpMsg + "</div>" +
@@ -1173,12 +1177,13 @@
       const safeMax = Math.max(1, max);
       const now = Math.max(0, Math.min(count, safeMax));
       const label = kind === "confirmed" ? "Percentual de confirmações" : "Ocupação do limite";
+      const tone = pct > 95 ? "high" : pct >= 76 ? "mid" : "low";
       return (
         '<div class="stat-progress-row"><div class="stat-progress" role="progressbar" aria-label="' + label +
           '" aria-valuemin="0" aria-valuemax="' + safeMax + '" aria-valuenow="' + now + '" aria-valuetext="' + pct + '%">' +
-          '<span class="stat-progress-fill ' + kind + '" style="width:' + width + '%"></span>' +
+          '<span class="stat-progress-fill ' + kind + (kind === "limit" ? " " + tone : "") + '" style="width:' + width + '%"></span>' +
         "</div>" +
-        '<span class="stat-progress-pct' + (kind === "confirmed" ? " positive" : pct >= 100 ? " limit-reached" : "") + '">' +
+        '<span class="stat-progress-pct' + (kind === "confirmed" ? " positive" : " limit-" + tone) + '">' +
           pct + "%" +
         "</span></div>"
       );
@@ -1256,7 +1261,7 @@
       } else if (guestFilter !== "all") {
         if (g.status !== guestFilter) return false;
       }
-      if (q && !norm(g.name).includes(q)) return false;
+      if (q && !norm(displayGuestName(g)).includes(q)) return false;
       return true;
     });
 
@@ -1838,6 +1843,7 @@
     const draft = guest || {
       id: "",
       name: "",
+      relation: "",
       type: "adult",
       status: "pending",
       phone: "",
@@ -1847,6 +1853,7 @@
 
     $("#guestEditId").value = guest ? guest.id : "";
     $("#guestEditName").value = draft.name;
+    $("#guestEditRelation").value = draft.relation || "";
     $("#guestEditType").value = draft.type;
     $("#guestEditStatus").value = draft.status;
     $("#guestEditPhone").value = draft.phone || "";
@@ -1891,6 +1898,7 @@
     }
 
     guest.name = name;
+    guest.relation = String($("#guestEditRelation").value || "").trim().slice(0, 32);
     guest.type = type;
     guest.status = status;
     guest.phone = normalizePhone($("#guestEditPhone").value);
@@ -1974,7 +1982,7 @@
     return { owner: match[1], repo };
   }
 
-  function openSettings() {
+  function openSettings(focusStageNames) {
     const meta = state.meta;
     const guess = guessRepoFromHost();
     $("#setName").value = meta.name;
@@ -2017,6 +2025,12 @@
 
     $("#cloudConfigState").textContent = "";
     openModal($("#settingsModal"));
+    if (focusStageNames) {
+      requestAnimationFrame(() => {
+        $("#stageNamesTitle").scrollIntoView({ behavior: "smooth", block: "center" });
+        $("[data-stage-name]").focus({ preventScroll: true });
+      });
+    }
   }
 
   function readCloudForm() {
@@ -2269,6 +2283,7 @@
               type: parseGuestType(o.type || o.tipo, "adult"),
               status: parseGuestStatus(o.status || o.confirmacao),
               phone: o.phone || o.whatsapp || o.tel || "",
+              relation: o.relation || o.parentesco || o.relationship || "",
               notes: o.notes || o.observacoes || "",
               guardians: Array.isArray(o.guardians) ? o.guardians.map(String) : [],
               rsvpAt: o.rsvpAt || "",
@@ -2510,7 +2525,8 @@
     $("#statusFilter").addEventListener("change", renderChecklist);
     $("#pendingOnly").addEventListener("change", renderChecklist);
     $("#addItemBtn").addEventListener("click", () => openItemModal());
-    $("#settingsBtn").addEventListener("click", openSettings);
+    $("#settingsBtn").addEventListener("click", () => openSettings());
+    $("#editStageNamesBtn").addEventListener("click", () => openSettings(true));
     $("#heroEditBtn").addEventListener("click", openSettings);
     $("#settingsGuestsBtn").addEventListener("click", openSettings);
 
