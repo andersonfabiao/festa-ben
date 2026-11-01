@@ -1441,6 +1441,111 @@ body.no-scroll { overflow: hidden; }
 .copy-field { display: flex; gap: 8px; align-items: center; }
 .copy-field .input { flex: 1 1 auto; min-width: 0; }
 
+/* ---------- Aba Convite ---------- */
+
+.invite-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.invite-link-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px 14px;
+  padding: 18px;
+  background: linear-gradient(160deg, #ffffff 0%, #f5fbff 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: transform .35s var(--motion-ios), box-shadow .35s ease;
+}
+.invite-link-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.invite-link-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #ffe38a, #ffc93c);
+  box-shadow: 0 5px 0 rgba(217, 154, 0, .5);
+  font-size: 1.35rem;
+}
+
+.invite-link-body { min-width: 0; }
+.invite-link-body h3 { font-size: 1.12rem; margin-bottom: 3px; }
+.invite-link-body p { margin: 0 0 10px; font-size: .82rem; color: var(--muted); line-height: 1.45; }
+.invite-link-body .input { font-size: .78rem; color: #42506b; background: #f7fbff; }
+
+.invite-link-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.invite-link-actions .btn { flex: 1 1 auto; }
+.invite-link-actions .btn-primary { flex: 1.4 1 auto; }
+
+.invite-editor .card-head { margin-bottom: 16px; }
+
+.invite-preview {
+  margin: 6px 0 16px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px dashed #b9d9f3;
+  background: linear-gradient(180deg, #eaf7ff, #f9fdff);
+  text-align: center;
+}
+.invite-preview-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #5a7794;
+}
+.invite-preview-title {
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--navy);
+}
+.invite-preview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.invite-preview-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-size: .74rem;
+  font-weight: 700;
+  color: #3f5674;
+  text-decoration: none;
+}
+
+.invite-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
 /* ---------- Página do convite ---------- */
 
 .invite-body {
@@ -1705,8 +1810,18 @@ body.no-scroll { overflow: hidden; }
   .stage-names-grid { grid-template-columns: 1fr; }
 
   .shell { padding: 0 12px 30px; margin-top: -32px; }
-  .tabs { width: 100%; justify-content: space-between; }
-  .tab { flex: 1; padding: 8px 6px; font-size: 0.8rem; }
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 5px;
+    border-radius: 24px;
+  }
+  .tab { flex: none; padding: 9px 6px; font-size: 0.78rem; }
+
+  .invite-links { grid-template-columns: 1fr; }
+  .invite-link-actions .btn { flex: 1 1 100%; }
+  .invite-preview { padding: 14px 12px; }
 
   .toolbar { padding: 10px; gap: 8px; }
   .search-field { flex-basis: 100%; }

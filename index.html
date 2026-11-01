@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261109" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261115" />
 </head>
 <body>
   <header class="hero">
@@ -67,6 +67,7 @@
       <button class="tab is-active" data-view="checklist" type="button">✅ Checklist</button>
       <button class="tab" data-view="budget" type="button">💰 Orçamento</button>
       <button class="tab" data-view="guests" type="button">🎟️ Convidados</button>
+      <button class="tab" data-view="invite" type="button">💌 Convite</button>
     </nav>
 
     <main>
@@ -187,6 +188,100 @@
       </div>
 
       <div id="guestList" class="guest-list"></div>
+    </section>
+
+    <section id="view-invite" class="view" aria-label="Convite" hidden>
+      <div class="section-head">
+        <div>
+          <h2>Convite</h2>
+          <p class="muted">Ajuste os dados da festa e compartilhe os links do convite com os convidados.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-cloud" id="saveInviteCloudBtn" type="button">☁️ Salvar na nuvem</button>
+          <button class="btn btn-ghost" id="settingsInviteBtn" type="button">⚙️ Ajustes completos</button>
+        </div>
+      </div>
+
+      <div class="invite-links">
+        <article class="invite-link-card">
+          <span class="invite-link-icon" aria-hidden="true">🎬</span>
+          <div class="invite-link-body">
+            <h3>Convite animado</h3>
+            <p>Abertura com os brinquedos do Andy. É este o link para enviar no WhatsApp.</p>
+            <input id="animatedInviteLink" class="input" readonly aria-label="Link do convite animado" />
+          </div>
+          <div class="invite-link-actions">
+            <a class="btn btn-primary" id="openAnimatedInviteLink" href="convite-animado.html" target="_blank" rel="noopener noreferrer">Abrir convite ↗</a>
+            <button class="btn btn-ghost" id="copyAnimatedInviteBtn" type="button">📋 Copiar link</button>
+          </div>
+        </article>
+
+        <article class="invite-link-card">
+          <span class="invite-link-icon" aria-hidden="true">✅</span>
+          <div class="invite-link-body">
+            <h3>Página de confirmação</h3>
+            <p>Onde cada convidado encontra o nome e confirma a presença.</p>
+            <input id="confirmInviteLink" class="input" readonly aria-label="Link da página de confirmação" />
+          </div>
+          <div class="invite-link-actions">
+            <a class="btn btn-primary" id="openConfirmInviteLink" href="convite.html" target="_blank" rel="noopener noreferrer">Abrir confirmação ↗</a>
+            <button class="btn btn-ghost" id="copyConfirmInviteBtn" type="button">📋 Copiar link</button>
+          </div>
+        </article>
+      </div>
+
+      <div class="card invite-editor">
+        <div class="card-head">
+          <h3>Dados do convite</h3>
+          <span class="muted">Aparecem no topo desta página, no convite animado e na confirmação</span>
+        </div>
+
+        <form id="inviteForm">
+          <div class="grid-2">
+            <label class="field-label">Nome do aniversariante
+              <input id="invName" class="input" maxlength="40" required autocomplete="off" />
+            </label>
+            <label class="field-label">Idade
+              <input id="invAge" class="input" type="number" min="1" max="99" inputmode="numeric" />
+            </label>
+          </div>
+          <div class="grid-2">
+            <label class="field-label">Data
+              <input id="invDate" class="input" type="date" />
+            </label>
+            <label class="field-label">Horário
+              <input id="invTime" class="input" type="time" />
+            </label>
+          </div>
+          <label class="field-label">Local
+            <input id="invLocation" class="input" maxlength="120" placeholder="Ex.: Enjoy Kids — Liv Mall Shopping" />
+          </label>
+          <label class="field-label">Link do Google Maps (opcional)
+            <input id="invMapsUrl" class="input" type="url" placeholder="https://maps.app.goo.gl/…" autocomplete="off" />
+          </label>
+          <p class="hint">Se ficar vazio, o convite cria sozinho um link de busca no Google Maps com o local acima.</p>
+
+          <div class="grid-2">
+            <label class="field-label">URL do Google Apps Script (recebe as respostas)
+              <input id="invRsvpUrl" class="input" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" />
+            </label>
+            <label class="field-label">Como o convidado encontra o nome
+              <select id="invMode" class="input">
+                <option value="search">Buscar pelo nome (mostra só depois de 3 letras)</option>
+                <option value="links">Somente link individual (sem busca)</option>
+              </select>
+            </label>
+          </div>
+          <p class="hint">Sem a URL do Apps Script, os botões de resposta ficam desativados no convite. As alterações valem para os convidados depois de salvar na nuvem.</p>
+
+          <div class="invite-preview" id="invitePreview" aria-live="polite"></div>
+
+          <div class="invite-form-actions">
+            <button class="btn btn-primary" type="submit">Salvar dados do convite</button>
+            <button class="btn btn-ghost" id="copyInviteMessageBtn" type="button">📋 Copiar mensagem do convite</button>
+          </div>
+        </form>
+      </div>
     </section>
     </main>
 
@@ -494,6 +589,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261109"></script>
+  <script src="assets/app.js?v=20261115"></script>
 </body>
 </html>

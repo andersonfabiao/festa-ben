@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/convite-animado.css?v=20261101d" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=20261115" />
 </head>
 <body>
   <a class="skip-link" href="#finalInvite">Pular para o convite</a>
@@ -116,19 +116,19 @@
             </div>
             <p>Você foi escolhido para esta missão!</p>
             <h2>
-              <span class="name-blocks" role="img" aria-label="Ben">
+              <span class="name-blocks" id="animatedNameBlocks" role="img" aria-label="Ben">
                 <span>B</span><span>E</span><span>N</span>
               </span>
-              <span class="age-copy">faz <strong>5</strong> anos!</span>
+              <span class="age-copy" id="animatedAgeCopy">faz <strong id="animatedAge">5</strong> anos!</span>
             </h2>
           </header>
 
           <p class="invite-message">Venha brincar, sorrir e viver uma aventura inesquecível com a gente.</p>
 
           <div class="event-details">
-            <div><span aria-hidden="true">📅</span><strong>09 de janeiro de 2027</strong><small>Sábado</small></div>
-            <div><span aria-hidden="true">🕕</span><strong>18h</strong><small>Hora da missão</small></div>
-            <div class="location"><span aria-hidden="true">📍</span><strong>Enjoy Kids</strong><small>Liv Mall Shopping</small></div>
+            <div id="animatedDate"><span aria-hidden="true">📅</span><strong id="animatedDateText">09 de janeiro de 2027</strong><small id="animatedWeekday">Sábado</small></div>
+            <div id="animatedTime"><span aria-hidden="true">🕕</span><strong id="animatedTimeText">18h</strong><small>Hora da missão</small></div>
+            <div class="location" id="animatedLocation"><span aria-hidden="true">📍</span><strong id="animatedLocationName">Enjoy Kids</strong><small id="animatedLocationDetail">Liv Mall Shopping</small></div>
           </div>
 
           <section class="gift-guide" aria-labelledby="giftTitle">
@@ -164,6 +164,7 @@
   <noscript>
     <div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div>
   </noscript>
+  <script src="assets/convite-dados.js?v=20261115"></script>
   <script src="assets/convite-animado.js?v=20261101c"></script>
 </body>
 </html>

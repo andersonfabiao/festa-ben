@@ -606,6 +606,27 @@
     $("#progressPct").textContent = s.pct + "%";
     $("#progressFill").style.width = s.pct + "%";
 
+    if (activeView === "invite") {
+      const guests = state.guests;
+      const confirmed = guests.filter((g) => g.status === "confirmed").length;
+      const pending = guests.filter((g) => g.status === "pending").length;
+      const declined = guests.filter((g) => g.status === "declined").length;
+      const stats = [
+        { label: "Na lista", value: guests.length, cls: "" },
+        { label: "Confirmados", value: confirmed, cls: "good" },
+        { label: "Pendentes", value: pending, cls: "" },
+        { label: "Não vão", value: declined, cls: "" },
+      ];
+      $("#heroStats").innerHTML = stats
+        .map(
+          (st) =>
+            '<div class="hero-stat ' + st.cls + '"><span class="label">' +
+            st.label + '</span><span class="value">' + st.value + "</span></div>"
+        )
+        .join("");
+      return;
+    }
+
     if (activeView === "guests") {
       const guests = state.guests;
       const confirmed = guests.filter((g) => g.status === "confirmed").length;
@@ -1375,6 +1396,7 @@
     renderBudget();
     renderGuests();
     renderCloudBar();
+    if (activeView === "invite") renderInviteView();
   }
 
   /* ---------- Alterações / persistência ---------- */
@@ -2177,6 +2199,17 @@
     }
   }
 
+  function animatedInviteUrl() {
+    try {
+      const url = new URL("convite-animado.html", location.href);
+      url.search = "";
+      url.hash = "";
+      return url.href;
+    } catch (e) {
+      return "convite-animado.html";
+    }
+  }
+
   function guestInviteUrl(guest) {
     const key = guest && guest.id ? String(guest.id) : guestKey(guest.name, guest.type);
     return invitePageUrl() + "?convite=" + encodeURIComponent(key);
@@ -2230,6 +2263,134 @@
   async function copyInviteLink() {
     const ok = await copyText(invitePageUrl());
     toast(ok ? "Link do convite copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
+  }
+
+  async function copyLinkWithToast(url, message) {
+    const ok = await copyText(url);
+    toast(ok ? message : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
+  }
+
+  async function copyInviteMessage() {
+    const name = (($("#invName") && $("#invName").value) || state.meta.name || "Ben").trim();
+    const age = parseInt($("#invAge") && $("#invAge").value, 10) || state.meta.age;
+    const date = ($("#invDate") && $("#invDate").value) || state.meta.date;
+    const time = ($("#invTime") && $("#invTime").value) || state.meta.time;
+    const location = (($("#invLocation") && $("#invLocation").value) || state.meta.location || "").trim();
+    const customMap = safeUrl($("#invMapsUrl") && $("#invMapsUrl").value);
+    const map = customMap || (location ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(location) : "");
+    const text =
+      "🎉 " + name + " faz " + age + " anos!\n" +
+      "Tema: " + state.meta.theme + " 🤠🚀\n" +
+      "📅 " + longDate(date) + (time ? " às " + time.replace(":", "h") : "") + "\n" +
+      "📍 " + (location || "Local a definir") + "\n" +
+      (map ? "🗺️ Mapa: " + map + "\n" : "") +
+      "\nAbra o convite: " + animatedInviteUrl() + "\n" +
+      "Confirme sua presença: " + invitePageUrl();
+
+    const ok = await copyText(text);
+    toast(ok ? "Mensagem do convite copiada." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
+  }
+
+  function renderInvitePreview() {
+    const el = $("#invitePreview");
+    if (!el) return;
+
+    const name = (($("#invName") && $("#invName").value) || state.meta.name || "Ben").trim().slice(0, 40);
+    const age = parseInt($("#invAge") && $("#invAge").value, 10) || state.meta.age;
+    const date = ($("#invDate") && $("#invDate").value) || state.meta.date;
+    const time = ($("#invTime") && $("#invTime").value) || state.meta.time;
+    const location = (($("#invLocation") && $("#invLocation").value) || "").trim();
+    const customMap = safeUrl($("#invMapsUrl") && $("#invMapsUrl").value);
+    const map = customMap || (location ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(location) : "");
+
+    const blocks = Array.from(name).map((letter, index) =>
+      '<span class="hero-name-block block-' + (index % 3) + '" aria-hidden="true">' + esc(letter) + "</span>"
+    ).join("");
+
+    const chips = [];
+    chips.push('<span class="invite-preview-chip">📅 ' + esc(longDate(date)) + "</span>");
+    if (time) chips.push('<span class="invite-preview-chip">⏰ ' + esc(time.replace(":", "h")) + "</span>");
+    if (location) {
+      chips.push(
+        map
+          ? '<a class="invite-preview-chip" href="' + esc(map) + '" target="_blank" rel="noopener noreferrer">📍 ' + esc(location) + " ↗</a>"
+          : '<span class="invite-preview-chip">📍 ' + esc(location) + "</span>"
+      );
+    }
+
+    el.innerHTML =
+      '<span class="invite-preview-label">Prévia do convite</span>' +
+      '<div class="invite-preview-title">' +
+        '<span class="hero-name-blocks" aria-label="' + esc(name) + '">' + blocks + "</span>" +
+        " faz " + esc(String(age)) + "!" +
+      "</div>" +
+      '<div class="invite-preview-chips">' + chips.join("") + "</div>";
+  }
+
+  function renderInviteView() {
+    const meta = state.meta;
+    const animated = animatedInviteUrl();
+    const confirm = invitePageUrl();
+
+    const animatedInput = $("#animatedInviteLink");
+    if (animatedInput) animatedInput.value = animated;
+    const confirmInput = $("#confirmInviteLink");
+    if (confirmInput) confirmInput.value = confirm;
+    const openAnimated = $("#openAnimatedInviteLink");
+    if (openAnimated) openAnimated.href = animated;
+    const openConfirm = $("#openConfirmInviteLink");
+    if (openConfirm) openConfirm.href = confirm;
+
+    const setValue = (selector, value) => {
+      const el = $(selector);
+      if (el) el.value = value;
+    };
+    setValue("#invName", meta.name);
+    setValue("#invAge", meta.age);
+    setValue("#invDate", meta.date);
+    setValue("#invTime", meta.time);
+    setValue("#invLocation", meta.location || "");
+    setValue("#invMapsUrl", meta.mapsUrl || "");
+    setValue("#invRsvpUrl", meta.rsvpUrl || "");
+    setValue("#invMode", meta.inviteMode === "links" ? "links" : "search");
+
+    renderInvitePreview();
+  }
+
+  function handleInviteSubmit(event) {
+    event.preventDefault();
+    const meta = state.meta;
+    const name = ($("#invName").value || "").trim();
+    if (!name) {
+      toast("Informe o nome do aniversariante.", "err");
+      $("#invName").focus();
+      return;
+    }
+
+    const rsvpValue = $("#invRsvpUrl").value.trim();
+    const rsvpUrl = safeUrl(rsvpValue);
+    if (rsvpValue && !rsvpUrl) {
+      toast("A URL do Apps Script precisa começar com https://", "err");
+      $("#invRsvpUrl").focus();
+      return;
+    }
+
+    const date = $("#invDate").value;
+    const time = $("#invTime").value;
+
+    meta.name = name.slice(0, 40);
+    meta.age = Math.min(99, Math.max(1, parseInt($("#invAge").value, 10) || meta.age));
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) meta.date = date;
+    if (/^\d{2}:\d{2}$/.test(time)) meta.time = time;
+    meta.location = $("#invLocation").value.trim().slice(0, 120);
+    meta.mapsUrl = safeUrl($("#invMapsUrl").value.trim());
+    meta.rsvpUrl = rsvpUrl;
+    meta.inviteMode = $("#invMode").value === "links" ? "links" : "search";
+
+    touch();
+    renderAll();
+    renderInviteView();
+    toast("Dados do convite salvos.", "ok");
   }
 
   /* ---------- Importar convidados ---------- */
@@ -2483,7 +2644,12 @@
   /* ---------- Navegação ---------- */
 
   function showView(name) {
-    const views = { checklist: "#view-checklist", budget: "#view-budget", guests: "#view-guests" };
+    const views = {
+      checklist: "#view-checklist",
+      budget: "#view-budget",
+      guests: "#view-guests",
+      invite: "#view-invite",
+    };
     if (!views[name]) name = "checklist";
     activeView = name;
 
@@ -2503,6 +2669,7 @@
       renderGuests();
       refreshGuestResponses();
     }
+    if (name === "invite") renderInviteView();
     renderHero();
 
     try {
@@ -2529,6 +2696,22 @@
     $("#editStageNamesBtn").addEventListener("click", () => openSettings(true));
     $("#heroEditBtn").addEventListener("click", openSettings);
     $("#settingsGuestsBtn").addEventListener("click", openSettings);
+    $("#settingsInviteBtn").addEventListener("click", openSettings);
+
+    $("#inviteForm").addEventListener("submit", handleInviteSubmit);
+    $("#inviteForm").addEventListener("input", renderInvitePreview);
+    $("#inviteForm").addEventListener("change", renderInvitePreview);
+    $("#copyAnimatedInviteBtn").addEventListener("click", () =>
+      copyLinkWithToast(animatedInviteUrl(), "Link do convite animado copiado.")
+    );
+    $("#copyConfirmInviteBtn").addEventListener("click", () =>
+      copyLinkWithToast(invitePageUrl(), "Link da confirmação copiado.")
+    );
+    $("#copyInviteMessageBtn").addEventListener("click", copyInviteMessage);
+    $("#saveInviteCloudBtn").addEventListener("click", () => {
+      if (!hasCloud()) openSettings();
+      else saveCloud();
+    });
 
     $("#toggleValuesBtn").addEventListener("click", () => {
       valuesHidden = !valuesHidden;
@@ -2830,7 +3013,7 @@
     renderAll();
 
     const hash = (location.hash || "").replace("#", "");
-    showView(hash === "budget" || hash === "guests" ? hash : "checklist");
+    showView(["budget", "guests", "invite"].includes(hash) ? hash : "checklist");
 
     if (hasCloud() && !hadLocal) {
       pullCloud({ silent: true });

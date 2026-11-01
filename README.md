@@ -11,7 +11,8 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
 - **Convidados** — lista com criança/adulto, confirmação de presença, parentesco/apelido opcional (ex.: “Vovô Tito”), WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. O parentesco aparece na busca e na saudação do convite. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros e busca por nome. Importação de lista em `.txt`, `.csv` ou `.json`.
 - **Página de confirmação** — página responsiva acessada pelo link enviado junto ao convite oficial. Mostra um resumo da festa e leva o convidado diretamente à busca do nome e aos botões **Vou comemorar** / **Não poderei ir**, com recado opcional. A página respeita a preferência do aparelho por menos movimento e não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, estrelas sobem pela tela em comemoração.
-- **Convite oficial animado** — experiência separada em `convite-animado.html`, com identidade **Ben Story**, abertura no quarto do Andy, entrada dos personagens, envelope animado, sugestões de presente e música iniciada após o primeiro toque. Ao abrir a confirmação, a faixa retoma do ponto em que estava (com botão de continuação quando o navegador bloquear o som automático).
+- **Convite oficial animado** — experiência separada em `convite-animado.html`, com identidade **Ben Story**, abertura no quarto do Andy, entrada dos personagens, envelope animado, sugestões de presente e música iniciada após o primeiro toque. Os dados de nome, idade, data, hora e local vêm do `data.json` e podem ser ajustados na aba **💌 Convite**. Ao abrir a confirmação, a faixa retoma do ponto em que estava (com botão de continuação quando o navegador bloquear o som automático).
+- **Aba Convite** — em **💌 Convite** você ajusta nome, idade, data, horário, local, link do mapa, URL do Apps Script e o modo de busca, com prévia do convite. A mesma aba reúne os links do **convite animado** e da **página de confirmação**, com botões para abrir e copiar (e também copiar a mensagem pronta para o WhatsApp). As alterações aparecem no topo da organização, no convite animado e na confirmação depois de salvar na nuvem.
 - **Limite de convidados** — os cards de **Adultos** e **Crianças** mostram a ocupação do limite: verde até 75%, amarelo de 76% a 95% e vermelho acima de 95%. O card **Confirmados** mostra o percentual de presença confirmada em verde. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Ajustes → Limite de convidados**.
 - **Resumo em PDF** — em **💰 Orçamento → 📄 Exportar resumo PDF**, abra a impressão e escolha **Salvar como PDF** para gerar um relatório com dados da festa, resumo financeiro, itens do checklist/orçamento e convidados separados por adultos e crianças.
 - **Olho dos valores** — o botão **👁️ Valores** no topo esconde (desfoca) todos os valores da página com um clique; a escolha fica salva no aparelho. Na aba **Convidados** os valores nem aparecem: ela é só para configurações e informações da lista.
@@ -31,8 +32,8 @@ Basta abrir o `index.html` no navegador. Para publicar online, siga o passo a pa
 
 1. Crie um repositório no GitHub, por exemplo `festa-ben` (pode ser público).
 2. Envie estes arquivos para a branch `main`:
-   - `index.html`, `convite.html`
-   - `assets/styles.css`, `assets/app.js`, `assets/convite.js`, `assets/guest-id.js`
+   - `index.html`, `convite.html`, `convite-animado.html`
+   - `assets/styles.css`, `assets/app.js`, `assets/convite.js`, `assets/convite-dados.js`, `assets/convite-animado.css`, `assets/convite-animado.js`, `assets/guest-id.js`
    - `convidados.json`
    - `README.md`, `.nojekyll`
 3. No repositório, abra **Settings → Pages**.
@@ -222,7 +223,7 @@ Sem essa URL, o convite abre normalmente, mas os botões ficam desativados e apa
 ## Estrutura
 
 ```
-index.html            página principal (checklist, orçamento, convidados)
+index.html            página principal (checklist, orçamento, convidados e convite)
 convite-animado.html  convite oficial animado para compartilhar pelo WhatsApp
 convite.html          página de confirmação de presença
 assets/styles.css     visual (tema Toy Story, responsivo, impressão e convite)
@@ -230,6 +231,7 @@ assets/convite-animado.css visual e animações do convite oficial
 assets/app.js         lógica, dados locais e sincronização GitHub
 assets/guest-id.js    ID estável do convidado (usado pelo app e pelo convite)
 assets/convite.js     carrega o convite e envia a resposta ao Apps Script
+assets/convite-dados.js atualiza nome, idade, data, hora e local do convite animado
 assets/convite-animado.js controla cenas, áudio e repetição do convite
 apps-script/rsvp.gs   script do Google que grava a resposta no data.json
 apps-script/README.md passo a passo do Apps Script
