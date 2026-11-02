@@ -1,5 +1,6 @@
 (() => {
   const experience = document.querySelector("#experience");
+  const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
   const startButton = document.querySelector("#startButton");
   const soundButton = document.querySelector("#soundButton");
   const replayButton = document.querySelector("#replayButton");
@@ -23,6 +24,26 @@
   let timers = [];
   let soundEnabled = true;
   let navigatingToRsvp = false;
+
+  const finishPrelude = () => {
+    if (experience.classList.contains("is-prelude-complete")) return;
+    experience.classList.add("is-prelude-complete");
+    if (buzzPreludeVideo) buzzPreludeVideo.pause();
+  };
+
+  if (reduceMotion.matches) {
+    finishPrelude();
+  } else if (buzzPreludeVideo) {
+    buzzPreludeVideo.addEventListener("ended", finishPrelude, { once: true });
+    buzzPreludeVideo.muted = true;
+    buzzPreludeVideo.currentTime = 0;
+    const startPrelude = () => buzzPreludeVideo.play().catch(finishPrelude);
+    if (buzzPreludeVideo.readyState >= 2) startPrelude();
+    else buzzPreludeVideo.addEventListener("canplay", startPrelude, { once: true });
+    window.setTimeout(finishPrelude, 5200);
+  } else {
+    finishPrelude();
+  }
 
   const clearTimers = () => {
     timers.forEach(window.clearTimeout);
@@ -108,9 +129,18 @@
     saveAudioState();
   });
 
-  confirmButton.addEventListener("click", () => {
+  confirmButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    if (navigatingToRsvp) return;
     navigatingToRsvp = true;
     saveAudioState();
+    const destination = confirmButton.href;
+    if (reduceMotion.matches) {
+      window.location.href = destination;
+      return;
+    }
+    experience.classList.add("is-departing");
+    window.setTimeout(() => { window.location.href = destination; }, 1050);
   });
   window.addEventListener("pagehide", () => {
     if (!navigatingToRsvp) saveAudioState();

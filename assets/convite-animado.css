@@ -139,6 +139,29 @@ button { color: inherit; }
   transform-origin: bottom;
 }
 
+.buzz-prelude {
+  position: absolute;
+  z-index: 220;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #fff;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .72s ease, visibility .72s ease;
+}
+
+.buzz-prelude video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.is-prelude-complete .buzz-prelude { opacity: 0; visibility: hidden; pointer-events: none; }
+
 .opening-screen {
   z-index: 100;
   display: grid;
@@ -653,6 +676,59 @@ button { color: inherit; }
 
 .no-script { position: fixed; z-index: 1000; inset: auto 10px 10px; padding: 15px; border-radius: 12px; background: #fff; color: #173f67; text-align: center; }
 
+.smoke-transition {
+  position: absolute;
+  z-index: 320;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.smoke-transition::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+}
+
+.smoke-transition span {
+  position: absolute;
+  width: clamp(170px, 28vw, 390px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 0 70px 35px rgba(255,255,255,.82);
+  filter: blur(7px);
+  opacity: 0;
+  transform: scale(.15);
+}
+
+.smoke-transition span:nth-child(1) { left: -8%; bottom: -12%; }
+.smoke-transition span:nth-child(2) { left: 12%; bottom: 8%; }
+.smoke-transition span:nth-child(3) { left: 36%; bottom: -16%; }
+.smoke-transition span:nth-child(4) { right: 10%; bottom: 4%; }
+.smoke-transition span:nth-child(5) { right: -10%; bottom: -12%; }
+.smoke-transition span:nth-child(6) { left: -10%; top: 12%; }
+.smoke-transition span:nth-child(7) { left: 18%; top: -12%; }
+.smoke-transition span:nth-child(8) { left: 43%; top: 20%; }
+.smoke-transition span:nth-child(9) { right: 12%; top: -9%; }
+.smoke-transition span:nth-child(10) { right: -12%; top: 18%; }
+
+.is-departing .smoke-transition { visibility: visible; animation: smoke-layer-in 1.05s ease-out forwards; }
+.is-departing .smoke-transition::after { animation: smoke-whiteout .48s .55s ease-in forwards; }
+.is-departing .smoke-transition span { animation: smoke-bloom .78s cubic-bezier(.15,.7,.2,1) forwards; }
+.is-departing .smoke-transition span:nth-child(2),
+.is-departing .smoke-transition span:nth-child(6),
+.is-departing .smoke-transition span:nth-child(9) { animation-delay: .08s; }
+.is-departing .smoke-transition span:nth-child(3),
+.is-departing .smoke-transition span:nth-child(7),
+.is-departing .smoke-transition span:nth-child(10) { animation-delay: .16s; }
+.is-departing .smoke-transition span:nth-child(4),
+.is-departing .smoke-transition span:nth-child(8) { animation-delay: .23s; }
+
 @keyframes opening-float { 50% { transform: translateY(-7px); } }
 @keyframes reveal-card-arrives { to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes reveal-card-leaves { to { opacity: 0; transform: translateY(-24px) scale(1.04); filter: blur(5px); } }
@@ -707,6 +783,9 @@ button { color: inherit; }
 @keyframes block-pop { 0% { opacity: 0; scale: .55; translate: 0 16px; } 72% { opacity: 1; scale: 1.08; translate: 0 -2px; } 100% { opacity: 1; scale: 1; translate: 0 0; } }
 @keyframes content-rise { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
 @keyframes twinkle { 50% { opacity: .35; transform: scale(.72) rotate(30deg); } }
+@keyframes smoke-layer-in { to { opacity: 1; } }
+@keyframes smoke-bloom { 35% { opacity: .92; } 100% { opacity: 1; transform: scale(2.15) translateY(-5%); } }
+@keyframes smoke-whiteout { to { opacity: 1; } }
 
 @media (min-width: 681px) {
   .intro-copy {
@@ -788,6 +867,7 @@ button { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .is-started .reveal-scene, .is-started .intro-scene, .is-started .envelope-scene { display: none; }
+  .buzz-prelude { display: none; }
   .is-started .final-invite { opacity: 1; visibility: visible; pointer-events: auto; }
   .is-started .invite-card { opacity: 1; transform: none; }
   .is-final .base-cast-art,
