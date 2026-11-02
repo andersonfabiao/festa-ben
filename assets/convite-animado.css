@@ -150,8 +150,13 @@ button { color: inherit; }
 
 .is-started .opening-screen { opacity: 0; visibility: hidden; pointer-events: none; }
 
+.opening-stage { position: relative; width: min(92vw, 510px); }
+
 .opening-card {
-  width: min(92vw, 510px);
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  width: 100%;
   padding: clamp(30px, 6vw, 54px) 28px 34px;
   border: 3px solid rgba(255,255,255,.75);
   border-radius: 30px;
@@ -160,6 +165,20 @@ button { color: inherit; }
   box-shadow: 0 28px 70px rgba(9, 51, 87, .34), inset 0 0 0 7px rgba(86, 194, 234, .12);
   animation: opening-float 3s ease-in-out infinite;
 }
+
+.opening-peek {
+  position: absolute;
+  z-index: 3;
+  left: -185px;
+  bottom: -16px;
+  width: 225px;
+  pointer-events: none;
+  filter: drop-shadow(0 15px 12px rgba(24, 67, 93, .22));
+  animation: opening-peek-arrives .9s .28s cubic-bezier(.15,.9,.25,1.15) both,
+    opening-peek-breathe 4.2s 1.25s ease-in-out infinite;
+}
+
+.opening-peek img { display: block; width: 100%; height: auto; }
 
 .ben-story-logo {
   position: relative;
@@ -442,23 +461,6 @@ button { color: inherit; }
   filter: blur(8px);
 }
 
-.peek-duo-art {
-  position: absolute;
-  z-index: 3;
-  top: auto;
-  right: 100%;
-  bottom: 0;
-  left: auto;
-  width: min(270px, calc(50vw - 340px));
-  height: auto;
-  opacity: 0;
-  filter: drop-shadow(0 16px 12px rgba(27, 73, 100, .2));
-  transform: translateX(-80px);
-  pointer-events: none;
-}
-
-.is-final .peek-duo-art { animation: peek-arrives .9s .65s cubic-bezier(.15,.9,.25,1.1) forwards; }
-
 .base-cast-art {
   position: absolute;
   z-index: 2;
@@ -558,6 +560,8 @@ button { color: inherit; }
 .no-script { position: fixed; z-index: 1000; inset: auto 10px 10px; padding: 15px; border-radius: 12px; background: #fff; color: #173f67; text-align: center; }
 
 @keyframes opening-float { 50% { transform: translateY(-7px); } }
+@keyframes opening-peek-arrives { from { opacity: 0; transform: translateX(-35px) rotate(-7deg) scale(.9); } to { opacity: 1; transform: translateX(0) rotate(-2deg) scale(1); } }
+@keyframes opening-peek-breathe { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
 @keyframes cloud-drift { to { translate: 10px -4px; } }
 @keyframes copy-arrives { to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes toys-arrive { to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
@@ -595,20 +599,34 @@ button { color: inherit; }
 @keyframes envelope-arrives { 70% { opacity: 1; transform: translate(-3vw, 2vh) rotate(-4deg) scale(1.04); } 100% { opacity: 1; transform: none; } }
 @keyframes star-pop { 0% { opacity: 0; transform: scale(.1) rotate(-80deg); } 60% { opacity: 1; transform: scale(1.25) rotate(15deg); } 100% { opacity: .8; transform: scale(1); } }
 @keyframes card-reveal { to { opacity: 1; transform: none; } }
-@keyframes peek-arrives { to { opacity: .98; transform: translateX(0); } }
 @keyframes base-cast-rise { to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes cast-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes block-pop { 0% { opacity: 0; scale: .55; translate: 0 16px; } 72% { opacity: 1; scale: 1.08; translate: 0 -2px; } 100% { opacity: 1; scale: 1; translate: 0 0; } }
 @keyframes content-rise { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
 @keyframes twinkle { 50% { opacity: .35; transform: scale(.72) rotate(30deg); } }
 
-@media (max-width: 1100px) and (min-width: 681px) {
-  .peek-duo-art { top: 42px; right: auto; bottom: auto; left: -6px; width: clamp(98px, 12vw, 126px); }
+@media (min-width: 681px) {
+  .intro-copy {
+    top: 5%;
+    width: min(76vw, 790px);
+    padding: 16px 25px 18px;
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 25px;
+    background: linear-gradient(180deg, rgba(17,76,118,.48), rgba(17,76,118,.28));
+    box-shadow: 0 15px 38px rgba(11,66,101,.17);
+    backdrop-filter: blur(5px);
+  }
+  .intro-copy h2 { font-size: clamp(2.35rem, 5vw, 4rem); text-shadow: 0 4px 0 rgba(13,65,103,.42), 0 10px 28px rgba(7,49,78,.4); }
+  .intro-copy p { text-shadow: 0 2px 8px rgba(7,49,78,.7); }
+  .hero-characters { bottom: -8%; width: min(58vw, 620px); max-height: 59vh; }
+  .orbit-potato { top: 30%; }
 }
 
 @media (max-width: 680px) {
   .window { right: -5%; width: 150px; height: 175px; border-width: 8px; }
   .shelf { left: -5%; width: 175px; transform: scale(.75); }
+  .opening-card { padding-top: 42px; }
+  .opening-peek { z-index: 5; top: auto; right: auto; bottom: -34px; left: -28px; width: 126px; }
   .intro-copy { top: 12%; }
   .hero-characters { bottom: 5%; width: 92vw; }
   .orbit-alien { left: -18px; bottom: 19%; }
@@ -621,7 +639,6 @@ button { color: inherit; }
   .invite-card { min-height: 900px; padding: 25px 16px var(--base-art-space); border-radius: 17px; }
   .invite-message { margin-top: 16px; }
   .card-logo { font-size: clamp(4.1rem, 21vw, 5.5rem); }
-  .peek-duo-art { top: 30px; right: auto; bottom: auto; left: -30px; width: 86px; opacity: 0; }
   .gift-options { grid-template-columns: 1fr 1fr; }
   .gift-options .gift-theme { grid-column: 1 / -1; }
 }

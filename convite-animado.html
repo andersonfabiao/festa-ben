@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/convite-animado.css?v=20261102p4" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=20261102p5e" />
 </head>
 <body>
   <a class="skip-link" href="#finalInvite">Pular para o convite</a>
@@ -49,18 +49,24 @@
     </div>
 
     <div class="opening-screen" id="openingScreen">
-      <div class="opening-card">
-        <div class="ben-story-logo opening-logo" role="img" aria-label="Ben Story">
-          <span class="ben-word">BEN</span>
-          <span class="story-word">STORY</span>
+      <div class="opening-stage">
+        <picture class="opening-peek" aria-hidden="true">
+          <source srcset="assets/convite/woody-buzz-espiando.webp?v=20261119" type="image/webp" />
+          <img src="assets/convite/woody-buzz-espiando.png?v=20261118a" alt="" />
+        </picture>
+        <div class="opening-card">
+          <div class="ben-story-logo opening-logo" role="img" aria-label="Ben Story">
+            <span class="ben-word">BEN</span>
+            <span class="story-word">STORY</span>
+          </div>
+          <p class="eyebrow">Uma mensagem especial chegou para você</p>
+          <h1>Prepare-se para uma<br /><strong>grande aventura!</strong></h1>
+          <button class="start-button" id="startButton" type="button">
+            <span class="start-icon" aria-hidden="true">▶</span>
+            <span>Abrir convite</span>
+          </button>
+          <p class="sound-hint"><span aria-hidden="true">♫</span> Ative o som para entrar na brincadeira</p>
         </div>
-        <p class="eyebrow">Uma mensagem especial chegou para você</p>
-        <h1>Prepare-se para uma<br /><strong>grande aventura!</strong></h1>
-        <button class="start-button" id="startButton" type="button">
-          <span class="start-icon" aria-hidden="true">▶</span>
-          <span>Abrir convite</span>
-        </button>
-        <p class="sound-hint"><span aria-hidden="true">♫</span> Ative o som para entrar na brincadeira</p>
       </div>
     </div>
 
@@ -106,10 +112,6 @@
 
       <section class="final-invite" id="finalInvite" tabindex="-1" aria-label="Convite do aniversário do Ben">
         <div class="card-stage">
-          <picture>
-            <source srcset="assets/convite/woody-buzz-espiando.webp?v=20261119" type="image/webp" />
-            <img class="peek-duo-art" src="assets/convite/woody-buzz-espiando.png?v=20261118a" alt="" aria-hidden="true" />
-          </picture>
           <div class="invite-card">
             <span class="tape tape-left" aria-hidden="true"></span>
             <span class="tape tape-right" aria-hidden="true"></span>
@@ -141,7 +143,7 @@
               <div class="gift-options">
                 <span><small>Roupa</small><b>6 anos</b></span>
                 <span><small>Calçado</small><b>27</b></span>
-                <span class="gift-theme"><small>Ele vai amar</small><b>Toy Story ou bloquinhos de montar estilo Lego</b></span>
+                <span class="gift-theme"><small>Ele vai amar</small><b>Tudo do universo Toy Story ou bloquinhos de montar estilo Lego</b></span>
               </div>
             </section>
 
