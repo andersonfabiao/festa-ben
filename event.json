@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "meta": {
+    "name": "Ben",
+    "age": 5,
+    "date": "2027-01-09",
+    "time": "18:00",
+    "location": "Enjoy Kids, Liv Mall Shopping",
+    "theme": "Toy Story",
+    "rsvpUrl": "https://script.google.com/macros/s/AKfycbxNGucbDD-m_2G6UHhGCWBY055_izeExY7AjNP7iHi0mY1WiQ-7z9hACvCLUhB72K5e/exec",
+    "mapsUrl": "https://maps.app.goo.gl/A1W6p14GLiRxY7Sy8",
+    "inviteMode": "search",
+    "giftSuggestions": [
+      "Roupa tamanho 6 anos",
+      "Calçado número 27",
+      "Itens do universo Toy Story"
+    ]
+  }
+}

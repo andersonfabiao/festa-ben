@@ -63,7 +63,7 @@
     const blocks = $("animatedNameBlocks");
     if (blocks) {
       blocks.setAttribute("aria-label", name);
-      blocks.innerHTML = Array.from(name)
+      blocks.innerHTML = Array.from(name.toUpperCase())
         .map((letter) => "<span>" + escapeHtml(letter) + "</span>")
         .join("");
     }
@@ -97,12 +97,12 @@
 
   const load = async () => {
     try {
-      const response = await fetch("data.json?t=" + Date.now(), { cache: "no-store" });
+      const response = await fetch("event.json?t=" + Date.now(), { cache: "no-store" });
       if (!response.ok) return;
       const data = await response.json();
       applyMeta(data && data.meta);
     } catch {
-      // Mantém os textos estáticos quando o data.json não está disponível.
+      // Mantém os textos estáticos quando a configuração pública não está disponível.
     }
   };
 

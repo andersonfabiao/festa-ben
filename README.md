@@ -1,6 +1,6 @@
 # 🎉 Ben faz 5! — Checklist Toy Story
 
-Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, valores previstos e pagos, orçamento, convidados e contagem regressiva. Feita para funcionar no celular e no computador, com dados salvos no navegador e sincronização opcional via GitHub.
+Projeto com duas áreas: convite público para os convidados e painel de organização com checklist, orçamento e confirmações. Os dados administrativos devem ser sincronizados em um repositório GitHub privado separado.
 
 ## O que tem
 
@@ -12,30 +12,30 @@ Página para organizar o aniversário de 5 anos do Ben: checklist por etapas, va
 - **Convidados** — lista com criança/adulto, confirmação de presença, parentesco/apelido opcional (ex.: “Vovô Tito”), WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. O parentesco aparece na busca e na saudação do convite. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros e busca por nome. Importação de lista em `.txt`, `.csv` ou `.json`.
 - **WhatsApp do convidado** — o telefone é formatado sozinho (`83 98824-8851`) e validado ao salvar (DDD + 10 ou 11 dígitos). Em cada convidado com número aparecem dois atalhos: **WhatsApp ↗** (abre a conversa) e **Enviar convite ↗** (abre o WhatsApp com a mensagem do convite já pronta, incluindo os links individualizados do convite animado e da confirmação).
 - **Página de confirmação** — página responsiva acessada pelo link enviado junto ao convite oficial. Mostra um resumo da festa e leva o convidado diretamente à busca do nome e aos botões **Vou comemorar** / **Não poderei ir**, com recado opcional. A página respeita a preferência do aparelho por menos movimento e não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, estrelas sobem pela tela em comemoração.
-- **Convite oficial animado** — experiência separada em `convite-animado.html`, com identidade **Ben Story**, abertura com os brinquedos em uma missão (e o bordão “Ao infinito e além!”), entrada dos personagens em recortes sem moldura, envelope animado, sugestões de presente e música iniciada após o primeiro toque. Os dados de nome, idade, data, hora e local vêm do `data.json` e podem ser ajustados na aba **💌 Convite**. Ao abrir a confirmação, a faixa retoma do ponto em que estava (com botão de continuação quando o navegador bloquear o som automático).
+- **Convite oficial animado** — experiência separada em `convite-animado.html`, com identidade **Ben Story**, personagens, envelope animado, sugestões de presente e música iniciada após o primeiro toque. Os dados públicos do evento vêm de `event.json`; lista, telefones e orçamento não são carregados pelo convite.
 - **Aba Convite** — em **💌 Convite** você ajusta nome, idade, data, horário, local, link do mapa, URL do Apps Script e o modo de busca, com prévia do convite. A mesma aba reúne os links do **convite animado** e da **página de confirmação**, com botões para abrir e copiar (e também copiar a mensagem pronta para o WhatsApp). As alterações aparecem no topo da organização, no convite animado e na confirmação depois de salvar na nuvem.
 - **Limite de convidados** — os cards de **Adultos** e **Crianças** mostram a ocupação do limite: verde até 75%, amarelo de 76% a 95% e vermelho acima de 95%. O card **Confirmados** mostra o percentual de presença confirmada em verde. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Ajustes → Limite de convidados**.
 - **Resumo em PDF** — em **💰 Orçamento → 📄 Exportar resumo PDF**, abra a impressão e escolha **Salvar como PDF** para gerar um relatório com dados da festa, resumo financeiro, itens do checklist/orçamento e convidados separados por adultos e crianças.
 - **Olho dos valores** — o botão **👁️ Valores** no topo esconde (desfoca) todos os valores da página com um clique; a escolha fica salva no aparelho. Na aba **Convidados** os valores nem aparecem: ela é só para configurações e informações da lista.
 - **Contagem regressiva** para a festa.
 - **Salvamento automático** no navegador (localStorage).
-- **Sincronização opcional com GitHub** para abrir em qualquer aparelho e ver os mesmos dados.
+- **Sincronização com repositório GitHub privado separado** para abrir o painel em qualquer aparelho sem publicar dados pessoais.
 - **Status da sincronização** — aparece em destaque logo abaixo da contagem regressiva, com ações para carregar e salvar na nuvem.
 - **Exportar/importar JSON** para backup e **impressão** (útil para gerar um PDF).
 
-Os itens, valores e convidados que aparecem na primeira abertura são **exemplos** — edite ou apague tudo em **Ajustes → Dados**.
+Uma primeira abertura sem configuração começa vazia, evitando que dados demonstrativos sejam confundidos com informações reais.
 
 ## Usar agora
 
-Basta abrir o `index.html` no navegador. Para publicar online, siga o passo a passo abaixo.
+- Convite público: `index.html` (encaminha para `convite-animado.html`).
+- Painel administrativo: `painel.html`.
 
 ## Publicar no GitHub Pages (grátis)
 
 1. Crie um repositório no GitHub, por exemplo `festa-ben` (pode ser público).
 2. Envie estes arquivos para a branch `main`:
-   - `index.html`, `convite.html`, `convite-animado.html`
+   - `index.html`, `painel.html`, `convite.html`, `convite-animado.html`, `event.json`
    - `assets/styles.css`, `assets/app.js`, `assets/convite.js`, `assets/convite-dados.js`, `assets/convite-animado.css`, `assets/convite-animado.js`, `assets/guest-id.js`
-   - `convidados.json`
    - `README.md`, `.nojekyll`
 3. No repositório, abra **Settings → Pages**.
 4. Em **Build and deployment**, escolha **Deploy from a branch**.
@@ -48,15 +48,15 @@ Basta abrir o `index.html` no navegador. Para publicar online, siga o passo a pa
 
 > Sem o passo de sincronização abaixo, cada aparelho guarda os próprios dados. Para ter os mesmos dados em todos, configure o GitHub.
 
-## Sincronizar os dados pelo GitHub (opcional)
+## Sincronizar os dados em repositório privado
 
-A página usa a API de conteúdo do GitHub para ler e gravar um arquivo `data.json` no seu repositório. O token fica salvo **somente no navegador** e nunca é enviado para o repositório.
+O painel usa a API do GitHub para ler e gravar `data.json` em um segundo repositório, obrigatoriamente **privado**. O site público e os dados privados não devem compartilhar o mesmo repositório.
 
 ### 1. Crie um token fine-grained
 
 1. No GitHub, acesse **Settings → Developer settings → Personal access tokens → Fine-grained tokens** (atalho: <https://github.com/settings/tokens?type=beta>). Atenção: é nas configurações da **sua conta** (menu do avatar, canto superior direito), não nas configurações do repositório.
 2. Clique em **Generate new token**.
-3. Em **Repository access**, escolha **Only select repositories** e marque o repositório da festa.
+3. Crie um repositório privado chamado `festa-ben-dados` e, em **Repository access**, marque somente ele.
 4. Em **Permissions → Repository permissions**, dê **Read and write** para **Contents**. Nada mais é necessário.
 5. Gere o token e copie o valor (`github_pat_...`).
 
@@ -65,7 +65,7 @@ A página usa a API de conteúdo do GitHub para ler e gravar um arquivo `data.js
 1. Abra a página e clique em **☁️ Ativar nuvem** (ou **⚙️ Ajustes**).
 2. Preencha:
    - **Usuário / organização**: seu usuário do GitHub
-   - **Repositório**: `festa-ben`
+   - **Repositório**: `festa-ben-dados`
    - **Branch**: `main`
    - **Arquivo de dados**: `data.json`
    - **Token**: o token criado acima
@@ -84,13 +84,13 @@ Depois da primeira sincronização, o salvamento automático funciona normalment
 ### Segurança e privacidade
 
 - O token não vai para o repositório nem para o `data.json`; ele fica no `localStorage` do navegador.
-- Se o repositório for público, a página **e o `data.json`** também são públicos. Não coloque ali dados sensíveis (endereço completo, telefone, CPF etc.). Nomes de convidados já ficam visíveis.
-- Para manter tudo privado: use um repositório privado com GitHub Pro/Enterprise para Pages, ou rode a página localmente (`index.html`) e sincronize só quando quiser.
+- O painel recusa salvar em repositório público.
+- O site público recebe apenas `event.json`, sem convidados, telefones, recados ou orçamento.
 - Revogue o token em **Settings → Developer settings** se ele vazar.
 
 ## Importar a lista de convidados
 
-Na aba **🎟️ Convidados**, clique em **📥 Lista do Ben (69)** para carregar direto o `convidados.json` publicado no site — não precisa baixar arquivo nenhum. A página mostra um resumo (quantos adultos e quantas crianças) e deixa você escolher:
+Na aba **🎟️ Convidados**, clique em **📂 Importar arquivo** e escolha uma lista `.txt`, `.csv` ou `.json`. A lista não acompanha mais os arquivos públicos do site.
 
 - **Adicionar aos convidados atuais** — mantém a lista e inclui só os nomes novos (repetidos são ignorados).
 - **Substituir a lista atual** — apaga os convidados deste aparelho e usa exatamente os do arquivo.
@@ -182,16 +182,16 @@ O botão **📋 Copiar convite** copia um texto pronto com data, local e o link 
 2. Escreve um recado, se quiser.
 3. Se for adulto responsável, escolhe a presença de cada criança vinculada.
 4. Toca em **🎉 Vou comemorar** ou **😢 Não poderei ir**.
-5. A resposta (e a das crianças) é gravada no `data.json` e aparece na lista dos anfitriões com status, hora e recado. Ao confirmar, estrelas sobem pela tela (respeita a opção de reduzir movimento do sistema).
+5. A resposta (e a das crianças) é gravada no `data.json` **privado** e aparece na lista dos anfitriões com status, hora e recado.
 
 No app, a lista se atualiza sozinha a cada minuto (e ao voltar para a aba). Também dá para forçar com **🔄 Atualizar respostas**. Ao salvar na nuvem, o app preserva as respostas que chegaram pelo convite e ainda não estavam no aparelho.
 
 ### Configurar o Apps Script (uma vez)
 
-O GitHub Pages é estático e não pode gravar no repositório com segurança, então o convite envia a resposta para um **Google Apps Script**, que grava no `data.json` usando um token guardado no Google. O passo a passo completo está em **[`apps-script/README.md`](apps-script/README.md)**. Resumo:
+O convite envia a busca e a resposta para um **Google Apps Script**, que acessa o repositório privado usando um token guardado no Google. O passo a passo completo está em **[`apps-script/README.md`](apps-script/README.md)**. Resumo:
 
 1. Crie o script em [script.google.com](https://script.google.com) e cole o conteúdo de `apps-script/rsvp.gs`.
-2. Crie um token fine-grained com **Contents: Read and write** no repositório.
+2. Crie `festa-ben-dados` como repositório privado e um token fine-grained com **Contents: Read and write** somente nele.
 3. Nas **Propriedades do script**, defina `GH_TOKEN`, `GH_OWNER`, `GH_REPO` (e, se quiser, `GH_BRANCH` e `GH_PATH`).
 4. **Implantar → Nova implantação → Aplicativo da Web**, executar como **Eu** e acesso **Qualquer pessoa**.
 5. Copie a URL `/exec`, cole em **Ajustes → Convite e RSVP → URL do Google Apps Script**, clique em **Salvar** e depois em **☁️ Salvar na nuvem**.
@@ -201,12 +201,12 @@ Sem essa URL, o convite abre normalmente, mas os botões ficam desativados e apa
 
 ### Antes de compartilhar
 
-1. Importe a lista (**📥 Lista do Ben (69)**) e clique em **☁️ Salvar na nuvem** — o convite lê o `data.json` publicado.
+1. Importe o backup/lista no painel e clique em **☁️ Salvar na nuvem** para criar o arquivo privado.
 2. Configure a URL do Apps Script e salve na nuvem.
 3. Abra o link do convite no celular e envie uma resposta de teste.
 4. Confira em **🎟️ Convidados → 🔄 Atualizar respostas**.
 
-> O repositório é público, então nomes, confirmações, recados, **WhatsApp e observações** no `data.json` também são públicos. O token do GitHub **não** vai para o site: fica só no navegador (app) e nas Propriedades do script (RSVP).
+> Antes de remover o `data.json` do repositório público, confirme que o painel e o Apps Script já apontam para `festa-ben-dados` e que o teste `?ping=1` funciona.
 
 ## Backup e impressão
 
@@ -219,14 +219,16 @@ Sem essa URL, o convite abre normalmente, mas os botões ficam desativados e apa
 - **Etapas e itens de exemplo**: `assets/app.js`, constante `STAGES` e função `seedItems`.
 - **Cores e fontes**: `assets/styles.css`, variáveis no topo (`:root`).
 - **Dados iniciais**: `defaultMeta()` em `assets/app.js` (nome, idade, data, local e orçamento).
-- **Textos da página**: `index.html`.
+- **Textos do painel**: `painel.html`.
 
 ## Estrutura
 
 ```
-index.html            página principal (checklist, orçamento, convidados e convite)
+index.html            entrada pública que abre o convite animado
+painel.html           painel administrativo (checklist, orçamento e convidados)
 convite-animado.html  convite oficial animado para compartilhar pelo WhatsApp
 convite.html          página de confirmação de presença
+event.json            somente dados públicos do evento
 assets/styles.css     visual (tema Toy Story, responsivo, impressão e convite)
 assets/convite-animado.css visual e animações do convite oficial
 assets/app.js         lógica, dados locais e sincronização GitHub
@@ -236,8 +238,7 @@ assets/convite-dados.js atualiza nome, idade, data, hora e local do convite anim
 assets/convite-animado.js controla cenas, áudio e repetição do convite
 apps-script/rsvp.gs   script do Google que grava a resposta no data.json
 apps-script/README.md passo a passo do Apps Script
-data.json             criado automaticamente na primeira sincronização
-convidados.json       lista de convidados pronta para importar
+data.json             arquivo privado; existe no repositório de dados, não no site final
 lista_convidados.txt  mesma lista em texto simples
 .nojekyll             evita processamento do Jekyll no GitHub Pages
 ```

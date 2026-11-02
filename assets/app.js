@@ -347,6 +347,16 @@
     };
   }
 
+  function emptyState() {
+    return {
+      version: 1,
+      meta: defaultMeta(),
+      items: [],
+      guests: [],
+      updatedAt: nowISO(),
+    };
+  }
+
   function makeGuestRecord(raw, usedIds) {
     const g = raw && typeof raw === "object" ? raw : {};
     const name = cleanGuestName(g.name || g.nome || "").slice(0, 80);
@@ -457,7 +467,7 @@
   /* ---------- Estado ---------- */
 
   const hadLocal = !!localStorage.getItem(STORAGE_KEY);
-  let state = normalizeState(loadLocal()) || defaultState();
+  let state = normalizeState(loadLocal()) || emptyState();
   let cloud = loadCloudCfg();
   let collapsed = new Set(loadCollapsed());
   let dirty = false;
@@ -1434,6 +1444,8 @@
     state.updatedAt = nowISO();
     saveLocal();
     dirty = true;
+    cloud.pending = true;
+    saveCloudCfg();
 
     if (opts.cloud === false) {
       renderCloudBar();
@@ -1444,8 +1456,8 @@
       cloudPhase = "dirty";
       renderCloudBar();
       clearTimeout(autoTimer);
-      // Agrupa várias edições num único commit (evita dezenas de commits por sessão).
-      autoTimer = setTimeout(() => saveCloud({ silent: true }), 25000);
+      // Agrupa a sessão em um único envio e reduz o histórico de commits automáticos.
+      autoTimer = setTimeout(() => saveCloud({ silent: true }), 90000);
     } else {
       renderCloudBar();
     }
@@ -1467,6 +1479,40 @@
       "/contents/" +
       path
     );
+  }
+
+  function repoApiUrl() {
+    return (
+      "https://api.github.com/repos/" +
+      encodeURIComponent(cloud.owner) +
+      "/" +
+      encodeURIComponent(cloud.repo)
+    );
+  }
+
+  async function verifyPrivateRepo() {
+    const res = await fetch(repoApiUrl(), {
+      headers: {
+        Authorization: "Bearer " + cloud.token,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const error = new Error(data.message || "Não foi possível verificar o repositório.");
+      error.status = res.status;
+      throw error;
+    }
+    if (!data.private) {
+      throw new Error(
+        "Este repositório é público. Use um repositório privado separado para proteger convidados, telefones e orçamento."
+      );
+    }
+    cloud.privateVerified = true;
+    saveCloudCfg();
+    return data;
   }
 
   async function gh(method, body) {
@@ -1517,6 +1563,7 @@
 
     setCloudPhase("syncing");
     try {
+      await verifyPrivateRepo();
       const data = await gh("GET");
       if (data.notFound) {
         setCloudPhase("idle");
@@ -1549,6 +1596,7 @@
       cloud.sha = data.sha;
       cloud.lastSync = nowISO();
       cloud.verified = true;
+      cloud.pending = false;
       saveCloudCfg();
       dirty = false;
       saveLocal();
@@ -1647,6 +1695,7 @@
     if (opts.fromSettings) setConfigState("Enviando os dados para o GitHub…");
 
     try {
+      await verifyPrivateRepo();
       const head = await gh("GET");
       const sha = head.notFound ? null : head.sha;
 
@@ -1681,7 +1730,11 @@
       cloud.lastSync = nowISO();
       cloud.verified = true;
       saveCloudCfg();
-      if (state.updatedAt === savedStamp) dirty = false;
+      if (state.updatedAt === savedStamp) {
+        dirty = false;
+        cloud.pending = false;
+      }
+      saveCloudCfg();
       if (mergedRsvps) {
         saveLocal();
         renderGuests();
@@ -2114,7 +2167,10 @@
     cloud.auto = $("#setAuto").checked;
 
     const identity = [cloud.owner, cloud.repo, cloud.branch, cloud.path, cloud.token].join("|");
-    if (cloud._identity && cloud._identity !== identity) cloud.verified = false;
+    if (cloud._identity && cloud._identity !== identity) {
+      cloud.verified = false;
+      cloud.privateVerified = false;
+    }
     cloud._identity = identity;
 
     if (!cloud.owner && !cloud.repo && !cloud.token) {
@@ -2186,10 +2242,11 @@
     }
     status.textContent = "Testando…";
     try {
+      await verifyPrivateRepo();
       const data = await gh("GET");
       status.textContent = data.notFound
-        ? "Conexão OK! O arquivo ainda não existe — clique em “Enviar para a nuvem” para criá-lo."
-        : "Conexão OK! Arquivo encontrado no repositório.";
+        ? "Repositório privado conectado! Envie os dados para criar o arquivo."
+        : "Repositório privado conectado e arquivo encontrado.";
       renderCloudBar();
     } catch (e) {
       status.textContent = "Falhou: " + (e.message || "erro de conexão") + ".";
@@ -2384,7 +2441,7 @@
     const customMap = safeUrl($("#invMapsUrl") && $("#invMapsUrl").value);
     const map = customMap || (location ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(location) : "");
 
-    const blocks = Array.from(name).map((letter, index) =>
+      const blocks = Array.from(name.toUpperCase()).map((letter, index) =>
       '<span class="hero-name-block block-' + (index % 3) + '" aria-hidden="true">' + esc(letter) + "</span>"
     ).join("");
 
@@ -2402,7 +2459,7 @@
     el.innerHTML =
       '<span class="invite-preview-label">Prévia do convite</span>' +
       '<div class="invite-preview-title">' +
-        '<span class="hero-name-blocks" aria-label="' + esc(name) + '">' + blocks + "</span>" +
+        '<span class="hero-name-blocks" role="img" aria-label="' + esc(name) + '">' + blocks + "</span>" +
         " faz " + esc(String(age)) + "!" +
       "</div>" +
       '<div class="invite-preview-chips">' + chips.join("") + "</div>";
@@ -2599,30 +2656,6 @@
     reader.onload = () => showGuestImportPreview(String(reader.result || ""), "no arquivo");
     reader.onerror = () => toast("Não foi possível ler o arquivo.", "err");
     reader.readAsText(file);
-  }
-
-  async function importBundledGuests() {
-    try {
-      const response = await fetch("convidados.json", { cache: "no-store" });
-      if (!response.ok) throw new Error("HTTP " + response.status);
-      showGuestImportPreview(await response.text(), "na lista do Ben");
-    } catch (e) {
-      toast("Não consegui abrir a lista do Ben. Use “Importar lista” e escolha o arquivo.", "err");
-    }
-  }
-
-  async function updateBundledGuestsLabel() {
-    const btn = $("#importBundledGuestsBtn");
-    if (!btn) return;
-    try {
-      const response = await fetch("convidados.json", { cache: "no-store" });
-      if (!response.ok) return;
-      const data = await response.json();
-      const list = Array.isArray(data) ? data : Array.isArray(data.guests) ? data.guests : [];
-      if (list.length) btn.textContent = "📥 Lista do Ben (" + list.length + ")";
-    } catch (e) {
-      /* sem conexão: mantém o rótulo sem o número */
-    }
   }
 
   function showGuestImportPreview(text, sourceLabel) {
@@ -3005,7 +3038,6 @@
     $("#copyInviteLinkBtn").addEventListener("click", copyInviteLink);
     $("#copyInviteLinkBtn2").addEventListener("click", copyInviteLink);
     $("#refreshGuestsBtn").addEventListener("click", () => refreshGuestResponses({ manual: true }));
-    $("#importBundledGuestsBtn").addEventListener("click", importBundledGuests);
     $("#importGuestsBtn").addEventListener("click", () => $("#guestImportFile").click());
     $("#guestImportFile").addEventListener("change", (event) => {
       const file = event.target.files && event.target.files[0];
@@ -3114,13 +3146,13 @@
   }
 
   function init() {
+    if (cloud.pending) dirty = true;
     loadGuestView();
     loadHiddenValues();
     applyValuesHidden();
     fillStageSelects();
     bindEvents();
     renderAll();
-    updateBundledGuestsLabel();
 
     const hash = (location.hash || "").replace("#", "");
     showView(["budget", "guests", "invite"].includes(hash) ? hash : "checklist");
@@ -3136,15 +3168,12 @@
       const guestsView = $("#view-guests");
       if (!document.hidden && guestsView && !guestsView.hidden) refreshGuestResponses();
     }, 60000);
+    if (dirty && hasCloud() && cloud.auto && cloud.verified) {
+      autoTimer = setTimeout(() => saveCloud({ silent: true }), 10000);
+    }
+
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        // Ao sair do app, envia logo o que estiver pendente (o envio automático espera 25 s).
-        if (dirty && hasCloud() && cloud.auto && cloud.verified) {
-          clearTimeout(autoTimer);
-          saveCloud({ silent: true });
-        }
-        return;
-      }
+      if (document.hidden) return;
       const guestsView = $("#view-guests");
       if (guestsView && !guestsView.hidden) refreshGuestResponses();
     });

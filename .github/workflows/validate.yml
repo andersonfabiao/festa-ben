@@ -1,0 +1,24 @@
+name: Validar site
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verificar arquivos e privacidade básica
+        run: node scripts/validate.mjs
+      - name: Verificar sintaxe JavaScript
+        shell: bash
+        run: |
+          find assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          node --check < apps-script/rsvp.gs

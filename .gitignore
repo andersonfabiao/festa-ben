@@ -1,2 +1,6 @@
 # Backup local da lista original de convidados (dados pessoais, não publicar)
 lista_convidados.original.txt
+
+# Backups e dados privados do painel nunca devem ser publicados
+.private/
+private-data*.json

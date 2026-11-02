@@ -1,6 +1,7 @@
 /* ============================================================
    Convite digital + RSVP — Ben faz 5!
-   Lê data.json (ou convidados.json) e envia a resposta ao Apps Script.
+   Lê a configuração pública e consulta os convidados no Apps Script.
+   Durante a migração, aceita também a lista estática antiga como contingência.
    ============================================================ */
 
 (() => {
@@ -95,6 +96,9 @@
   let current = null;
   let sending = false;
   let toastTimer = null;
+  let remoteDirectory = false;
+  let lookupTimer = null;
+  let lookupSequence = 0;
 
   function toast(message, type) {
     const el = $("#inviteToast");
@@ -164,8 +168,50 @@
     return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query);
   }
 
+  function normalizeGuest(raw) {
+    const g = raw && typeof raw === "object" ? raw : {};
+    if (!g.name) return null;
+    const name = String(g.name).slice(0, 80);
+    const type = g.type === "adult" ? "adult" : "child";
+    let key = String(g.id || g.key || "").trim();
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(key)) key = guestKey(name, type);
+    const rsvpAt =
+      typeof g.rsvpAt === "string" && !isNaN(Date.parse(g.rsvpAt)) ? g.rsvpAt : "";
+    return {
+      key,
+      name,
+      relation: String(g.relation || g.parentesco || g.relationship || "").trim().slice(0, 32),
+      type,
+      status: GUEST_STATUS[g.status] ? g.status : "pending",
+      guardians: Array.isArray(g.guardians) ? g.guardians.map(String) : [],
+      rsvpAt,
+      rsvpMessage: String(g.rsvpMessage || "").slice(0, 280),
+    };
+  }
+
+  function mergeGuests(list) {
+    (Array.isArray(list) ? list : []).forEach((raw) => {
+      const guest = normalizeGuest(raw);
+      if (!guest) return;
+      const index = guests.findIndex((item) => item.key === guest.key);
+      if (index >= 0) guests[index] = guest;
+      else guests.push(guest);
+    });
+  }
+
   async function loadData() {
-    const files = ["data.json", "convidados.json"];
+    try {
+      const response = await fetch("event.json?t=" + Date.now(), { cache: "no-store" });
+      if (response.ok) {
+        const event = await response.json();
+        meta = normalizeMeta(event && event.meta);
+        remoteDirectory = !!meta.rsvpUrl;
+      }
+    } catch (e) {
+      /* os textos padrão mantêm o convite utilizável */
+    }
+
+    const files = ["data.json"];
     for (const file of files) {
       try {
         const res = await fetch(file + "?t=" + Date.now(), { cache: "no-store" });
@@ -178,41 +224,29 @@
             : [];
         if (!list.length) continue;
 
-        meta = normalizeMeta(json && json.meta);
-
-        const seen = new Set();
-        guests = list
-          .filter((g) => g && typeof g === "object" && g.name)
-          .map((g) => {
-            const name = String(g.name).slice(0, 80);
-            const type = g.type === "adult" ? "adult" : "child";
-            let key = String(g.id || "").trim();
-            if (!/^[A-Za-z0-9_-]{1,40}$/.test(key)) key = guestKey(name, type);
-            const rsvpAt =
-              typeof g.rsvpAt === "string" && !isNaN(Date.parse(g.rsvpAt)) ? g.rsvpAt : "";
-            return {
-              key,
-              name,
-              relation: String(g.relation || g.parentesco || g.relationship || "").trim().slice(0, 32),
-              type,
-              status: GUEST_STATUS[g.status] ? g.status : "pending",
-              guardians: Array.isArray(g.guardians) ? g.guardians.map(String) : [],
-              rsvpAt,
-              rsvpMessage: String(g.rsvpMessage || "").slice(0, 280),
-            };
-          })
-          .filter((g) => {
-            if (seen.has(g.key)) return false;
-            seen.add(g.key);
-            return true;
-          });
-
-        if (guests.length) return true;
+        if (!remoteDirectory) meta = normalizeMeta(json && json.meta);
+        mergeGuests(list);
+        if (guests.length) break;
       } catch (e) {
         /* tenta o próximo arquivo */
       }
     }
-    return false;
+    return remoteDirectory || guests.length > 0;
+  }
+
+  async function remoteLookup(params) {
+    if (!remoteDirectory || !meta.rsvpUrl) return null;
+    const url = new URL(meta.rsvpUrl);
+    url.searchParams.set("action", "lookup");
+    Object.keys(params).forEach((key) => url.searchParams.set(key, params[key]));
+    const response = await fetch(url.toString(), { cache: "no-store", redirect: "follow" });
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data || data.ok === false || !Array.isArray(data.guests)) {
+      throw appError((data && data.error) || "Não foi possível consultar a lista.");
+    }
+    mergeGuests(data.guests);
+    mergeGuests(data.related);
+    return data.guests.map((item) => normalizeGuest(item)).filter(Boolean);
   }
 
   function renderMeta() {
@@ -277,11 +311,15 @@
     renderPickList("");
     const search = $("#guestSearch");
     if (search) {
-      search.addEventListener("input", () => renderPickList(search.value));
+      search.addEventListener("input", () => {
+        clearTimeout(lookupTimer);
+        const value = search.value;
+        lookupTimer = setTimeout(() => renderPickList(value), 280);
+      });
     }
   }
 
-  function renderPickList(query) {
+  async function renderPickList(query) {
     const list = $("#guestPickList");
     if (!list) return;
 
@@ -292,7 +330,25 @@
       return;
     }
 
-    const matches = guests
+    const sequence = ++lookupSequence;
+    let source = guests;
+    if (remoteDirectory) {
+      list.innerHTML = '<p class="invite-hint invite-search-hint">Buscando seu nome…</p>';
+      try {
+        const remote = await remoteLookup({ q });
+        if (sequence !== lookupSequence) return;
+        if (remote) source = remote;
+      } catch (error) {
+        if (sequence !== lookupSequence) return;
+        if (!guests.length) {
+          list.innerHTML =
+            '<p class="invite-hint">Não consegui consultar os nomes agora. Verifique sua internet e tente novamente.</p>';
+          return;
+        }
+      }
+    }
+
+    const matches = source
       .filter((g) => norm(displayGuestName(g)).includes(q))
       .sort((a, b) => {
         const aStarts = norm(displayGuestName(a)).startsWith(q) ? 0 : 1;
@@ -440,8 +496,19 @@
       "</div>";
   }
 
-  function selectGuest(key) {
-    const guest = guests.find((g) => g.key === key);
+  async function selectGuest(key) {
+    let guest = guests.find((g) => g.key === key);
+    if (remoteDirectory) {
+      try {
+        const found = await remoteLookup({ id: key });
+        if (found && found.length) guest = guests.find((g) => g.key === key) || found[0];
+      } catch (error) {
+        if (!guest) {
+          toast("Não consegui abrir esse convite agora.", "err");
+          return;
+        }
+      }
+    }
     if (!guest) return;
     try {
       history.replaceState(null, "", location.pathname + "?convite=" + encodeURIComponent(key));
@@ -484,7 +551,11 @@
       if (data && data.ok === false) {
         throw appError(data.error || "O servidor recusou a resposta.");
       }
-      return { ok: true, guest: data && data.guest ? data.guest : null };
+      return {
+        ok: true,
+        guest: data && data.guest ? data.guest : null,
+        children: data && Array.isArray(data.children) ? data.children : [],
+      };
     } catch (err) {
       if (err && err.__app) throw err;
 
@@ -616,6 +687,13 @@
 
     const key = new URLSearchParams(location.search).get("convite");
     if (key) {
+      if (remoteDirectory) {
+        try {
+          await remoteLookup({ id: key });
+        } catch (error) {
+          /* usa a cópia de contingência, se existir */
+        }
+      }
       const guest = guests.find((g) => g.key === key);
       if (guest) {
         renderRsvp(guest);

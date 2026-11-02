@@ -1,7 +1,7 @@
 /* ============================================================
    RSVP do convite — Ben faz 5!
-   Google Apps Script que grava a resposta do convidado no
-   data.json do repositório (GitHub Contents API).
+   Google Apps Script que consulta e grava respostas no arquivo
+   de dados de um repositório GitHub privado.
 
    Configuração: veja apps-script/README.md
    ============================================================ */
@@ -106,6 +106,21 @@ function ghFetch_(cfg, method, url, body) {
   return { code: code, data: data, text: text };
 }
 
+function assertPrivateRepo_(cfg) {
+  var url =
+    'https://api.github.com/repos/' +
+    encodeURIComponent(cfg.owner) +
+    '/' +
+    encodeURIComponent(cfg.repo);
+  var res = ghFetch_(cfg, 'get', url);
+  if (res.code !== 200 || !res.data) {
+    throw new Error('Não foi possível verificar o repositório de dados (' + res.code + ').');
+  }
+  if (!res.data.private) {
+    throw new Error('O repositório de dados precisa ser privado.');
+  }
+}
+
 function readFile_(cfg) {
   var res = ghFetch_(cfg, 'get', apiUrl_(cfg) + '?ref=' + encodeURIComponent(cfg.branch));
   if (res.code === 404) {
@@ -185,6 +200,83 @@ function findGuest_(guests, id, name, type) {
   return null;
 }
 
+function normalizeSearch_(value) {
+  return String(value == null ? '' : value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/* Nunca envia telefone, observações ou recados para o navegador público. */
+function publicGuest_(guest) {
+  var type = guest.type === 'adult' ? 'adult' : 'child';
+  return {
+    id: guest.id || guestKey_(guest.name, type),
+    name: String(guest.name || '').slice(0, 80),
+    relation: String(guest.relation || '').slice(0, 32),
+    type: type,
+    status: STATUS_OK.indexOf(guest.status) >= 0 ? guest.status : 'pending',
+    guardians: Array.isArray(guest.guardians) ? guest.guardians.map(String) : [],
+    rsvpAt: guest.rsvpAt || '',
+  };
+}
+
+function lookupGuests_(data, params) {
+  var guests = data && Array.isArray(data.guests) ? data.guests : [];
+  var id = String(params.id || '').trim().slice(0, 40);
+  var query = normalizeSearch_(params.q || '');
+  var matches = [];
+
+  if (id) {
+    var direct = findGuest_(guests, id, '', 'adult');
+    if (direct) matches.push(direct);
+  } else {
+    if (query.length < 3) throw new Error('Digite pelo menos 3 letras para pesquisar.');
+    matches = guests
+      .filter(function (guest) {
+        if (!guest || !guest.name) return false;
+        return normalizeSearch_((guest.relation || '') + ' ' + guest.name).indexOf(query) >= 0;
+      })
+      .sort(function (a, b) {
+        var an = normalizeSearch_((a.relation || '') + ' ' + a.name);
+        var bn = normalizeSearch_((b.relation || '') + ' ' + b.name);
+        var ap = an.indexOf(query) === 0 ? 0 : 1;
+        var bp = bn.indexOf(query) === 0 ? 0 : 1;
+        if (ap !== bp) return ap - bp;
+        return an < bn ? -1 : an > bn ? 1 : 0;
+      })
+      .slice(0, 12);
+  }
+
+  var relatedById = {};
+  matches.forEach(function (guest) {
+    var gid = guest.id || guestKey_(guest.name, guest.type);
+    if (guest.type === 'adult') {
+      guests.forEach(function (child) {
+        if (!child || child.type !== 'child' || !Array.isArray(child.guardians)) return;
+        if (child.guardians.map(String).indexOf(String(gid)) >= 0) {
+          var cid = child.id || guestKey_(child.name, child.type);
+          relatedById[cid] = child;
+        }
+      });
+    } else if (Array.isArray(guest.guardians)) {
+      guest.guardians.forEach(function (guardianId) {
+        var adult = findGuest_(guests, String(guardianId), '', 'adult');
+        if (adult) relatedById[String(guardianId)] = adult;
+      });
+    }
+  });
+
+  return {
+    guests: matches.map(publicGuest_),
+    related: Object.keys(relatedById).map(function (key) {
+      return publicGuest_(relatedById[key]);
+    }),
+  };
+}
+
 function updateGuest_(body) {
   var status = String(body.status || '').trim();
   if (STATUS_OK.indexOf(status) === -1) {
@@ -229,7 +321,7 @@ function updateGuest_(body) {
     guest.id = guest.id || guestKey_(guest.name, guest.type);
     guest.status = status;
     guest.rsvpAt = now;
-    guest.rsvpMessage = message;
+    guest.rsvpMessage = message || guest.rsvpMessage || '';
     guest.rsvpSource = 'guest';
     data.updatedAt = now;
 
@@ -280,12 +372,24 @@ function updateGuest_(body) {
   throw lastError || new Error('Não foi possível gravar a resposta. Tente de novo.');
 }
 
-/* GET /exec?ping=1 — teste rápido da configuração. */
+/* GET /exec?ping=1 — teste rápido; ?action=lookup&q=ana consulta sem expor a lista. */
 function doGet(e) {
   var params = (e && e.parameter) || {};
+  if (params.action === 'lookup') {
+    try {
+      var lookupCfg = config_();
+      assertPrivateRepo_(lookupCfg);
+      var lookupFile = readFile_(lookupCfg);
+      var result = lookupGuests_(lookupFile.json, params);
+      return json_({ ok: true, guests: result.guests, related: result.related });
+    } catch (lookupError) {
+      return json_({ ok: false, error: String(lookupError.message || lookupError) });
+    }
+  }
   if (params.ping) {
     try {
       var cfg = config_();
+      assertPrivateRepo_(cfg);
       var file = readFile_(cfg);
       var count = file.json && Array.isArray(file.json.guests) ? file.json.guests.length : 0;
       return json_({
@@ -307,6 +411,7 @@ function doGet(e) {
 function doPost(e) {
   try {
     var body = parseBody_(e);
+    assertPrivateRepo_(config_());
 
     var lock = LockService.getScriptLock();
     if (!lock.tryLock(30000)) {

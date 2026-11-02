@@ -1,11 +1,11 @@
 # Confirmação de presença (RSVP) — Google Apps Script
 
-A página do convite (`convite.html`) é um site estático no GitHub Pages. Para ela conseguir **gravar** a resposta do convidado no `data.json`, usamos um pequeno script do Google Apps Script como intermediário. O token do GitHub fica guardado no Google, nunca no site.
+A página do convite (`convite.html`) é pública, mas a lista de convidados não precisa ser. O Google Apps Script consulta e grava as respostas em um **repositório privado separado**. O token fica guardado no Google e nunca é enviado ao convidado.
 
 Fluxo:
 
 ```
-Convidado → convite.html → Apps Script → GitHub Contents API → data.json
+Convidado → convite.html → Apps Script → repositório privado → data.json
                                       ↑
                          token fica nas Propriedades do script
 ```
@@ -17,13 +17,16 @@ Convidado → convite.html → Apps Script → GitHub Contents API → data.json
 3. Abra o arquivo [`rsvp.gs`](rsvp.gs) deste repositório, copie tudo e cole no editor.
 4. Renomeie o projeto para algo como `RSVP Ben 5`.
 
-## 2. Criar o token do GitHub
+## 2. Criar o repositório privado e o token
 
-Use um token **fine-grained**, separado do token do app (é boa prática cada uso ter o seu):
+1. No GitHub, crie um novo repositório chamado `festa-ben-dados` e marque-o como **Private**.
+2. Não ative GitHub Pages nesse repositório.
+
+Depois crie um token **fine-grained** dedicado:
 
 1. Abra [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta).
 2. **Generate new token**.
-3. Em **Repository access**, escolha **Only select repositories** e marque `andersonfabiao/festa-ben`.
+3. Em **Repository access**, escolha **Only select repositories** e marque apenas `festa-ben-dados`.
 4. Em **Permissions → Repository permissions**, coloque **Contents** em **Read and write**.
 5. Gere, copie o valor (`github_pat_…`) e guarde.
 
@@ -35,7 +38,7 @@ No Apps Script, abra **Configurações do projeto** (ícone de engrenagem) → *
 | --- | --- |
 | `GH_TOKEN` | o token `github_pat_…` criado no passo 2 |
 | `GH_OWNER` | `andersonfabiao` |
-| `GH_REPO` | `festa-ben` |
+| `GH_REPO` | `festa-ben-dados` |
 | `GH_BRANCH` | `main` (opcional — este é o padrão) |
 | `GH_PATH` | `data.json` (opcional — este é o padrão) |
 
@@ -63,7 +66,7 @@ SUA_URL/exec?ping=1
 Deve aparecer algo assim:
 
 ```json
-{"ok":true,"service":"rsvp-ben","repo":"andersonfabiao/festa-ben","branch":"main","path":"data.json","guests":69}
+{"ok":true,"service":"rsvp-ben","repo":"andersonfabiao/festa-ben-dados","branch":"main","path":"data.json","guests":70}
 ```
 
 Se aparecer `"ok":false`, a mensagem de erro indica o que falta (token, repositório, caminho etc.).
@@ -73,7 +76,8 @@ Se aparecer `"ok":false`, a mensagem de erro indica o que falta (token, reposit�
 1. Abra o site da festa e vá em **⚙️ Ajustes**.
 2. No campo **URL do Google Apps Script**, cole a URL `/exec`.
 3. Clique em **Salvar**.
-4. Clique em **☁️ Salvar na nuvem** para publicar essa configuração no `data.json`.
+4. Configure também o mesmo repositório privado na seção **Sincronização privada com GitHub**.
+5. Clique em **☁️ Salvar na nuvem** para criar o `data.json` privado.
 
 A partir daí, o convite mostra os botões **🎉 Vou comemorar** e **😢 Não poderei ir** habilitados.
 
@@ -86,7 +90,9 @@ A partir daí, o convite mostra os botões **🎉 Vou comemorar** e **😢 Não 
 
 ## Como funciona por dentro
 
-- `doGet(?ping=1)` só lê o `data.json` e devolve a configuração + quantidade de convidados.
+- `doGet(?ping=1)` testa o acesso ao arquivo privado e devolve somente a quantidade de convidados.
+- `doGet(?action=lookup&q=ana)` pesquisa no servidor e devolve no máximo 12 resultados, sem telefone, observações, orçamento ou recados.
+- `doGet(?action=lookup&id=...)` abre o convite individual e devolve somente o convidado e os familiares vinculados.
 - `doPost` recebe `{ id, name, type, status, message, children }`, valida o status (`confirmed`/`declined`), encontra o convidado pelo ID estável e grava `status`, `rsvpAt`, `rsvpMessage` e `rsvpSource: "guest"`. Se vierem `children: [{ id, status }]`, atualiza também as crianças **vinculadas a esse adulto** na mesma gravação.
 - O ID do convidado fica salvo no próprio convidado (gerado por `assets/guest-id.js` na primeira criação). Renomear não muda o ID nem o link individual.
 - Usa `LockService` para evitar duas gravações simultâneas e tenta de novo em caso de conflito (`409`/`422`).
@@ -99,12 +105,14 @@ A partir daí, o convite mostra os botões **🎉 Vou comemorar** e **😢 Não 
 | `Configuração incompleta: falta GH_TOKEN…` | Propriedade não criada ou com nome errado | Confira as Propriedades do script (maiúsculas e sublinhado). |
 | `GitHub recusou a leitura (401)` | Token inválido, expirado ou sem permissão | Gere outro token com **Contents: Read and write**. |
 | `GitHub recusou a leitura (404)` | Dono/repositório/caminho errados | Confira `GH_OWNER`, `GH_REPO` e `GH_PATH`. |
+| `O repositório de dados precisa ser privado` | O script ainda aponta para o site público | Crie `festa-ben-dados` como privado e atualize `GH_REPO`. |
 | `Convidado não encontrado` | Nome alterado ou lista ainda não enviada à nuvem | Importe a lista no app e clique em **☁️ Salvar na nuvem**. |
 | Botões desativados no convite | URL do Apps Script não configurada | Cole a URL em **Ajustes** e clique em **Salvar** + **☁️ Salvar na nuvem**. |
 | Resposta não aparece | Ainda não atualizou / link antigo | Clique em **🔄 Atualizar respostas**; confira se o convite usou o link novo. |
 
 ## Segurança
 
-- O token fica **somente** nas Propriedades do script do Google — não aparece no site nem no repositório.
-- O `data.json` é público (o repositório é público), então nomes, confirmações e recados podem ser lidos por qualquer pessoa que acesse o endereço. Se isso for um problema, use um repositório privado e publique o site por outro meio.
-- O endpoint aceita respostas de qualquer pessoa que tenha o link do convite; ele não expõe o token nem permite alterar outros dados além do status/recado do convidado escolhido.
+- O token fica **somente** nas Propriedades do script do Google e no navegador do administrador; use um token dedicado, limitado ao repositório privado.
+- O script recusa repositórios públicos.
+- A busca pública nunca devolve a lista completa nem campos privados.
+- O endpoint aceita respostas de quem localizar o nome ou receber o link individual; ele não expõe o token e só altera status e recado do convidado escolhido.

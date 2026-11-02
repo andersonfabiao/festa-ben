@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Ben faz 5! · Checklist Toy Story</title>
+  <meta name="description" content="Checklist, orçamento e convidados do aniversário de 5 anos do Ben — tema Toy Story." />
+  <meta name="theme-color" content="#8fd3ff" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 61,38 96,38 68,59 79,93 50,72 21,93 32,59 4,38 39,38' fill='%23ffc93c' stroke='%23e8453c' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
+  <link rel="stylesheet" href="assets/styles.css?v=20261116" />
+</head>
+<body>
+  <header class="hero">
+    <div class="clouds" aria-hidden="true">
+      <span class="cloud c1"></span>
+      <span class="cloud c2"></span>
+      <span class="cloud c3"></span>
+      <span class="cloud c4"></span>
+      <span class="spark s1">✦</span>
+      <span class="spark s2">✦</span>
+      <span class="spark s3">✦</span>
+      <span class="spark s4">✧</span>
+    </div>
+
+    <div class="hero-inner">
+      <div class="hero-top">
+        <div class="hero-copy">
+          <h1><span id="heroName" class="hero-name-blocks" role="img" aria-label="Ben"></span> faz <span class="hl" id="heroAge">5</span>!</h1>
+          <p class="hero-sub">Checklist da festa, orçamento e convidados em um só lugar.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-ghost hero-edit" id="toggleValuesBtn" type="button" aria-pressed="false" title="Ocultar valores">👁️ Valores</button>
+          <button class="btn btn-ghost hero-edit" id="heroEditBtn" type="button">✏️ Editar festa</button>
+        </div>
+      </div>
+
+      <div class="hero-meta" id="heroMeta"></div>
+      <div class="countdown" id="countdown" aria-live="polite"></div>
+
+      <div class="cloud-bar" aria-label="Sincronização dos dados">
+        <div class="cloud-status"><span class="dot" id="cloudDot"></span><span id="cloudText">Salvo neste dispositivo</span></div>
+        <div class="cloud-actions">
+          <button class="btn btn-sm btn-ghost" id="pullBtn" type="button" hidden>⬇️ Carregar</button>
+          <button class="btn btn-sm btn-cloud" id="saveCloudBtn" type="button">☁️ Salvar na nuvem</button>
+          <button class="btn btn-sm btn-ghost" id="settingsBtn" type="button">⚙️ Ajustes</button>
+        </div>
+      </div>
+
+      <div class="hero-progress">
+        <div class="progress-head">
+          <span id="progressLabel">0 de 0 itens concluídos</span>
+          <strong id="progressPct">0%</strong>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div class="hero-stats" id="heroStats"></div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="tabs" aria-label="Seções">
+      <button class="tab is-active" data-view="checklist" type="button">✅ Checklist</button>
+      <button class="tab" data-view="budget" type="button">💰 Orçamento</button>
+      <button class="tab" data-view="guests" type="button">🎟️ Convidados</button>
+      <button class="tab" data-view="invite" type="button">💌 Convite</button>
+    </nav>
+
+    <main>
+    <section id="view-checklist" class="view" aria-label="Checklist">
+      <div class="toolbar">
+        <div class="search-field">
+          <span aria-hidden="true">🔎</span>
+          <input id="searchInput" type="search" placeholder="Buscar item, fornecedor, observação…" autocomplete="off" aria-label="Buscar item" />
+        </div>
+        <select id="stageFilter" class="input" aria-label="Filtrar por etapa"></select>
+        <select id="statusFilter" class="input" aria-label="Filtrar por status">
+          <option value="">Todos os status</option>
+          <option value="todo">A fazer</option>
+          <option value="doing">Em andamento</option>
+          <option value="contracted">Contratado</option>
+          <option value="done">Concluído</option>
+        </select>
+        <label class="check-inline"><input type="checkbox" id="pendingOnly" /> Só pendentes</label>
+        <button class="btn btn-ghost" id="editStageNamesBtn" type="button">✏️ Editar nomes das etapas</button>
+        <button class="btn btn-primary" id="addItemBtn" type="button">＋ Novo item</button>
+      </div>
+
+      <div id="checklist" class="checklist"></div>
+    </section>
+
+    <section id="view-budget" class="view" aria-label="Orçamento" hidden>
+      <div class="section-head">
+        <div>
+          <h2>Orçamento da festa</h2>
+          <p class="muted">Acompanhe o previsto, o que já foi contratado e o que falta pagar.</p>
+        </div>
+        <div class="budget-head-actions">
+          <label class="budget-edit">
+            <span>Orçamento total (R$)</span>
+            <input id="budgetInput" class="input money-input" type="number" min="0" step="50" inputmode="decimal" />
+          </label>
+          <button class="btn btn-ghost" id="exportPartyPdfBtn" type="button">📄 Exportar resumo PDF</button>
+        </div>
+      </div>
+
+      <div id="budgetCards" class="stat-grid"></div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>Gastos por etapa</h3>
+          <div class="legend">
+            <span><i class="swatch swatch-prev"></i> Previsto</span>
+            <span><i class="swatch swatch-paid"></i> Pago</span>
+          </div>
+        </div>
+        <div id="stageBreakdown" class="breakdown"></div>
+      </div>
+
+      <div class="card table-card">
+        <div class="card-head">
+          <h3>Todos os itens</h3>
+          <span class="muted" id="budgetTableCount"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="budget-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="hide-sm">Etapa</th>
+                <th>Status</th>
+                <th class="num">Previsto</th>
+                <th class="num">Pago</th>
+                <th class="num">Falta</th>
+              </tr>
+            </thead>
+            <tbody id="budgetTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-guests" class="view" aria-label="Convidados" hidden>
+      <div class="section-head">
+        <div>
+          <h2>Convidados</h2>
+          <p class="muted">Monte a lista e acompanhe as confirmações de presença.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-ghost" id="copyInviteBtn" type="button">📋 Copiar convite</button>
+          <button class="btn btn-ghost" id="copyInviteLinkBtn" type="button">🔗 Link do convite</button>
+          <button class="btn btn-ghost" id="importGuestsBtn" type="button">📂 Importar arquivo</button>
+          <button class="btn btn-cloud" id="saveCloudGuestsBtn" type="button">☁️ Salvar na nuvem</button>
+          <button class="btn btn-ghost" id="settingsGuestsBtn" type="button">⚙️ Ajustes</button>
+          <input type="file" id="guestImportFile" accept=".txt,.csv,.json,text/plain,text/csv,application/json" hidden />
+        </div>
+      </div>
+
+      <div id="guestStats" class="stat-grid small"></div>
+
+      <div class="guest-tools">
+        <div class="guest-filters" role="group" aria-label="Filtrar convidados">
+          <button class="filter-chip is-active" type="button" data-guest-filter="all">Todos</button>
+          <button class="filter-chip" type="button" data-guest-filter="adult">Adultos</button>
+          <button class="filter-chip" type="button" data-guest-filter="child">Crianças</button>
+          <button class="filter-chip" type="button" data-guest-filter="confirmed">Confirmados</button>
+          <button class="filter-chip" type="button" data-guest-filter="pending">Pendentes</button>
+          <button class="filter-chip" type="button" data-guest-filter="declined">Não vão</button>
+        </div>
+      </div>
+
+      <div class="guest-sync">
+        <button class="btn btn-ghost btn-sm" id="refreshGuestsBtn" type="button">🔄 Atualizar respostas</button>
+        <span class="muted" id="guestSyncState"></span>
+      </div>
+
+      <div class="guest-actions">
+        <label class="guest-search">
+          <span aria-hidden="true">🔎</span>
+          <input id="guestSearch" class="guest-search-input" type="search" placeholder="Buscar convidado pelo nome…" autocomplete="off" aria-label="Buscar convidado pelo nome" />
+        </label>
+        <button class="btn btn-primary" id="addGuestBtn" type="button">＋ Adicionar convidado</button>
+      </div>
+
+      <div id="guestList" class="guest-list"></div>
+    </section>
+
+    <section id="view-invite" class="view" aria-label="Convite" hidden>
+      <div class="section-head">
+        <div>
+          <h2>Convite</h2>
+          <p class="muted">Ajuste os dados da festa e compartilhe os links do convite com os convidados.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-cloud" id="saveInviteCloudBtn" type="button">☁️ Salvar na nuvem</button>
+          <button class="btn btn-ghost" id="settingsInviteBtn" type="button">⚙️ Ajustes completos</button>
+        </div>
+      </div>
+
+      <div class="invite-links">
+        <article class="invite-link-card">
+          <span class="invite-link-icon" aria-hidden="true">🎬</span>
+          <div class="invite-link-body">
+            <h3>Convite animado</h3>
+            <p>Abertura com os brinquedos do Andy. É este o link para enviar no WhatsApp.</p>
+            <input id="animatedInviteLink" class="input" readonly aria-label="Link do convite animado" />
+          </div>
+          <div class="invite-link-actions">
+            <a class="btn btn-primary" id="openAnimatedInviteLink" href="convite-animado.html" target="_blank" rel="noopener noreferrer">Abrir convite ↗</a>
+            <button class="btn btn-ghost" id="copyAnimatedInviteBtn" type="button">📋 Copiar link</button>
+          </div>
+        </article>
+
+        <article class="invite-link-card">
+          <span class="invite-link-icon" aria-hidden="true">✅</span>
+          <div class="invite-link-body">
+            <h3>Página de confirmação</h3>
+            <p>Onde cada convidado encontra o nome e confirma a presença.</p>
+            <input id="confirmInviteLink" class="input" readonly aria-label="Link da página de confirmação" />
+          </div>
+          <div class="invite-link-actions">
+            <a class="btn btn-primary" id="openConfirmInviteLink" href="convite.html" target="_blank" rel="noopener noreferrer">Abrir confirmação ↗</a>
+            <button class="btn btn-ghost" id="copyConfirmInviteBtn" type="button">📋 Copiar link</button>
+          </div>
+        </article>
+      </div>
+
+      <div class="card invite-editor">
+        <div class="card-head">
+          <h3>Dados do convite</h3>
+          <span class="muted">Aparecem no topo desta página, no convite animado e na confirmação</span>
+        </div>
+
+        <form id="inviteForm">
+          <div class="grid-2">
+            <label class="field-label">Nome do aniversariante
+              <input id="invName" class="input" maxlength="40" required autocomplete="off" />
+            </label>
+            <label class="field-label">Idade
+              <input id="invAge" class="input" type="number" min="1" max="99" inputmode="numeric" />
+            </label>
+          </div>
+          <div class="grid-2">
+            <label class="field-label">Data
+              <input id="invDate" class="input" type="date" />
+            </label>
+            <label class="field-label">Horário
+              <input id="invTime" class="input" type="time" />
+            </label>
+          </div>
+          <label class="field-label">Local
+            <input id="invLocation" class="input" maxlength="120" placeholder="Ex.: Enjoy Kids — Liv Mall Shopping" />
+          </label>
+          <label class="field-label">Link do Google Maps (opcional)
+            <input id="invMapsUrl" class="input" type="url" placeholder="https://maps.app.goo.gl/…" autocomplete="off" />
+          </label>
+          <p class="hint">Se ficar vazio, o convite cria sozinho um link de busca no Google Maps com o local acima.</p>
+
+          <div class="grid-2">
+            <label class="field-label">URL do Google Apps Script (recebe as respostas)
+              <input id="invRsvpUrl" class="input" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" />
+            </label>
+            <label class="field-label">Como o convidado encontra o nome
+              <select id="invMode" class="input">
+                <option value="search">Buscar pelo nome (mostra só depois de 3 letras)</option>
+                <option value="links">Somente link individual (sem busca)</option>
+              </select>
+            </label>
+          </div>
+          <p class="hint">Sem a URL do Apps Script, os botões de resposta ficam desativados no convite. As alterações valem para os convidados depois de salvar na nuvem.</p>
+
+          <div class="invite-preview" id="invitePreview" aria-live="polite"></div>
+
+          <div class="invite-form-actions">
+            <button class="btn btn-primary" type="submit">Salvar dados do convite</button>
+            <button class="btn btn-ghost" id="copyInviteMessageBtn" type="button">📋 Copiar mensagem do convite</button>
+          </div>
+        </form>
+      </div>
+    </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Feito com 💙 para a festa do <strong id="footerName">Ben</strong> · dados salvos no seu navegador e, se quiser, no GitHub.</p>
+    </footer>
+  </div>
+
+  <!-- Modal de item -->
+  <div class="modal" id="itemModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+      <div class="modal-head">
+        <h2 id="itemModalTitle">Novo item</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <form id="itemForm">
+        <input type="hidden" id="itemId" />
+        <label class="field-label">O que precisa ser feito?
+          <input id="itemTitle" class="input" required maxlength="140" placeholder="Ex.: Contratar o buffet" />
+        </label>
+        <div class="grid-2">
+          <label class="field-label">Etapa
+            <select id="itemStage" class="input"></select>
+          </label>
+          <label class="field-label">Status
+            <select id="itemStatus" class="input">
+              <option value="todo">A fazer</option>
+              <option value="doing">Em andamento</option>
+              <option value="contracted">Contratado</option>
+              <option value="done">Concluído</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid-3">
+          <label class="field-label">Valor previsto (R$)
+            <input id="itemCost" class="input" inputmode="decimal" placeholder="0,00" />
+          </label>
+          <label class="field-label">Valor pago (R$)
+            <input id="itemPaid" class="input" inputmode="decimal" placeholder="0,00" />
+          </label>
+          <label class="field-label">Vence em
+            <input id="itemDue" class="input" type="date" />
+          </label>
+        </div>
+        <div class="grid-2">
+          <label class="field-label">Fornecedor / loja
+            <input id="itemSupplier" class="input" maxlength="80" placeholder="Ex.: Buffet Alegria" />
+          </label>
+          <label class="field-label">Link (opcional)
+            <input id="itemLink" class="input" type="url" placeholder="https://…" />
+          </label>
+        </div>
+        <label class="field-label">Observações
+          <textarea id="itemNotes" class="input" rows="3" maxlength="500" placeholder="Detalhes, medidas, combinados…"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger-ghost" id="deleteItemBtn" hidden>Excluir</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de ajustes -->
+  <div class="modal" id="settingsModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal-head">
+        <h2 id="settingsTitle">Ajustes</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <form id="settingsForm">
+        <h3 class="form-section">A festa</h3>
+        <div class="grid-2">
+          <label class="field-label">Nome do aniversariante
+            <input id="setName" class="input" maxlength="40" />
+          </label>
+          <label class="field-label">Idade
+            <input id="setAge" class="input" type="number" min="1" max="99" />
+          </label>
+        </div>
+        <div class="grid-2">
+          <label class="field-label">Data
+            <input id="setDate" class="input" type="date" />
+          </label>
+          <label class="field-label">Horário
+            <input id="setTime" class="input" type="time" />
+          </label>
+        </div>
+        <label class="field-label">Local
+          <input id="setLocation" class="input" maxlength="120" placeholder="Ex.: Buffet Alegria — Salão 2" />
+        </label>
+        <label class="field-label">Link do Google Maps (opcional)
+          <input id="setMapsUrl" class="input" type="url" placeholder="https://maps.app.goo.gl/…" autocomplete="off" />
+        </label>
+        <p class="hint">Se ficar vazio, o convite cria sozinho um link de busca no Google Maps com o local acima.</p>
+        <label class="field-label">Orçamento total (R$)
+          <input id="setBudget" class="input" inputmode="decimal" placeholder="0,00" />
+        </label>
+
+        <h3 class="form-section">Limite de convidados</h3>
+        <div class="grid-2">
+          <label class="field-label">Máximo de adultos
+            <input id="setMaxAdults" class="input" type="number" min="1" max="999" inputmode="numeric" />
+          </label>
+          <label class="field-label">Máximo de crianças
+            <input id="setMaxChildren" class="input" type="number" min="1" max="999" inputmode="numeric" />
+          </label>
+        </div>
+        <p class="hint">A aba Convidados mostra uma barra de ocupação de cada limite. Ao chegar no total, a barra fica vermelha.</p>
+
+        <h3 class="form-section" id="stageNamesTitle">Nomes das etapas do checklist</h3>
+        <p class="hint">Personalize os títulos das etapas. Os itens continuam vinculados às mesmas etapas.</p>
+        <div id="stageNamesFields" class="stage-names-grid"></div>
+
+        <h3 class="form-section">Sincronização privada com GitHub <span class="tag-optional">recomendado</span></h3>
+        <p class="hint"><strong>Use um repositório privado separado</strong> (por exemplo, <code>festa-ben-dados</code>). Assim convidados, telefones, orçamento e confirmações não ficam publicados junto com o convite. O token permanece somente neste navegador.</p>
+
+        <details class="cloud-help">
+          <summary>Como criar o token (passo a passo)</summary>
+          <ol>
+            <li>
+              Abra
+              <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer">github.com/settings/tokens?type=beta ↗</a>
+              <span class="muted">(é nas configurações da sua conta, no canto superior direito do GitHub — não é nas configurações do repositório)</span>
+            </li>
+            <li>Clique em <strong>Generate new token</strong>.</li>
+            <li>Crie antes um novo repositório <strong>privado</strong>, por exemplo <code>festa-ben-dados</code>.</li>
+            <li>Em <strong>Repository access</strong>, escolha <strong>Only select repositories</strong> e marque somente esse repositório privado.</li>
+            <li>Em <strong>Permissions → Repository permissions</strong>, coloque <strong>Contents</strong> em <strong>Read and write</strong>.</li>
+            <li>Gere o token, copie o valor (<code>github_pat_…</code>) e cole no campo abaixo.</li>
+          </ol>
+        </details>
+
+        <div class="grid-2">
+          <label class="field-label">Usuário / organização
+            <input id="setOwner" class="input" placeholder="seu-usuario" autocomplete="off" />
+          </label>
+          <label class="field-label">Repositório
+            <input id="setRepo" class="input" placeholder="festa-ben-dados" autocomplete="off" />
+          </label>
+        </div>
+        <div class="grid-2">
+          <label class="field-label">Branch
+            <input id="setBranch" class="input" placeholder="main" autocomplete="off" />
+          </label>
+          <label class="field-label">Arquivo de dados
+            <input id="setPath" class="input" placeholder="data.json" autocomplete="off" />
+          </label>
+        </div>
+        <label class="field-label">Token do GitHub (fine-grained, com Contents: read &amp; write)
+          <input id="setToken" class="input" type="password" placeholder="github_pat_…" autocomplete="off" />
+        </label>
+        <label class="check-inline"><input type="checkbox" id="setAuto" /> Salvar automaticamente na nuvem</label>
+        <div class="settings-cloud-actions">
+          <button type="button" class="btn btn-cloud btn-sm" id="pushCloudBtn">☁️ Enviar para a nuvem</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="pullCloudBtn">⬇️ Baixar da nuvem</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="testCloudBtn">Testar conexão</button>
+          <span id="cloudConfigState" class="muted"></span>
+        </div>
+
+        <h3 class="form-section">Convite e RSVP</h3>
+        <label class="field-label">Link do convite (para compartilhar)
+          <span class="copy-field">
+            <input id="setInviteLink" class="input" readonly />
+            <button type="button" class="btn btn-ghost btn-sm" id="copyInviteLinkBtn2">Copiar</button>
+          </span>
+        </label>
+        <label class="field-label">URL do Google Apps Script (recebe as respostas)
+          <input id="setRsvpUrl" class="input" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" />
+        </label>
+        <p class="hint">
+          Sem essa URL, o convite mostra os botões desativados.
+          <a id="rsvpHelpLink" href="https://github.com/andersonfabiao/festa-ben/blob/main/apps-script/README.md" target="_blank" rel="noopener noreferrer">Passo a passo para configurar ↗</a>
+        </p>
+        <label class="field-label">Como o convidado encontra o nome
+          <select id="setInviteMode" class="input">
+            <option value="search">Buscar pelo nome (mostra só depois de 3 letras)</option>
+            <option value="links">Somente link individual (sem busca)</option>
+          </select>
+        </label>
+        <p class="hint">
+          No modo busca, a lista completa nunca aparece: os nomes surgem apenas quando a pessoa digita pelo menos 3 letras.
+          No modo somente link, o convite pede o link individual — útil para não expor nenhum nome.
+        </p>
+
+        <h3 class="form-section">Dados</h3>
+        <div class="data-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">⬇️ Exportar JSON</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="importBtn">⬆️ Importar JSON</button>
+          <input type="file" id="importFile" accept="application/json,.json" hidden />
+          <button type="button" class="btn btn-ghost btn-sm" id="resetBtn">↺ Restaurar exemplo</button>
+          <button type="button" class="btn btn-danger-ghost btn-sm" id="clearBtn">🗑 Apagar itens</button>
+        </div>
+        <p class="hint">Seus dados ficam neste navegador (localStorage) e, se configurado, no arquivo do repositório. Faça exportações de vez em quando como backup.</p>
+
+        <div class="modal-actions">
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost" data-close>Fechar</button>
+          <button type="submit" class="btn btn-primary">Salvar ajustes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de importação de convidados -->
+  <div class="modal" id="guestImportModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="guestImportTitle">
+      <div class="modal-head">
+        <h2 id="guestImportTitle">Importar convidados</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <div class="guest-import-body">
+        <p class="hint" id="guestImportSummary"></p>
+        <ul class="guest-import-preview" id="guestImportPreview"></ul>
+        <p class="hint" id="guestImportDupes" hidden></p>
+
+        <fieldset class="import-mode">
+          <legend>O que fazer com a lista atual?</legend>
+          <label class="check-inline">
+            <input type="radio" name="importMode" value="merge" checked />
+            Adicionar aos convidados atuais (ignora repetidos)
+          </label>
+          <label class="check-inline">
+            <input type="radio" name="importMode" value="replace" />
+            Substituir a lista atual
+          </label>
+        </fieldset>
+
+        <div class="modal-actions">
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
+          <button type="button" class="btn btn-primary" id="guestImportConfirm">Importar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de edição de convidado -->
+  <div class="modal" id="guestModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle">
+      <div class="modal-head">
+        <h2 id="guestModalTitle">Editar convidado</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <form id="guestEditForm">
+        <input type="hidden" id="guestEditId" />
+        <label class="field-label">Nome
+          <input id="guestEditName" class="input" required maxlength="80" autocomplete="off" />
+        </label>
+        <label class="field-label">Parentesco ou como é conhecido (opcional)
+          <input id="guestEditRelation" class="input" maxlength="32" placeholder="Ex.: Vovô, Tia, Padrinho" autocomplete="off" />
+        </label>
+        <div class="grid-2">
+          <label class="field-label">Tipo
+            <select id="guestEditType" class="input">
+              <option value="child">Criança</option>
+              <option value="adult">Adulto</option>
+            </select>
+          </label>
+          <label class="field-label">Confirmação
+            <select id="guestEditStatus" class="input">
+              <option value="pending">Pendente</option>
+              <option value="confirmed">Confirmado</option>
+              <option value="declined">Não vai</option>
+            </select>
+          </label>
+        </div>
+        <label class="field-label">WhatsApp (opcional)
+          <input id="guestEditPhone" class="input" inputmode="tel" maxlength="40" placeholder="(11) 99999-9999" />
+        </label>
+        <label class="field-label">Observações (opcional)
+          <textarea id="guestEditNotes" class="input" rows="2" maxlength="500" placeholder="Ex.: vai com 2 acompanhantes, restrição alimentar…"></textarea>
+        </label>
+
+        <div id="guestGuardiansField" hidden>
+          <h3 class="form-section">Quem é responsável por esta criança?</h3>
+          <p class="hint">Marque um ou mais adultos. Quando um deles abrir o convite, esta criança aparecerá para confirmar junto.</p>
+          <div class="relation-list" id="guestGuardiansList"></div>
+        </div>
+
+        <div id="guestChildrenField" hidden>
+          <h3 class="form-section">Crianças sob responsabilidade deste adulto</h3>
+          <p class="hint">Essas crianças aparecem no convite deste adulto para ele confirmar a presença de todas de uma vez.</p>
+          <div class="relation-list" id="guestChildrenList"></div>
+        </div>
+
+        <label class="field-label" id="guestEditLinkField">Link individual do convite
+          <span class="copy-field">
+            <input id="guestEditLink" class="input" readonly />
+            <button type="button" class="btn btn-ghost btn-sm" id="guestEditCopyLink">Copiar</button>
+          </span>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger-ghost" id="guestEditDelete">Excluir</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="guestEditSubmit">Salvar convidado</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/guest-id.js?v=20261105"></script>
+  <script src="assets/app.js?v=20261119"></script>
+</body>
+</html>
