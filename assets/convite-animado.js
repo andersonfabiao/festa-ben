@@ -9,6 +9,16 @@
   const audio = document.querySelector("#themeAudio");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const audioStateKey = "ben-invite-audio";
+
+  // Quando o link vem do WhatsApp de um convidado, leva a chave para a confirmação.
+  try {
+    const inviteKey = new URLSearchParams(window.location.search).get("convite");
+    if (inviteKey && confirmButton) {
+      confirmButton.href = "convite.html?music=1&convite=" + encodeURIComponent(inviteKey);
+    }
+  } catch (e) {
+    /* ignora */
+  }
   let timers = [];
   let soundEnabled = true;
   let navigatingToRsvp = false;

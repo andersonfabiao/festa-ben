@@ -1159,6 +1159,7 @@ body.hide-values .money-input:focus {
 .guest-type { font-size: 0.74rem; font-weight: 700; color: var(--muted); }
 .guest-contact { margin-top: 3px; font-size: 0.75rem; font-weight: 700; color: #31506f; overflow-wrap: anywhere; }
 .guest-contact a { color: var(--blue); font-weight: 800; text-decoration: none; }
+.guest-contact a.guest-wa-invite { color: var(--green); }
 .guest-contact a:hover { text-decoration: underline; }
 .guest-notes { margin-top: 3px; font-size: 0.76rem; color: #5c6b82; overflow-wrap: anywhere; }
 .guest-links { margin-top: 3px; font-size: 0.74rem; font-weight: 700; color: #5a7794; overflow-wrap: anywhere; }

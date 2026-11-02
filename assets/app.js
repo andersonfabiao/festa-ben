@@ -150,16 +150,39 @@
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  function formatPhoneBR(value) {
+    let digits = String(value == null ? "" : value).replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.length > 11 && digits.startsWith("55")) digits = digits.slice(2);
+    if (digits.length > 11) return String(value).trim().slice(0, 40);
+    if (digits.length <= 2) return digits;
+    const ddd = digits.slice(0, 2);
+    const rest = digits.slice(2);
+    if (rest.length <= 4) return ddd + " " + rest;
+    const cut = rest.length > 8 ? 5 : 4;
+    return ddd + " " + rest.slice(0, cut) + "-" + rest.slice(cut);
+  }
+
   function normalizePhone(value) {
-    return String(value == null ? "" : value)
+    const cleaned = String(value == null ? "" : value)
       .replace(/[^\d+()\-\s]/g, "")
       .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 40);
+      .trim();
+    if (!cleaned) return "";
+    const digits = cleaned.replace(/\D/g, "");
+    if (!digits) return "";
+    return formatPhoneBR(digits).slice(0, 40);
   }
 
   function phoneDigits(value) {
     return String(value || "").replace(/\D/g, "");
+  }
+
+  function isValidPhone(value) {
+    let digits = phoneDigits(value);
+    if (!digits) return true;
+    if (digits.length > 11 && digits.startsWith("55")) digits = digits.slice(2);
+    return digits.length === 10 || digits.length === 11;
   }
 
   function waLink(value) {
@@ -442,6 +465,7 @@
   let cloudError = "";
   let autoTimer = null;
   let savingCloud = false;
+  let cloudQueued = false;
   let toastTimer = null;
   let activeView = "checklist";
 
@@ -1139,6 +1163,10 @@
           ? ' · <a href="' + esc(waLink(g.phone)) +
             '" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>'
           : "") +
+        (waInviteLink(g)
+          ? ' · <a class="guest-wa-invite" href="' + esc(waInviteLink(g)) +
+            '" target="_blank" rel="noopener noreferrer">Enviar convite ↗</a>'
+          : "") +
         "</div>"
       : "";
     const notes = g.notes ? '<div class="guest-notes">' + esc(g.notes) + "</div>" : "";
@@ -1416,7 +1444,8 @@
       cloudPhase = "dirty";
       renderCloudBar();
       clearTimeout(autoTimer);
-      autoTimer = setTimeout(() => saveCloud({ silent: true }), 2500);
+      // Agrupa várias edições num único commit (evita dezenas de commits por sessão).
+      autoTimer = setTimeout(() => saveCloud({ silent: true }), 25000);
     } else {
       renderCloudBar();
     }
@@ -1606,8 +1635,14 @@
       openSettings();
       return;
     }
-    if (savingCloud) return;
+    if (savingCloud) {
+      // Já existe um envio em andamento: garante um novo envio logo depois,
+      // senão a alteração feita durante a sincronização nunca chegaria à nuvem.
+      cloudQueued = true;
+      return;
+    }
     savingCloud = true;
+    const savedStamp = state.updatedAt;
     setCloudPhase("syncing");
     if (opts.fromSettings) setConfigState("Enviando os dados para o GitHub…");
 
@@ -1646,7 +1681,7 @@
       cloud.lastSync = nowISO();
       cloud.verified = true;
       saveCloudCfg();
-      dirty = false;
+      if (state.updatedAt === savedStamp) dirty = false;
       if (mergedRsvps) {
         saveLocal();
         renderGuests();
@@ -1677,6 +1712,11 @@
     } finally {
       savingCloud = false;
       renderCloudBar();
+      if (cloudQueued) {
+        cloudQueued = false;
+        clearTimeout(autoTimer);
+        autoTimer = setTimeout(() => saveCloud({ silent: true }), 1200);
+      }
     }
   }
 
@@ -1905,6 +1945,16 @@
       ? $("#guestEditStatus").value
       : "pending";
 
+    const phoneRaw = $("#guestEditPhone").value;
+    if (!isValidPhone(phoneRaw)) {
+      toast(
+        "Telefone incompleto: informe DDD + número (10 ou 11 dígitos) ou deixe em branco.",
+        "err"
+      );
+      $("#guestEditPhone").focus();
+      return;
+    }
+
     let guest = existing;
     if (!guest) {
       const usedIds = new Set(state.guests.map((g) => g.id));
@@ -1923,7 +1973,7 @@
     guest.relation = String($("#guestEditRelation").value || "").trim().slice(0, 32);
     guest.type = type;
     guest.status = status;
-    guest.phone = normalizePhone($("#guestEditPhone").value);
+    guest.phone = normalizePhone(phoneRaw);
     guest.notes = String($("#guestEditNotes").value || "").trim().slice(0, 500);
 
     if (type === "child") {
@@ -2213,6 +2263,37 @@
   function guestInviteUrl(guest) {
     const key = guest && guest.id ? String(guest.id) : guestKey(guest.name, guest.type);
     return invitePageUrl() + "?convite=" + encodeURIComponent(key);
+  }
+
+  function guestAnimatedInviteUrl(guest) {
+    const key = guest && guest.id ? String(guest.id) : guestKey(guest.name, guest.type);
+    return animatedInviteUrl() + "?convite=" + encodeURIComponent(key);
+  }
+
+  function inviteMessageText(options) {
+    const opts = options || {};
+    const m = state.meta;
+    const map = mapsLink();
+    return (
+      "🎉 " + m.name + " faz " + m.age + " anos!\n" +
+      "Tema: " + m.theme + " 🤠🚀\n" +
+      "📅 " + longDate(m.date) + (m.time ? " às " + m.time.replace(":", "h") : "") + "\n" +
+      "📍 " + (m.location || "Local a definir") + "\n" +
+      (map ? "🗺️ Mapa: " + map + "\n" : "") +
+      "\nAbra o convite: " + (opts.animatedUrl || animatedInviteUrl()) + "\n" +
+      "Confirme sua presença: " + (opts.confirmUrl || invitePageUrl())
+    );
+  }
+
+  function waInviteLink(guest) {
+    const digits = phoneDigits(guest && guest.phone);
+    if (!digits) return "";
+    const phone = digits.length <= 11 ? "55" + digits : digits;
+    const text = inviteMessageText({
+      animatedUrl: guestAnimatedInviteUrl(guest),
+      confirmUrl: guestInviteUrl(guest),
+    });
+    return "https://wa.me/" + phone + "?text=" + encodeURIComponent(text);
   }
 
   function mapsLink() {
@@ -2527,6 +2608,20 @@
       showGuestImportPreview(await response.text(), "na lista do Ben");
     } catch (e) {
       toast("Não consegui abrir a lista do Ben. Use “Importar lista” e escolha o arquivo.", "err");
+    }
+  }
+
+  async function updateBundledGuestsLabel() {
+    const btn = $("#importBundledGuestsBtn");
+    if (!btn) return;
+    try {
+      const response = await fetch("convidados.json", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      const list = Array.isArray(data) ? data : Array.isArray(data.guests) ? data.guests : [];
+      if (list.length) btn.textContent = "📥 Lista do Ben (" + list.length + ")";
+    } catch (e) {
+      /* sem conexão: mantém o rótulo sem o número */
     }
   }
 
@@ -2874,6 +2969,20 @@
 
     /* Modal de convidado */
     $("#guestEditForm").addEventListener("submit", handleGuestEditSubmit);
+    $("#guestEditPhone").addEventListener("input", (event) => {
+      const input = event.target;
+      const atEnd = input.selectionStart === input.value.length;
+      const formatted = normalizePhone(input.value);
+      if (formatted === input.value) return;
+      input.value = formatted;
+      if (atEnd) {
+        try {
+          input.setSelectionRange(formatted.length, formatted.length);
+        } catch (e) {
+          /* ignora */
+        }
+      }
+    });
     $("#guestEditType").addEventListener("change", () => {
       const id = $("#guestEditId").value;
       const guest = guestById(id);
@@ -3011,6 +3120,7 @@
     fillStageSelects();
     bindEvents();
     renderAll();
+    updateBundledGuestsLabel();
 
     const hash = (location.hash || "").replace("#", "");
     showView(["budget", "guests", "invite"].includes(hash) ? hash : "checklist");
@@ -3027,8 +3137,16 @@
       if (!document.hidden && guestsView && !guestsView.hidden) refreshGuestResponses();
     }, 60000);
     document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        // Ao sair do app, envia logo o que estiver pendente (o envio automático espera 25 s).
+        if (dirty && hasCloud() && cloud.auto && cloud.verified) {
+          clearTimeout(autoTimer);
+          saveCloud({ silent: true });
+        }
+        return;
+      }
       const guestsView = $("#view-guests");
-      if (!document.hidden && guestsView && !guestsView.hidden) refreshGuestResponses();
+      if (guestsView && !guestsView.hidden) refreshGuestResponses();
     });
   }
 
