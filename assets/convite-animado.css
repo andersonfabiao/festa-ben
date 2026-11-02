@@ -53,6 +53,7 @@ button { color: inherit; }
 .room,
 .opening-screen,
 .stage,
+.reveal-scene,
 .intro-scene,
 .envelope-scene,
 .final-invite {
@@ -297,6 +298,75 @@ button { color: inherit; }
 .round-control { width: 42px; height: 42px; border-radius: 50%; font-size: 1.1rem; font-weight: 900; }
 .skip-animation { padding: 9px 13px; border-radius: 999px; font-size: .76rem; font-weight: 800; }
 .is-final .skip-animation { display: none; }
+
+.reveal-scene {
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 46%, rgba(255,250,208,.34), transparent 38%);
+  transition: opacity .65s ease;
+}
+
+.is-reveal .reveal-scene { opacity: 1; }
+.is-intro .reveal-scene, .is-final .reveal-scene { opacity: 0; }
+
+.reveal-glow {
+  position: absolute;
+  width: min(92vw, 690px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,245,175,.46), rgba(255,255,255,.16) 42%, transparent 70%);
+  filter: blur(8px);
+  animation: reveal-glow-pulse 2.4s ease-in-out infinite;
+}
+
+.reveal-frame {
+  position: relative;
+  z-index: 2;
+  height: min(82vh, 720px);
+  aspect-ratio: 128 / 240;
+  padding: 8px;
+  border: 3px solid rgba(255,255,255,.88);
+  border-radius: 24px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 28px 75px rgba(9,55,88,.35), 0 0 0 8px rgba(255,255,255,.13);
+  opacity: 0;
+  transform: translateY(35px) scale(.88);
+  overflow: hidden;
+}
+
+.is-reveal .reveal-frame { animation: reveal-card-arrives .75s .12s cubic-bezier(.15,.9,.25,1.12) forwards; }
+
+.reveal-frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 15px;
+  object-fit: cover;
+  background: #65bce1;
+}
+
+.reveal-frame p {
+  position: absolute;
+  z-index: 3;
+  right: 14px;
+  bottom: 15px;
+  left: 14px;
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(16,67,105,.72);
+  box-shadow: 0 5px 18px rgba(10,44,70,.2);
+  font-size: clamp(.66rem, 1.6vw, .82rem);
+  font-weight: 900;
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
 
 .intro-scene { display: grid; place-items: center; opacity: 0; transition: opacity .6s ease; }
 .is-intro .intro-scene { opacity: 1; }
@@ -578,6 +648,8 @@ button { color: inherit; }
 .no-script { position: fixed; z-index: 1000; inset: auto 10px 10px; padding: 15px; border-radius: 12px; background: #fff; color: #173f67; text-align: center; }
 
 @keyframes opening-float { 50% { transform: translateY(-7px); } }
+@keyframes reveal-card-arrives { to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes reveal-glow-pulse { 50% { opacity: .58; transform: scale(1.08); } }
 @keyframes opening-peek-arrives { from { opacity: 0; transform: translateX(-35px) rotate(-7deg) scale(.9); } to { opacity: 1; transform: translateX(0) rotate(-2deg) scale(1); } }
 @keyframes opening-peek-breathe { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
 @keyframes flight-crosses-room {
@@ -651,6 +723,8 @@ button { color: inherit; }
   .shelf { left: -5%; width: 175px; transform: scale(.75); }
   .opening-card { padding-top: 42px; }
   .opening-logo .opening-peek { top: 0; right: 92%; bottom: auto; left: auto; width: .62em; }
+  .reveal-scene { padding: 12px; }
+  .reveal-frame { width: min(78vw, 350px); height: auto; max-height: 79vh; }
   .intro-copy { top: 12%; }
   .hero-characters { bottom: 5%; width: 92vw; }
   .orbit-alien { left: -18px; bottom: 19%; }
@@ -678,7 +752,7 @@ button { color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-  .is-started .intro-scene, .is-started .envelope-scene { display: none; }
+  .is-started .reveal-scene, .is-started .intro-scene, .is-started .envelope-scene { display: none; }
   .is-started .final-invite { opacity: 1; visibility: visible; pointer-events: auto; }
   .is-started .invite-card { opacity: 1; transform: none; }
   .is-final .base-cast-art,

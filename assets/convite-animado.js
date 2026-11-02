@@ -6,6 +6,7 @@
   const skipButton = document.querySelector("#skipButton");
   const confirmButton = document.querySelector("#confirmButton");
   const finalInvite = document.querySelector("#finalInvite");
+  const revealVideo = document.querySelector("#revealVideo");
   const audio = document.querySelector("#themeAudio");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const audioStateKey = "ben-invite-audio";
@@ -33,8 +34,9 @@
   };
 
   const setScene = (scene) => {
-    experience.classList.remove("is-intro", "is-envelope", "is-final");
+    experience.classList.remove("is-reveal", "is-intro", "is-envelope", "is-final");
     experience.classList.add(`is-${scene}`);
+    if (scene !== "reveal" && revealVideo) revealVideo.pause();
     if (scene === "final") finalInvite.focus({ preventScroll: true });
   };
 
@@ -84,10 +86,14 @@
       return;
     }
 
-    setScene("intro");
+    setScene("reveal");
+    if (revealVideo) {
+      revealVideo.currentTime = 0;
+      revealVideo.play().catch(() => {});
+    }
     playAudio(restartAudio);
-    later(() => setScene("envelope"), 6300);
-    later(showFinal, 9900);
+    later(() => setScene("intro"), 5250);
+    later(showFinal, 10100);
   };
 
   startButton.addEventListener("click", () => runAnimation({ restartAudio: true }));
