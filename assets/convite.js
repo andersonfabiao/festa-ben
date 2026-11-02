@@ -1,7 +1,6 @@
 /* ============================================================
    Convite digital + RSVP — Ben faz 5!
-   Lê a configuração pública e consulta os convidados no Apps Script.
-   Durante a migração, aceita também a lista estática antiga como contingência.
+   Lê somente a configuração pública e consulta os convidados no Apps Script.
    ============================================================ */
 
 (() => {
@@ -211,27 +210,7 @@
       /* os textos padrão mantêm o convite utilizável */
     }
 
-    const files = ["data.json"];
-    for (const file of files) {
-      try {
-        const res = await fetch(file + "?t=" + Date.now(), { cache: "no-store" });
-        if (!res.ok) continue;
-        const json = await res.json();
-        const list = Array.isArray(json)
-          ? json
-          : json && Array.isArray(json.guests)
-            ? json.guests
-            : [];
-        if (!list.length) continue;
-
-        if (!remoteDirectory) meta = normalizeMeta(json && json.meta);
-        mergeGuests(list);
-        if (guests.length) break;
-      } catch (e) {
-        /* tenta o próximo arquivo */
-      }
-    }
-    return remoteDirectory || guests.length > 0;
+    return remoteDirectory;
   }
 
   async function remoteLookup(params) {

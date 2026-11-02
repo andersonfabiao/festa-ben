@@ -14,7 +14,7 @@ function filesIn(dir, extension) {
   });
 }
 
-for (const name of ["event.json", "data.json"]) {
+for (const name of ["event.json"]) {
   const path = join(root, name);
   if (!existsSync(path)) continue;
   try {
@@ -31,7 +31,7 @@ for (const forbidden of ["guests", "items", "budget", "phone", "notes"]) {
   }
 }
 
-for (const forbiddenFile of ["convidados.json", "lista_convidados.txt"]) {
+for (const forbiddenFile of ["data.json", "convidados.json", "lista_convidados.txt"]) {
   if (existsSync(join(root, forbiddenFile))) {
     errors.push(`${forbiddenFile}: lista pessoal não deve ser publicada`);
   }
