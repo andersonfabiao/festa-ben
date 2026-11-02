@@ -94,6 +94,7 @@ A partir daí, o convite mostra os botões **🎉 Vou comemorar** e **😢 Não 
 - `doGet(?action=lookup&q=ana)` pesquisa no servidor e devolve no máximo 12 resultados, sem telefone, observações, orçamento ou recados.
 - `doGet(?action=lookup&id=...)` abre o convite individual e devolve somente o convidado e os familiares vinculados.
 - `doPost` recebe `{ id, name, type, status, message, children }`, valida o status (`confirmed`/`declined`), encontra o convidado pelo ID estável e grava `status`, `rsvpAt`, `rsvpMessage` e `rsvpSource: "guest"`. Se vierem `children: [{ id, status }]`, atualiza também as crianças **vinculadas a esse adulto** na mesma gravação.
+- Para um nome ausente da lista, `doPost` também aceita `{ action: "unlisted-rsvp", name }`, cria um adulto confirmado com `unlisted: true` e o identifica no painel como novo convidado.
 - O ID do convidado fica salvo no próprio convidado (gerado por `assets/guest-id.js` na primeira criação). Renomear não muda o ID nem o link individual.
 - Usa `LockService` para evitar duas gravações simultâneas e tenta de novo em caso de conflito (`409`/`422`).
 - O site também tenta de novo em modo `no-cors` quando o navegador bloqueia a leitura da resposta; nesse caso a confirmação pode levar alguns segundos para aparecer na lista dos anfitriões.

@@ -1161,6 +1161,7 @@ body.hide-values .money-input:focus {
 .guest-avatar.child { background: #fff2cc; color: #8a6400; }
 .guest-main { flex: 1; min-width: 0; }
 .guest-name { font-weight: 800; font-size: 0.94rem; color: #26344f; overflow-wrap: anywhere; }
+.guest-unlisted-badge { display: inline-flex; align-items: center; margin-left: 7px; padding: 2px 7px; border-radius: 999px; background: #fff1c7; color: #8a5800; font-size: .64rem; font-weight: 900; letter-spacing: .02em; vertical-align: middle; }
 .guest-type { font-size: 0.74rem; font-weight: 700; color: var(--muted); }
 .guest-contact { margin-top: 3px; font-size: 0.75rem; font-weight: 700; color: #31506f; overflow-wrap: anywhere; }
 .guest-contact a { color: var(--blue); font-weight: 800; text-decoration: none; }
@@ -1713,6 +1714,12 @@ body.no-scroll { overflow: hidden; }
 .invite-answer span { font-size: 0.72rem; font-weight: 700; opacity: 0.8; }
 .invite-hint { font-size: 0.82rem; color: #5c6b82; margin: 0 0 12px; text-align: center; }
 .invite-search-hint { padding: 14px 8px; background: #f7fbff; border: 1px dashed #c9dcef; border-radius: 12px; }
+.invite-unlisted { margin-top: 8px; padding: 16px; border: 1px solid #c9dcef; border-radius: 16px; background: linear-gradient(145deg, #f8fcff, #fff); }
+.invite-unlisted-title { margin: 0 0 5px; color: #173f67; font-size: 1rem; font-weight: 900; }
+.invite-unlisted-form { display: grid; gap: 9px; margin-top: 12px; }
+.invite-unlisted-form .field-label { margin: 0; }
+.invite-unlisted-submit { width: 100%; justify-content: center; margin-top: 2px; }
+.invite-honeypot { position: absolute !important; left: -10000px !important; width: 1px !important; height: 1px !important; opacity: 0 !important; }
 .invite-kids {
   margin: 0 0 14px;
   padding: 12px;

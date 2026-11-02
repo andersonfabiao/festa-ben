@@ -395,6 +395,7 @@
           : rsvpAt
             ? "guest"
             : "",
+      unlisted: g.unlisted === true,
     };
   }
 
@@ -1180,6 +1181,9 @@
         "</div>"
       : "";
     const notes = g.notes ? '<div class="guest-notes">' + esc(g.notes) + "</div>" : "";
+    const unlistedBadge = g.unlisted
+      ? '<span class="guest-unlisted-badge" title="Confirmou presença sem estar na lista inicial">Novo convidado</span>'
+      : "";
 
     const guardians =
       g.type === "child"
@@ -1202,7 +1206,7 @@
     return (
       '<div class="guest-row">' +
         '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
-        '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + "</div>" +
+        '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + unlistedBadge + "</div>" +
           '<div class="guest-type">' + (g.type === "child" ? "Criança" : "Adulto") +
           " · " + gs.label + "</div>" + phone + notes + guardianLine + kidsLine +
           rsvpNote + rsvpMsg + "</div>" +
@@ -1623,6 +1627,15 @@
       g.rsvpAt = r.rsvpAt;
       g.rsvpMessage = r.rsvpMessage || "";
       g.rsvpSource = r.rsvpSource || "guest";
+      changed++;
+    });
+
+    const usedIds = new Set(state.guests.map((guest) => guest.id));
+    remote.guests.forEach((raw) => {
+      if (!raw || raw.unlisted !== true || usedIds.has(raw.id)) return;
+      const record = makeGuestRecord(raw, usedIds);
+      if (!record) return;
+      state.guests.push(record);
       changed++;
     });
     return changed;

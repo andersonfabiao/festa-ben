@@ -220,7 +220,69 @@ function publicGuest_(guest) {
     status: STATUS_OK.indexOf(guest.status) >= 0 ? guest.status : 'pending',
     guardians: Array.isArray(guest.guardians) ? guest.guardians.map(String) : [],
     rsvpAt: guest.rsvpAt || '',
+    unlisted: guest.unlisted === true,
   };
+}
+
+function createUnlistedGuest_(body) {
+  if (String(body.website || '').trim()) throw new Error('Não foi possível validar o envio.');
+  var name = String(body.name || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  if (name.length < 3) throw new Error('Digite seu nome completo.');
+
+  var cfg = config_();
+  var lastError = null;
+  for (var attempt = 0; attempt < 4; attempt++) {
+    var file = readFile_(cfg);
+    var data = file.json;
+    if (!data || typeof data !== 'object' || !Array.isArray(data.guests)) {
+      throw new Error('O ' + cfg.path + ' não tem uma lista de convidados.');
+    }
+
+    var normalizedName = normalizeSearch_(name);
+    var existing = data.guests.filter(function (guest) {
+      return guest && normalizeSearch_(guest.name) === normalizedName;
+    })[0];
+    if (existing) {
+      throw new Error('Esse nome já está na lista. Volte à busca e selecione a opção correspondente.');
+    }
+
+    var now = new Date().toISOString();
+    var baseId = guestKey_(name, 'adult');
+    var id = baseId;
+    var suffix = 2;
+    while (findGuest_(data.guests, id, '', 'adult')) {
+      id = String(baseId).slice(0, 36) + '-' + suffix;
+      suffix++;
+    }
+    var guest = {
+      id: id,
+      name: name,
+      type: 'adult',
+      status: 'confirmed',
+      phone: '',
+      relation: 'Novo convidado',
+      notes: 'Confirmou pelo convite sem estar na lista inicial.',
+      guardians: [],
+      rsvpAt: now,
+      rsvpMessage: '',
+      rsvpSource: 'guest',
+      unlisted: true,
+    };
+    data.guests.push(guest);
+    data.updatedAt = now;
+
+    var res = writeFile_(cfg, data, file.sha);
+    if (res.code === 200 || res.code === 201) {
+      return { guest: publicGuest_(guest), children: [] };
+    }
+    if (res.code === 409 || res.code === 422) {
+      lastError = new Error('Outra atualização aconteceu ao mesmo tempo. Tente de novo.');
+      Utilities.sleep(400 + attempt * 500);
+      continue;
+    }
+    throw new Error('GitHub recusou a gravação (' + res.code + '): ' + errorMessage_(res));
+  }
+  throw lastError || new Error('Não foi possível gravar a confirmação. Tente de novo.');
 }
 
 function lookupGuests_(data, params) {
@@ -399,6 +461,7 @@ function doGet(e) {
         branch: cfg.branch,
         path: cfg.path,
         guests: count,
+        features: { lookup: true, unlistedRsvp: true },
       });
     } catch (err) {
       return json_({ ok: false, error: String(err.message || err) });
@@ -418,7 +481,7 @@ function doPost(e) {
       throw new Error('Muitas respostas ao mesmo tempo. Tente de novo em instantes.');
     }
     try {
-      var result = updateGuest_(body);
+      var result = body.action === 'unlisted-rsvp' ? createUnlistedGuest_(body) : updateGuest_(body);
       return json_({ ok: true, guest: result.guest, children: result.children });
     } finally {
       lock.releaseLock();

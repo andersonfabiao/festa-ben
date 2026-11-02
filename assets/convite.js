@@ -98,6 +98,7 @@
   let remoteDirectory = false;
   let lookupTimer = null;
   let lookupSequence = 0;
+  const pageStartedAt = Date.now();
 
   function toast(message, type) {
     const el = $("#inviteToast");
@@ -185,6 +186,7 @@
       guardians: Array.isArray(g.guardians) ? g.guardians.map(String) : [],
       rsvpAt,
       rsvpMessage: String(g.rsvpMessage || "").slice(0, 280),
+      unlisted: !!g.unlisted,
     };
   }
 
@@ -284,7 +286,7 @@
           '<input id="guestSearch" class="input" type="search" placeholder="Digite seu nome para confirmar…" autocomplete="off" aria-label="Digite seu nome para confirmar presença" />' +
         "</label>" +
         '<div id="guestPickList" class="invite-guest-list"></div>' +
-        '<p class="invite-hint">Não encontrou seu nome? Fale com os anfitriões. 💬</p>' +
+        '<p class="invite-hint">Se o seu nome não aparecer, você poderá avisar os pais do Ben por aqui.</p>' +
       "</div>";
 
     renderPickList("");
@@ -361,8 +363,66 @@
       )
       .join("");
 
-    list.innerHTML =
-      html || '<p class="invite-hint">Nenhum nome encontrado com essas letras. Tente outro trecho do nome.</p>';
+    list.innerHTML = html ||
+      '<div class="invite-unlisted">' +
+        '<p class="invite-unlisted-title">Não encontrou seu nome?</p>' +
+        '<p class="invite-hint">Digite seu nome completo abaixo. Sua presença será confirmada e aparecerá para os pais do Ben como um novo convidado.</p>' +
+        '<form id="unlistedGuestForm" class="invite-unlisted-form">' +
+          '<label class="field-label" for="unlistedGuestName">Seu nome completo</label>' +
+          '<input id="unlistedGuestName" class="input" name="name" type="text" minlength="3" maxlength="80" autocomplete="name" required value="' + esc(String(query || "").trim()) + '" />' +
+          '<input class="invite-honeypot" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" />' +
+          '<button class="btn btn-primary invite-unlisted-submit" type="submit">Confirmar minha presença</button>' +
+          '<p class="invite-status" id="unlistedStatus" role="status" aria-live="polite"></p>' +
+        '</form>' +
+      '</div>';
+  }
+
+  async function submitUnlisted(form) {
+    if (!form || sending || !meta.rsvpUrl) return;
+    const nameInput = $("#unlistedGuestName", form);
+    const websiteInput = $("[name=website]", form);
+    const statusEl = $("#unlistedStatus", form);
+    const name = String(nameInput ? nameInput.value : "").replace(/\s+/g, " ").trim().slice(0, 80);
+    if (name.length < 3) {
+      if (statusEl) statusEl.textContent = "Digite seu nome completo.";
+      if (nameInput) nameInput.focus();
+      return;
+    }
+
+    sending = true;
+    const button = $("button[type=submit]", form);
+    if (button) button.disabled = true;
+    if (statusEl) statusEl.textContent = "Enviando sua confirmação…";
+
+    try {
+      const result = await sendRsvp({
+        action: "unlisted-rsvp",
+        name,
+        type: "adult",
+        status: "confirmed",
+        website: websiteInput ? websiteInput.value : "",
+        startedAt: pageStartedAt,
+      });
+      const guest = normalizeGuest(result.guest || {
+        id: guestKey(name, "adult"), name, type: "adult", status: "confirmed",
+        rsvpAt: new Date().toISOString(), unlisted: true,
+      });
+      if (!guest) throw appError("Não foi possível registrar esse nome.");
+      guest.status = "confirmed";
+      guest.unlisted = true;
+      mergeGuests([guest]);
+      sending = false;
+      renderRsvp(guests.find((item) => item.key === guest.key) || guest);
+      celebrate();
+      const savedStatus = $("#rsvpStatus");
+      if (savedStatus) savedStatus.textContent = "Presença confirmada e enviada aos pais do Ben. Obrigado!";
+      toast("Presença confirmada! 🎉", "ok");
+    } catch (error) {
+      sending = false;
+      if (button) button.disabled = false;
+      if (statusEl) statusEl.textContent = "Não foi possível enviar: " + (error.message || "erro de conexão") + ". Tente novamente.";
+      toast("Não foi possível enviar sua confirmação.", "err");
+    }
   }
 
   function linkedChildren(guest) {
@@ -628,6 +688,13 @@
   }
 
   function bind() {
+    $("#inviteContent").addEventListener("submit", (event) => {
+      if (event.target.matches("#unlistedGuestForm")) {
+        event.preventDefault();
+        submitUnlisted(event.target);
+      }
+    });
+
     $("#inviteContent").addEventListener("click", (event) => {
       const pick = event.target.closest("[data-key]");
       if (pick) {

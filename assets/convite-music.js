@@ -16,8 +16,6 @@
   }
 
   const freshState = state && Number.isFinite(state.savedAt) && Date.now() - state.savedAt < 30 * 60 * 1000;
-  if (!freshState && !arrivedFromInvite) return;
-
   player.hidden = false;
 
   const saveState = () => {
@@ -59,7 +57,8 @@
     }
     audio.volume = freshState && Number.isFinite(state.volume) ? state.volume : .62;
 
-    if ((freshState && state.shouldPlay) || arrivedFromInvite) {
+    const explicitlyPaused = freshState && state.shouldPlay === false;
+    if (!explicitlyPaused || arrivedFromInvite) {
       continueAudio();
     } else {
       updateControl(false);

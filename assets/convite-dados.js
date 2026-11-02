@@ -76,8 +76,17 @@
 
     const detail = $("animatedLocationDetail");
     if (detail) {
-      detail.textContent = location[1];
+      detail.textContent = location[1] ? location[1] + " · abrir mapa ↗" : "Abrir no Google Maps ↗";
       detail.hidden = !location[1];
+    }
+
+    const locationLink = $("animatedLocation");
+    if (locationLink) {
+      const mapUrl = /^https?:\/\//i.test(String(meta.mapsUrl || "").trim())
+        ? String(meta.mapsUrl).trim()
+        : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(String(meta.location || ""));
+      locationLink.href = mapUrl;
+      locationLink.setAttribute("aria-label", "Abrir a localização de " + location[0] + " no Google Maps");
     }
 
     const finalInvite = $("finalInvite");
