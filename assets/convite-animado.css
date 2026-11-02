@@ -394,11 +394,17 @@ button { color: inherit; }
 .is-final .final-invite { opacity: 1; visibility: visible; pointer-events: auto; }
 .is-final .envelope-scene { opacity: 0; }
 
-.invite-card {
+.card-stage {
   position: relative;
   width: min(100%, 660px);
+  --base-art-space: clamp(130px, calc(41.5vw + 8px), 290px);
+}
+
+.invite-card {
+  position: relative;
+  width: 100%;
   min-height: 910px;
-  padding: clamp(24px, 5vh, 45px) clamp(21px, 5vw, 48px) 235px;
+  padding: clamp(24px, 5vh, 45px) clamp(21px, 5vw, 48px) var(--base-art-space);
   border: 3px solid rgba(255,255,255,.9);
   border-radius: 12px;
   text-align: center;
@@ -415,13 +421,13 @@ button { color: inherit; }
 .peek-duo-art {
   position: absolute;
   z-index: 3;
-  top: 150px;
-  right: calc(50% + 252px);
+  top: auto;
+  right: 100%;
+  bottom: calc(var(--base-art-space) - 4px);
   left: auto;
-  width: 270px;
+  width: min(270px, calc(50vw - 340px));
   height: auto;
   opacity: 0;
-  mix-blend-mode: multiply;
   filter: drop-shadow(0 16px 12px rgba(27, 73, 100, .2));
   transform: translateX(-80px);
   pointer-events: none;
@@ -435,20 +441,13 @@ button { color: inherit; }
   left: 0;
   right: 0;
   bottom: 0;
-  height: clamp(132px, 33.4vw, 225px);
-  overflow: hidden;
   pointer-events: none;
 }
 
 .base-cast-art img {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  top: auto;
+  display: block;
   width: 100%;
   height: auto;
-  mix-blend-mode: multiply;
-  transform: none;
   filter: drop-shadow(0 -9px 7px rgba(42, 65, 76, .12));
 }
 
@@ -476,25 +475,6 @@ button { color: inherit; }
 .age-copy strong { color: #e94741; font-size: 1.28em; }
 
 .invite-message { max-width: 490px; margin: 20px auto 18px; color: #4a6680; font-size: clamp(.9rem, 2.7vw, 1.06rem); font-weight: 700; line-height: 1.38; }
-
-.buzz-quote {
-  position: relative;
-  z-index: 4;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 14px auto 0;
-  padding: 6px 16px;
-  border: 2px dashed rgba(30, 91, 135, .3);
-  border-radius: 999px;
-  color: #1e5b87;
-  background: #fff3b8;
-  font-family: "Baloo 2", sans-serif;
-  font-size: clamp(1rem, 3.2vw, 1.35rem);
-  font-weight: 800;
-  transform: rotate(-1.2deg);
-  box-shadow: 0 4px 0 rgba(30, 91, 135, .12);
-}
 
 .event-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 510px; margin: 0 auto 17px; }
 .event-details div { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 9px; padding: 10px 13px; border: 2px solid rgba(55,137,213,.13); border-radius: 12px; text-align: left; background: rgba(238,248,255,.86); }
@@ -572,6 +552,10 @@ button { color: inherit; }
 @keyframes peek-arrives { to { opacity: .98; transform: translateX(0); } }
 @keyframes twinkle { 50% { opacity: .35; transform: scale(.72) rotate(30deg); } }
 
+@media (max-width: 1100px) and (min-width: 681px) {
+  .peek-duo-art { top: 96px; right: auto; bottom: auto; left: 6px; width: clamp(132px, 20vw, 190px); }
+}
+
 @media (max-width: 680px) {
   .window { right: -5%; width: 150px; height: 175px; border-width: 8px; }
   .shelf { left: -5%; width: 175px; transform: scale(.75); }
@@ -582,10 +566,10 @@ button { color: inherit; }
   .orbit-potato { right: 4%; top: 27%; }
   .skip-animation { padding: 8px 10px; font-size: .68rem; }
   .round-control { width: 38px; height: 38px; }
-  .invite-card { min-height: 940px; padding: 27px 17px clamp(150px, 36vw, 240px); }
+  .invite-card { min-height: 940px; padding: 27px 17px var(--base-art-space); }
   .invite-message { margin-top: 16px; }
   .card-logo { font-size: clamp(4.1rem, 21vw, 5.5rem); }
-  .peek-duo-art { top: 72px; left: -10px; right: auto; width: 96px; opacity: 0; }
+  .peek-duo-art { top: 72px; right: auto; bottom: auto; left: -12px; width: 108px; opacity: 0; }
   .gift-options { grid-template-columns: 1fr 1fr; }
   .gift-options .gift-theme { grid-column: 1 / -1; }
 }
