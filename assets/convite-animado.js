@@ -34,7 +34,7 @@
   };
 
   const setScene = (scene) => {
-    experience.classList.remove("is-reveal", "is-intro", "is-envelope", "is-final");
+    experience.classList.remove("is-reveal", "is-reveal-leaving", "is-intro", "is-envelope", "is-final");
     experience.classList.add(`is-${scene}`);
     if (scene !== "reveal" && revealVideo) revealVideo.pause();
     if (scene === "final") finalInvite.focus({ preventScroll: true });
@@ -92,8 +92,8 @@
       revealVideo.play().catch(() => {});
     }
     playAudio(restartAudio);
-    later(() => setScene("intro"), 5250);
-    later(showFinal, 10100);
+    later(() => experience.classList.add("is-reveal-leaving"), 5700);
+    later(showFinal, 6460);
   };
 
   startButton.addEventListener("click", () => runAnimation({ restartAudio: true }));
