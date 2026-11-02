@@ -302,6 +302,17 @@ button { color: inherit; }
   text-shadow: 0 5px 0 rgba(20, 95, 145, .24), 0 12px 30px rgba(10, 76, 117, .28);
 }
 
+.intro-copy .intro-quote {
+  margin: 12px 0 0;
+  color: #fff;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1rem, 3.4vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-transform: none;
+  text-shadow: 0 3px 0 rgba(20, 95, 145, .22), 0 8px 18px rgba(10, 76, 117, .25);
+}
+
 .hero-characters {
   position: absolute;
   z-index: 4;
@@ -320,24 +331,18 @@ button { color: inherit; }
 .character-orbit {
   position: absolute;
   z-index: 3;
-  width: clamp(82px, 13vw, 145px);
-  aspect-ratio: 1;
-  padding: 5px;
-  border: 6px solid #fff;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 14px 28px rgba(19, 75, 107, .26);
+  width: clamp(104px, 16vw, 178px);
   opacity: 0;
+  filter: drop-shadow(0 14px 12px rgba(19, 75, 107, .26));
 }
 
-.character-orbit img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-.orbit-alien { left: 6%; bottom: 18%; transform: translateX(-160%) rotate(-12deg); }
-.orbit-forky { right: 7%; bottom: 23%; transform: translateX(160%) rotate(9deg); }
-.orbit-potato { right: 20%; top: 24%; width: clamp(70px, 10vw, 112px); transform: translateY(-180%) rotate(-6deg); }
-.is-intro .orbit-alien { animation: orbit-left .75s 2.2s cubic-bezier(.2,.85,.3,1.2) forwards, badge-float 3s 3s ease-in-out infinite; }
-.is-intro .orbit-forky { animation: orbit-right .75s 2.45s cubic-bezier(.2,.85,.3,1.2) forwards, badge-float 3.5s 3.2s ease-in-out infinite reverse; }
-.is-intro .orbit-potato { animation: orbit-top .75s 2.7s cubic-bezier(.2,.85,.3,1.2) forwards, badge-float 3.2s 3.5s ease-in-out infinite; }
+.character-orbit img { display: block; width: 100%; height: auto; }
+.orbit-alien { left: 6%; bottom: 16%; transform: translateX(-160%) rotate(-12deg); }
+.orbit-forky { right: 7%; bottom: 22%; width: clamp(62px, 9vw, 108px); transform: translateX(160%) rotate(9deg); }
+.orbit-potato { right: 19%; top: 23%; width: clamp(80px, 11.5vw, 132px); transform: translateY(-180%) rotate(-6deg); }
+.is-intro .orbit-alien { animation: orbit-left .9s 2.2s cubic-bezier(.16,.9,.3,1.18) forwards, alien-bob 3.4s 3.15s ease-in-out infinite; }
+.is-intro .orbit-forky { animation: orbit-right .9s 2.45s cubic-bezier(.16,.9,.3,1.18) forwards, forky-sway 3.8s 3.4s ease-in-out infinite; }
+.is-intro .orbit-potato { animation: orbit-top .9s 2.7s cubic-bezier(.16,.9,.3,1.18) forwards, potato-nod 3.2s 3.65s ease-in-out infinite; }
 
 .envelope-scene { display: grid; place-items: center; opacity: 0; pointer-events: none; }
 .is-envelope .envelope-scene { opacity: 1; }
@@ -472,6 +477,25 @@ button { color: inherit; }
 
 .invite-message { max-width: 490px; margin: 20px auto 18px; color: #4a6680; font-size: clamp(.9rem, 2.7vw, 1.06rem); font-weight: 700; line-height: 1.38; }
 
+.buzz-quote {
+  position: relative;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px auto 0;
+  padding: 6px 16px;
+  border: 2px dashed rgba(30, 91, 135, .3);
+  border-radius: 999px;
+  color: #1e5b87;
+  background: #fff3b8;
+  font-family: "Baloo 2", sans-serif;
+  font-size: clamp(1rem, 3.2vw, 1.35rem);
+  font-weight: 800;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 4px 0 rgba(30, 91, 135, .12);
+}
+
 .event-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 510px; margin: 0 auto 17px; }
 .event-details div { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 9px; padding: 10px 13px; border: 2px solid rgba(55,137,213,.13); border-radius: 12px; text-align: left; background: rgba(238,248,255,.86); }
 .event-details div > span { grid-row: 1 / 3; font-size: 1.35rem; }
@@ -512,10 +536,36 @@ button { color: inherit; }
 @keyframes copy-arrives { to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes toys-arrive { to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
 @keyframes toys-breathe { 0%, 100% { transform: translate(-50%, 0) scale(1); } 50% { transform: translate(-50%, -8px) scale(1.015); } }
-@keyframes orbit-left { to { opacity: 1; transform: translateX(0) rotate(-6deg); } }
-@keyframes orbit-right { to { opacity: 1; transform: translateX(0) rotate(5deg); } }
-@keyframes orbit-top { to { opacity: 1; transform: translateY(0) rotate(-5deg); } }
-@keyframes badge-float { 50% { margin-top: -10px; } }
+@keyframes orbit-left {
+  0% { opacity: 0; transform: translate(-190%, 45%) rotate(-20deg) scale(.68); }
+  62% { opacity: 1; transform: translate(9%, -12%) rotate(5deg) scale(1.07); }
+  82% { transform: translate(-2%, 2%) rotate(-5deg) scale(.98); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(-4deg) scale(1); }
+}
+@keyframes orbit-right {
+  0% { opacity: 0; transform: translate(190%, 45%) rotate(20deg) scale(.68); }
+  62% { opacity: 1; transform: translate(-9%, -12%) rotate(-5deg) scale(1.07); }
+  82% { transform: translate(2%, 2%) rotate(5deg) scale(.98); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(4deg) scale(1); }
+}
+@keyframes orbit-top {
+  0% { opacity: 0; transform: translate(0, -230%) rotate(10deg) scale(.68); }
+  58% { opacity: 1; transform: translate(0, 10%) rotate(-6deg) scale(1.07); }
+  78% { transform: translate(0, -5%) rotate(-2deg) scale(.98); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(-4deg) scale(1); }
+}
+@keyframes alien-bob {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  50% { translate: 0 -13px; rotate: 4deg; }
+}
+@keyframes forky-sway {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  50% { translate: 9px -7px; rotate: 8deg; }
+}
+@keyframes potato-nod {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  50% { translate: 0 -10px; rotate: 6deg; }
+}
 @keyframes envelope-arrives { 70% { opacity: 1; transform: translate(-3vw, 2vh) rotate(-4deg) scale(1.04); } 100% { opacity: 1; transform: none; } }
 @keyframes star-pop { 0% { opacity: 0; transform: scale(.1) rotate(-80deg); } 60% { opacity: 1; transform: scale(1.25) rotate(15deg); } 100% { opacity: .8; transform: scale(1); } }
 @keyframes card-reveal { to { opacity: 1; transform: none; } }
@@ -532,7 +582,7 @@ button { color: inherit; }
   .orbit-potato { right: 4%; top: 27%; }
   .skip-animation { padding: 8px 10px; font-size: .68rem; }
   .round-control { width: 38px; height: 38px; }
-  .invite-card { min-height: 940px; padding: 27px 17px clamp(124px, 34vw, 200px); }
+  .invite-card { min-height: 940px; padding: 27px 17px clamp(150px, 36vw, 240px); }
   .invite-message { margin-top: 16px; }
   .card-logo { font-size: clamp(4.1rem, 21vw, 5.5rem); }
   .peek-duo-art { top: 72px; left: -10px; right: auto; width: 96px; opacity: 0; }
