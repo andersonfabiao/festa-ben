@@ -166,12 +166,14 @@ button { color: inherit; }
   animation: opening-float 3s ease-in-out infinite;
 }
 
-.opening-peek {
+.opening-logo .opening-peek {
   position: absolute;
   z-index: 3;
-  left: -185px;
-  bottom: -16px;
-  width: 225px;
+  top: -2%;
+  right: 92%;
+  bottom: auto;
+  left: auto;
+  width: .78em;
   pointer-events: none;
   filter: drop-shadow(0 15px 12px rgba(24, 67, 93, .22));
   animation: opening-peek-arrives .9s .28s cubic-bezier(.15,.9,.25,1.15) both,
@@ -377,6 +379,22 @@ button { color: inherit; }
 .envelope-scene { display: grid; place-items: center; opacity: 0; pointer-events: none; }
 .is-envelope .envelope-scene { opacity: 1; }
 
+.flight-delivery {
+  position: absolute;
+  z-index: 8;
+  left: 0;
+  bottom: 4%;
+  width: clamp(240px, 34vw, 455px);
+  border-radius: 38% 44% 40% 35%;
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 16px 12px rgba(18,63,91,.2));
+  -webkit-mask-image: radial-gradient(ellipse 72% 68% at 50% 50%, #000 66%, transparent 100%);
+  mask-image: radial-gradient(ellipse 72% 68% at 50% 50%, #000 66%, transparent 100%);
+}
+
+.is-envelope .flight-delivery { animation: flight-crosses-room 2.9s .1s cubic-bezier(.2,.62,.24,1) both; }
+
 .trail-stars { position: absolute; inset: 0; }
 .trail-stars span { position: absolute; color: #ffe35c; font-size: clamp(24px, 4vw, 54px); opacity: 0; filter: drop-shadow(0 3px 0 rgba(158, 105, 18, .2)); }
 .trail-stars span:nth-child(1) { top: 18%; left: 18%; }
@@ -562,6 +580,12 @@ button { color: inherit; }
 @keyframes opening-float { 50% { transform: translateY(-7px); } }
 @keyframes opening-peek-arrives { from { opacity: 0; transform: translateX(-35px) rotate(-7deg) scale(.9); } to { opacity: 1; transform: translateX(0) rotate(-2deg) scale(1); } }
 @keyframes opening-peek-breathe { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+@keyframes flight-crosses-room {
+  0% { opacity: 0; transform: translate(-115%, 24%) rotate(-8deg) scale(.78); }
+  14% { opacity: 1; }
+  74% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(100vw + 12%), -58vh) rotate(6deg) scale(1.04); }
+}
 @keyframes cloud-drift { to { translate: 10px -4px; } }
 @keyframes copy-arrives { to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes toys-arrive { to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
@@ -626,7 +650,7 @@ button { color: inherit; }
   .window { right: -5%; width: 150px; height: 175px; border-width: 8px; }
   .shelf { left: -5%; width: 175px; transform: scale(.75); }
   .opening-card { padding-top: 42px; }
-  .opening-peek { z-index: 5; top: auto; right: auto; bottom: -34px; left: -28px; width: 126px; }
+  .opening-logo .opening-peek { top: 0; right: 92%; bottom: auto; left: auto; width: .62em; }
   .intro-copy { top: 12%; }
   .hero-characters { bottom: 5%; width: 92vw; }
   .orbit-alien { left: -18px; bottom: 19%; }
@@ -641,6 +665,7 @@ button { color: inherit; }
   .card-logo { font-size: clamp(4.1rem, 21vw, 5.5rem); }
   .gift-options { grid-template-columns: 1fr 1fr; }
   .gift-options .gift-theme { grid-column: 1 / -1; }
+  .flight-delivery { bottom: 14%; width: min(74vw, 310px); }
 }
 
 @media (max-height: 700px) and (orientation: landscape) {
