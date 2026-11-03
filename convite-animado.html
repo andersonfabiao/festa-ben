@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/convite-animado.css?v=20261102p10" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=20261102p11" />
 </head>
 <body>
   <a class="skip-link" href="#finalInvite">Pular para o convite</a>
@@ -49,9 +49,13 @@
     </div>
 
     <div class="buzz-prelude" id="buzzPrelude" aria-label="Buzz Lightyear chegando para a aventura">
-      <video id="buzzPreludeVideo" autoplay muted playsinline preload="auto" poster="assets/convite/buzz-poster.webp?v=20261102">
+      <video id="buzzPreludeVideo" playsinline preload="auto" poster="assets/convite/buzz-poster.webp?v=20261102">
         <source src="assets/convite/buzz.mp4?v=20261102" type="video/mp4" />
       </video>
+      <button class="buzz-sound-start" id="buzzSoundStart" type="button">
+        <span class="buzz-sound-icon" aria-hidden="true">▶</span>
+        <span>Começar com som</span>
+      </button>
     </div>
 
     <div class="opening-screen" id="openingScreen">
@@ -163,6 +167,6 @@
     <div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div>
   </noscript>
   <script src="assets/convite-dados.js?v=20261102p4"></script>
-  <script src="assets/convite-animado.js?v=20261102p10"></script>
+  <script src="assets/convite-animado.js?v=20261102p11"></script>
 </body>
 </html>
