@@ -258,15 +258,20 @@
   function renderParentContacts() {
     const host = $("#parentContacts");
     if (!host) return;
-    const links = [
+    const parents = [
       { label: "Papai", phone: meta.fatherPhone },
       { label: "Mamãe", phone: meta.motherPhone },
-    ].filter((item) => item.phone);
-    host.innerHTML = '<span>Se tiver alguma dificuldade, fale com o papai ou a mamãe!</span>' +
-      (links.length ? '<div class="parent-contact-actions">' + links.map((item) =>
-        '<a href="' + esc(whatsappHref(item.phone, item.label)) + '" target="_blank" rel="noopener noreferrer" aria-label="Falar com ' + item.label + ' pelo WhatsApp">' +
-          '<span aria-hidden="true">💬</span> ' + item.label +
-        '</a>').join("") + '</div>' : '');
+    ];
+    const parentMarkup = parents.map((item) => {
+      const label = '<span class="parent-contact-name">' + esc(item.label) + '</span>';
+      if (!item.phone) return label;
+      return label + ' <a class="parent-whatsapp-link" href="' + esc(whatsappHref(item.phone, item.label)) +
+        '" target="_blank" rel="noopener noreferrer" aria-label="Conversar com ' + esc(item.label) + ' pelo WhatsApp" title="Conversar com ' + esc(item.label) + ' pelo WhatsApp">' +
+        '<svg aria-hidden="true" viewBox="0 0 32 32" focusable="false"><path fill="currentColor" d="M16 3a12.7 12.7 0 0 0-11 19l-1.5 5.5L9.2 26A12.8 12.8 0 1 0 16 3Zm6.8 18.1c-.3.9-1.8 1.7-2.5 1.8-.7.1-1.6.2-5.2-1.3-4.4-1.9-7.2-6.4-7.4-6.7-.2-.3-1.8-2.4-1.8-4.6s1.1-3.2 1.5-3.7c.4-.4.9-.5 1.2-.5h.9c.3 0 .6 0 .8.7l1.2 2.9c.1.2.1.5 0 .7l-.5.8-.7.8c-.2.2-.4.5-.2.9.2.4 1.1 1.8 2.4 2.9 1.7 1.5 3.1 2 3.5 2.2.4.2.7.2.9-.1l1.3-1.6c.3-.4.6-.3 1-.2l2.7 1.3c.4.2.7.3.8.5.2.2.2 1 .1 1.9Z"/></svg>' +
+      '</a>';
+    });
+    host.innerHTML = '<span>Se tiver alguma dificuldade, fale com o ' + parentMarkup[0] +
+      ' ou a ' + parentMarkup[1] + '!</span>';
   }
 
   async function remoteLookup(params) {

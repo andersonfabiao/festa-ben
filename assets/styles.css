@@ -1274,6 +1274,8 @@ body.hide-values .money-input:focus {
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
   animation: pop .42s var(--motion-ios) both;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .modal-head {
   position: sticky;
@@ -1876,7 +1878,7 @@ body.no-scroll { overflow: hidden; }
   .guest-row .icon-btn { order: 5; }
 
   .modal { padding: 10px; align-items: start; }
-  .modal-card { max-height: calc(100vh - 20px); border-radius: 20px; }
+  .modal-card { max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); border-radius: 20px; }
   .modal-head { padding: 13px 16px; border-radius: 20px 20px 0 0; }
   .modal form { padding: 16px; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 0; }
@@ -2345,9 +2347,10 @@ body.no-scroll { overflow: hidden; }
 .goodbye-door span { position: absolute; inset: 0; background: linear-gradient(90deg,#b76c35,#df9852); transform-origin: left; animation: close-door 1.1s cubic-bezier(.2,.8,.2,1) both; }
 .goodbye-door span::after { content:""; position:absolute; right:8px; top:50%; width:7px; height:7px; border-radius:50%; background:#f5cf54; }
 .rsvp-parent-help { margin: 0 34px 26px; padding: 15px 18px; border-radius: 16px; background: #f5fbff; color: #1d557c; font-size: .82rem; font-weight: 900; text-align: center; }
-.parent-contact-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 9px; margin-top: 10px; }
-.parent-contact-actions a { display:inline-flex; align-items:center; gap:6px; padding:8px 13px; border-radius:999px; color:#fff; background:#25a95b; text-decoration:none; box-shadow:0 3px 0 #16743b; }
-.parent-contact-actions a:hover { transform: translateY(-1px); }
+.parent-contact-name { white-space: nowrap; }
+.parent-whatsapp-link { position:relative; display:inline-grid; place-items:center; width:25px; height:25px; margin:0 3px; border-radius:50%; color:#fff; background:#25a95b; text-decoration:none; box-shadow:0 2px 0 #16743b; vertical-align:middle; transform:translateY(-1px); }
+.parent-whatsapp-link svg { width:18px; height:18px; }
+.parent-whatsapp-link:hover, .parent-whatsapp-link:focus-visible { transform:translateY(-2px) scale(1.06); outline:3px solid rgba(37,169,91,.25); outline-offset:2px; }
 .invite-loading { padding: 18px 0; }
 .invite-spinner { border-color: #d4e5f4; border-top-color: #e6af20; }
 .invite-search .input { margin-top: 5px; }

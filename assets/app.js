@@ -1800,6 +1800,10 @@
     el.hidden = false;
     document.body.classList.add("no-scroll");
     setTimeout(() => {
+      // Em telas de toque, focar o primeiro campo abre o teclado e pode deixar
+      // a impressão de que o modal não abriu. Preserve o foco automático apenas
+      // para mouse/trackpad e teclado.
+      if (!window.matchMedia("(pointer: fine)").matches) return;
       const first =
         el.querySelector("input:not([type=hidden]):not([type=checkbox]), select, textarea") ||
         el.querySelector("button");
@@ -2820,9 +2824,12 @@
     $("#addItemBtn").addEventListener("click", () => openItemModal());
     $("#settingsBtn").addEventListener("click", () => openSettings());
     $("#editStageNamesBtn").addEventListener("click", () => openSettings(true));
-    $("#heroEditBtn").addEventListener("click", openSettings);
-    $("#settingsGuestsBtn").addEventListener("click", openSettings);
-    $("#settingsInviteBtn").addEventListener("click", openSettings);
+    // Não repasse o evento de clique/toque para openSettings. Em celulares, o
+    // evento era interpretado como `focusStageNames = true`, deslocando o modal
+    // e abrindo o teclado assim que a tela de ajustes aparecia.
+    $("#heroEditBtn").addEventListener("click", () => openSettings(false));
+    $("#settingsGuestsBtn").addEventListener("click", () => openSettings(false));
+    $("#settingsInviteBtn").addEventListener("click", () => openSettings(false));
 
     $("#inviteForm").addEventListener("submit", handleInviteSubmit);
     $("#inviteForm").addEventListener("input", renderInvitePreview);
