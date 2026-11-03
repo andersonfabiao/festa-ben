@@ -488,11 +488,13 @@
   let activeView = "checklist";
 
   const GUEST_VIEW_KEY = "ben-guest-view-v1";
+  const GUEST_GROUPS_KEY = "ben-guest-groups-v1";
   const HIDE_VALUES_KEY = "ben-hide-values-v1";
   const GUEST_FILTERS = ["all", "adult", "child", "confirmed", "pending", "declined"];
   let guestFilter = "all";
   let guestQuery = "";
   let valuesHidden = false;
+  let collapsedGuestGroups = new Set(loadGuestGroupsCollapsed());
 
   function loadGuestView() {
     try {
@@ -506,6 +508,23 @@
   function saveGuestView() {
     try {
       localStorage.setItem(GUEST_VIEW_KEY, JSON.stringify({ filter: guestFilter }));
+    } catch (e) {
+      /* ignora */
+    }
+  }
+
+  function loadGuestGroupsCollapsed() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(GUEST_GROUPS_KEY) || "[]");
+      return Array.isArray(arr) ? arr.filter((id) => id === "adult" || id === "child") : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveGuestGroupsCollapsed() {
+    try {
+      localStorage.setItem(GUEST_GROUPS_KEY, JSON.stringify(Array.from(collapsedGuestGroups)));
     } catch (e) {
       /* ignora */
     }
@@ -1062,6 +1081,77 @@
     report.focus();
   }
 
+  function exportConfirmedPdf() {
+    const report = window.open("", "_blank");
+    if (!report) {
+      toast("O navegador bloqueou a janela do relatório. Permita pop-ups e tente novamente.", "warn");
+      return;
+    }
+
+    const meta = state.meta;
+    const guests = countableGuests(state.guests);
+    const confirmed = guests
+      .filter((g) => g.status === "confirmed")
+      .sort((a, b) => {
+        if (a.type !== b.type) return a.type === "adult" ? -1 : 1;
+        return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
+      });
+    const adults = confirmed.filter((g) => g.type === "adult");
+    const children = confirmed.filter((g) => g.type === "child");
+    const generatedAt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date());
+    const map = mapsLink();
+    const phones = [
+      { label: "Papai", phone: meta.fatherPhone },
+      { label: "Mamãe", phone: meta.motherPhone },
+    ].filter((item) => phoneDigits(item.phone));
+    const phoneList = phones.length
+      ? phones.map((item) => esc(item.label) + ": " + esc(formatPhoneBR(item.phone) || item.phone)).join(" · ")
+      : "Não informado";
+    const guestRows = confirmed.length
+      ? confirmed.map((g, index) =>
+          '<tr><td class="num">' + (index + 1) + '</td><td>' + esc(displayGuestName(g)) +
+          '</td><td>' + (g.type === "child" ? "Criança" : "Adulto") + "</td></tr>"
+        ).join("")
+      : '<tr><td colspan="3" class="empty-row">Nenhum convidado confirmado até agora.</td></tr>';
+
+    const html = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>Confirmados · ' + esc(meta.name) + ' faz ' + esc(meta.age) + '</title><style>' +
+      '*,*::before,*::after{box-sizing:border-box}body{font:14px Arial,sans-serif;color:#20304b;max-width:760px;margin:32px auto;padding:0 24px;line-height:1.45}' +
+      'h1{font-size:27px;margin:0 0 2px;color:#123a66}h2{font-size:17px;margin:22px 0 9px;color:#123a66;border-bottom:2px solid #dce7f2;padding-bottom:5px}' +
+      'p{margin:3px 0}.muted{color:#68788e;font-size:12px}.badge{display:inline-block;margin-bottom:8px;padding:4px 10px;border-radius:999px;background:#fff0b7;color:#765400;font-size:11px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase}' +
+      '.event{padding:15px 17px;border:1px solid #dce7f2;border-radius:12px;background:#f7fbff}.event div{margin:3px 0}.event b{display:inline-block;min-width:74px;color:#38536f}' +
+      '.counts{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}.count{flex:1 1 120px;padding:10px 12px;border:1px solid #dce7f2;border-radius:10px;background:#fff}.count span{display:block;font-size:11px;color:#68788e;text-transform:uppercase;letter-spacing:.07em}.count b{display:block;font-size:20px;margin-top:2px;color:#123a66}' +
+      'table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px 9px;border-bottom:1px solid #dce3eb}th{background:#f0f5fa;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#52627a}' +
+      'td.num{width:34px;color:#8a9bb2}td.empty-row{text-align:center;color:#68788e;padding:22px}' +
+      '.contact{margin-top:16px;padding:12px 15px;border-radius:10px;background:#f5fbff;font-size:12px;color:#1d557c}' +
+      '@media print{body{margin:0 auto;padding:0;max-width:none}.event,.count,.contact{background:#fff}h2{break-after:avoid}tr{break-inside:avoid}.no-print{display:none}}@page{size:A4;margin:15mm}' +
+      '</style></head><body>' +
+      '<span class="badge">Lista de confirmados</span>' +
+      '<h1>' + esc(meta.name) + ' faz ' + esc(meta.age) + ' anos!</h1>' +
+      '<p class="muted">Gerado em ' + generatedAt + '</p>' +
+      '<section class="event">' +
+        '<div><b>Data:</b> ' + esc(longDate(meta.date)) + (meta.time ? ' às ' + esc(meta.time.replace(":", "h")) : "") + '</div>' +
+        '<div><b>Local:</b> ' + esc(meta.location || "A definir") + '</div>' +
+        (map ? '<div><b>Mapa:</b> ' + esc(map) + '</div>' : "") +
+        '<div><b>Tema:</b> ' + esc(meta.theme) + '</div>' +
+      '</section>' +
+      '<div class="counts">' +
+        '<div class="count"><span>Confirmados</span><b>' + confirmed.length + '</b></div>' +
+        '<div class="count"><span>Adultos</span><b>' + adults.length + '</b></div>' +
+        '<div class="count"><span>Crianças</span><b>' + children.length + '</b></div>' +
+      '</div>' +
+      '<h2>Confirmados</h2>' +
+      '<table><thead><tr><th>#</th><th>Nome</th><th>Tipo</th></tr></thead><tbody>' + guestRows + '</tbody></table>' +
+      '<div class="contact"><strong>Se precisar de ajuda, fale com:</strong><br>' + phoneList + '</div>' +
+      '<p class="muted no-print" style="margin-top:22px">Na janela de impressão, escolha “Salvar como PDF”.</p>' +
+      '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},250)})<\/script></body></html>';
+
+    report.document.open();
+    report.document.write(html);
+    report.document.close();
+    report.focus();
+  }
+
   function renderBreakdown() {
     const rows = stageList().map((stage) => {
       const items = state.items.filter((i) => i.stage === stage.id);
@@ -1378,14 +1468,22 @@
     ].filter((group) => group.items.length);
 
     list.innerHTML = groups
-      .map(
-        (group) =>
-          '<div class="guest-group">' +
-            '<h3 class="guest-group-title">' + group.icon + " " + group.title +
-              ' <span class="guest-group-count">' + group.items.length + "</span></h3>" +
-            group.items.map(guestRowHtml).join("") +
+      .map((group) => {
+        const isCollapsed = collapsedGuestGroups.has(group.id);
+        return (
+          '<div class="guest-group' + (isCollapsed ? " is-collapsed" : "") + '" data-guest-group="' + group.id + '">' +
+            '<button class="guest-group-toggle guest-group-title" type="button" data-guest-group-toggle="' + group.id +
+              '" aria-expanded="' + (isCollapsed ? "false" : "true") + '" aria-controls="guestRows-' + group.id + '">' +
+              '<span class="guest-group-heading">' + group.icon + " " + group.title +
+              ' <span class="guest-group-count">' + group.items.length + "</span></span>" +
+              '<span class="guest-group-chevron" aria-hidden="true">⌄</span>' +
+            "</button>" +
+            '<div class="guest-group-rows guest-list" id="guestRows-' + group.id + '"' + (isCollapsed ? " hidden" : "") + ">" +
+              group.items.map(guestRowHtml).join("") +
+            "</div>" +
           "</div>"
-      )
+        );
+      })
       .join("");
   }
 
@@ -2370,12 +2468,7 @@
 
   function inviteMessageText(options) {
     const opts = options || {};
-    const m = state.meta;
-    return (
-      "🚀 Você foi chamado para uma aventura! " + m.name + " faz " + m.age + " anos!\n" +
-      "Toque abaixo para abrir o convite animado:\n" +
-      (opts.animatedUrl || animatedInviteUrl())
-    );
+    return opts.animatedUrl || animatedInviteUrl();
   }
 
   function waInviteLink(guest) {
@@ -2418,13 +2511,6 @@
     }
   }
 
-  async function copyInvite() {
-    const text = inviteMessageText();
-
-    const ok = await copyText(text);
-    toast(ok ? "Convite com o link copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
-  }
-
   async function copyInviteLink() {
     const ok = await copyText(invitePageUrl());
     toast(ok ? "Link do convite copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
@@ -2436,15 +2522,10 @@
   }
 
   async function copyInviteMessage() {
-    const name = (($("#invName") && $("#invName").value) || state.meta.name || "Ben").trim();
-    const age = parseInt($("#invAge") && $("#invAge").value, 10) || state.meta.age;
-    const text =
-      "🚀 Você foi chamado para uma aventura! " + name + " faz " + age + " anos!\n" +
-      "Toque abaixo para abrir o convite animado:\n" +
-      animatedInviteUrl();
+    const text = animatedInviteUrl();
 
     const ok = await copyText(text);
-    toast(ok ? "Mensagem do convite copiada." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
+    toast(ok ? "Link do convite copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
   }
 
   function renderInvitePreview() {
@@ -2903,6 +2984,7 @@
       renderCloudBar();
     });
     $("#exportPartyPdfBtn").addEventListener("click", exportPartyPdf);
+    $("#exportConfirmedPdfBtn").addEventListener("click", exportConfirmedPdf);
 
     /* Checklist */
     $("#checklist").addEventListener("change", (event) => {
@@ -2997,6 +3079,16 @@
     });
 
     $("#guestList").addEventListener("click", (event) => {
+      const toggle = event.target.closest("[data-guest-group-toggle]");
+      if (toggle) {
+        const id = toggle.dataset.guestGroupToggle;
+        if (collapsedGuestGroups.has(id)) collapsedGuestGroups.delete(id);
+        else collapsedGuestGroups.add(id);
+        saveGuestGroupsCollapsed();
+        renderGuests();
+        return;
+      }
+
       const edit = event.target.closest("[data-guest-edit]");
       if (edit) {
         openGuestModal(edit.dataset.guestEdit);
@@ -3055,8 +3147,6 @@
       deleteGuest($("#guestEditId").value);
     });
 
-    $("#copyInviteBtn").addEventListener("click", copyInvite);
-    $("#copyInviteLinkBtn").addEventListener("click", copyInviteLink);
     $("#copyInviteLinkBtn2").addEventListener("click", copyInviteLink);
     $("#refreshGuestsBtn").addEventListener("click", () => refreshGuestResponses({ manual: true }));
     $("#importGuestsBtn").addEventListener("click", () => $("#guestImportFile").click());

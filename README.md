@@ -9,13 +9,14 @@ Projeto com duas áreas: convite público para os convidados e painel de organiz
 - **Status por item** — a fazer, em andamento, contratado e concluído, com checkbox para marcar rápido.
 - **Valores** — custo previsto, valor já pago, fornecedor, link, data limite e observações.
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
-- **Convidados** — lista com criança/adulto, confirmação de presença, parentesco/apelido opcional (ex.: “Vovô Tito”), WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. O parentesco aparece na busca e na saudação do convite. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros e busca por nome. Convidados com parentesco **Pai** ou **Mãe** aparecem na lista com o selo **Anfitrião**, mas não entram nas contagens, nos limites nem no resumo em PDF. Importação de lista em `.txt`, `.csv` ou `.json`.
-- **WhatsApp do convidado** — o telefone é formatado sozinho (`(83) 99999-9999`) e validado ao salvar (DDD + 10 ou 11 dígitos). Em cada convidado com número aparecem dois atalhos: **WhatsApp ↗** (abre a conversa) e **Enviar convite ↗** (abre o WhatsApp com a mensagem do convite já pronta, incluindo os links individualizados do convite animado e da confirmação).
+- **Convidados** — lista com criança/adulto, confirmação de presença, parentesco/apelido opcional (ex.: “Vovô Tito”), WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. O parentesco aparece na busca e na saudação do convite. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros e busca por nome; clique no título de cada grupo para recolher ou expandir (a escolha fica salva no aparelho). Convidados com parentesco **Pai** ou **Mãe** aparecem na lista com o selo **Anfitrião**, mas não entram nas contagens, nos limites nem no resumo em PDF. Importação de lista em `.txt`, `.csv` ou `.json`.
+- **WhatsApp do convidado** — o telefone é formatado sozinho (`(83) 99999-9999`) e validado ao salvar (DDD + 10 ou 11 dígitos). Em cada convidado com número aparecem dois atalhos: **WhatsApp ↗** (abre a conversa) e **Enviar convite ↗** (abre o WhatsApp com somente o link individual do convite animado).
 - **Página de confirmação** — página responsiva acessada pelo link enviado junto ao convite oficial. Mostra um resumo da festa e leva o convidado diretamente à busca do nome e aos botões **Vou comemorar** / **Não poderei ir**, com recado opcional. A página respeita a preferência do aparelho por menos movimento e não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, estrelas sobem pela tela em comemoração.
 - **Convite oficial animado** — experiência separada em `convite-animado.html`, com identidade **Ben Story**, personagens, envelope animado, sugestões de presente e música iniciada após o primeiro toque. Os dados públicos do evento vêm de `event.json`; lista, telefones e orçamento não são carregados pelo convite.
-- **Aba Convite** — em **💌 Convite** você ajusta nome, idade, data, horário, local, link do mapa, URL do Apps Script e o modo de busca, com prévia do convite. A mesma aba reúne os links do **convite animado** e da **página de confirmação**, com botões para abrir e copiar (e também copiar a mensagem pronta para o WhatsApp). As alterações aparecem no topo da organização, no convite animado e na confirmação depois de salvar na nuvem.
+- **Aba Convite** — em **💌 Convite** você ajusta nome, idade, data, horário, local, link do mapa, URL do Apps Script e o modo de busca, com prévia do convite. A mesma aba reúne os links do **convite animado** e da **página de confirmação**, com botões para abrir e copiar (inclusive copiar somente o link do convite animado para o WhatsApp). As alterações aparecem no topo da organização, no convite animado e na confirmação depois de salvar na nuvem.
 - **Limite de convidados** — os cards de **Adultos** e **Crianças** mostram a ocupação do limite: verde até 75%, amarelo de 76% a 95% e vermelho acima de 95%. O card **Confirmados** mostra o percentual de presença confirmada em verde. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Editar festa → Limite de convidados**.
 - **Resumo em PDF** — em **💰 Orçamento → 📄 Exportar resumo PDF**, abra a impressão e escolha **Salvar como PDF** para gerar um relatório com dados da festa, resumo financeiro, itens do checklist/orçamento e convidados separados por adultos e crianças.
+- **PDF dos confirmados** — em **🎟️ Convidados → 📄 PDF dos confirmados**, abra a impressão e escolha **Salvar como PDF** para gerar uma lista limpa só com quem confirmou presença, além dos dados da festa e dos contatos dos pais.
 - **Olho dos valores** — o botão **👁️ Valores** no topo esconde (desfoca) todos os valores da página com um clique; a escolha fica salva no aparelho. Na aba **Convidados** os valores nem aparecem: ela é só para configurações e informações da lista.
 - **Contagem regressiva** para a festa.
 - **Salvamento automático** no navegador (localStorage).
@@ -150,7 +151,7 @@ O link também inclui título, descrição e uma imagem horizontal própria (`as
 
 ### Local com link para o Google Maps
 
-O local da festa está definido como **Enjoy Kids**, dentro do **Liv Mall Shopping**, na Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005. O chip de localização abre o Google Maps com esse endereço. Se você tiver um link exato do local, cole em **✏️ Editar festa → Link do Google Maps (opcional)** — ele tem prioridade sobre a busca automática. O mesmo link aparece no texto do **📋 Copiar convite**.
+O local da festa está definido como **Enjoy Kids**, dentro do **Liv Mall Shopping**, na Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005. O chip de localização abre o Google Maps com esse endereço. Se você tiver um link exato do local, cole em **✏️ Editar festa → Link do Google Maps (opcional)** — ele tem prioridade sobre a busca automática e também aparece no convite.
 
 ### Editar convidados e vincular crianças
 
@@ -164,17 +165,17 @@ Na aba **🎟️ Convidados**, clique no **✏️** ao lado de qualquer nome par
 
 O vínculo é feito nos dois sentidos: marcar um adulto na criança também faz a criança aparecer na lista daquele adulto. Ao abrir o convite, o adulto vê as crianças vinculadas e pode confirmar a presença de cada uma junto com a dele.
 
-> ⚠️ O WhatsApp e as observações ficam salvos no `data.json`. Se o repositório for público, **esses dados também ficam públicos**. Preencha só o que você não se importa em deixar visível.
+> ⚠️ O WhatsApp e as observações ficam salvos no `data.json` do repositório **privado** `festa-ben-dados`, acessado pelo painel por meio de um token. O site público não serve esse arquivo nem os telefones dos convidados — o Apps Script devolve apenas o necessário para cada confirmação. Mesmo assim, evite colocar no campo de observações algo que você não gostaria de registrar.
 >
-> A tela do convite não mostra a lista completa, mas o arquivo `data.json` continua público no repositório. Quem abrir esse arquivo consegue ver os nomes. Para esconder de verdade, use um repositório privado e publique o site por outro meio.
+> A tela do convite nunca mostra a lista completa: a busca libera no máximo 12 nomes depois de 3 letras, ou use somente links individuais.
 
 ### Links do convite
 
-- **Link único (para o grupo)** — o convidado abre o convite e digita pelo menos 3 letras do nome; só então aparecem as opções (no máximo 12). A lista completa nunca é exibida. Use **🔗 Link do convite** na aba **Convidados** ou o campo em **Editar festa → Convite e RSVP**.
+- **Link único (para o grupo)** — o convidado abre o convite e digita pelo menos 3 letras do nome; só então aparecem as opções (no máximo 12). A lista completa nunca é exibida. O link fica em **Editar festa → Convite e RSVP** e pode ser aberto ou copiado na aba **💌 Convite**.
 - **Link individual** — cada convidado tem um link próprio, que já abre o convite com o nome dele. Clique no **🔗** ao lado do nome na lista para copiar. O link usa um ID estável salvo no convidado, então **continua o mesmo mesmo se o nome for alterado**.
 - **Modo somente links** — em **Editar festa → Convite e RSVP → Como o convidado encontra o nome**, escolha **Somente link individual**. O convite deixa de ter busca e pede o link pessoal, sem expor nenhum nome. Ideal para grupos menores ou quando a privacidade for prioridade.
 
-O botão **📋 Copiar convite** copia um texto pronto com data, local e o link único para colar no WhatsApp.
+O botão **Enviar convite ↗** de cada convidado abre o WhatsApp com somente o link individual do convite animado — sem texto adicional — para você escrever a mensagem do jeito que preferir. O mesmo link pode ser copiado pelo ícone **🔗** na lista.
 
 ### Como o convidado responde
 
