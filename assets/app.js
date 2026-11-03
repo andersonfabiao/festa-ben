@@ -347,6 +347,7 @@
       meta,
       items: seedItems(meta.date),
       guests: seedGuests(),
+      deletedGuestIds: [],
       updatedAt: nowISO(),
     };
   }
@@ -357,8 +358,30 @@
       meta: defaultMeta(),
       items: [],
       guests: [],
+      deletedGuestIds: [],
       updatedAt: nowISO(),
     };
+  }
+
+  function deletedGuestSet() {
+    if (!Array.isArray(state.deletedGuestIds)) state.deletedGuestIds = [];
+    return new Set(state.deletedGuestIds);
+  }
+
+  function markGuestDeleted(id) {
+    const key = String(id || "").trim();
+    if (!key) return;
+    if (!Array.isArray(state.deletedGuestIds)) state.deletedGuestIds = [];
+    if (!state.deletedGuestIds.includes(key)) state.deletedGuestIds.push(key);
+    if (state.deletedGuestIds.length > 1000) {
+      state.deletedGuestIds = state.deletedGuestIds.slice(-1000);
+    }
+  }
+
+  function reviveGuest(id) {
+    const key = String(id || "").trim();
+    if (!key || !Array.isArray(state.deletedGuestIds)) return;
+    state.deletedGuestIds = state.deletedGuestIds.filter((item) => item !== key);
   }
 
   function makeGuestRecord(raw, usedIds) {
@@ -467,9 +490,19 @@
         createdAt: i.createdAt || nowISO(),
       }));
 
-    const guests = normalizeGuestList(raw.guests);
+    const deletedGuestIds = Array.isArray(raw.deletedGuestIds)
+      ? Array.from(
+          new Set(
+            raw.deletedGuestIds
+              .map((id) => String(id || "").trim())
+              .filter((id) => /^[A-Za-z0-9_-]{1,40}$/.test(id))
+          )
+        ).slice(-1000)
+      : [];
+    const deletedGuestSet = new Set(deletedGuestIds);
+    const guests = normalizeGuestList(raw.guests).filter((guest) => !deletedGuestSet.has(guest.id));
 
-    return { version: 1, meta, items, guests, updatedAt: raw.updatedAt || nowISO() };
+    return { version: 1, meta, items, guests, deletedGuestIds, updatedAt: raw.updatedAt || nowISO() };
   }
 
   /* ---------- Estado ---------- */
@@ -1733,9 +1766,29 @@
 
   function mergeRsvpsFrom(remote) {
     if (!remote || !Array.isArray(remote.guests)) return 0;
-    const byId = new Map(remote.guests.map((g) => [g.id, g]));
     let changed = 0;
+
+    // Exclusões feitas em qualquer aparelho viram tombstones no arquivo da nuvem.
+    // Elas impedem que um convidado removido volte ao atualizar as respostas.
+    const blocked = deletedGuestSet();
+    const remoteDeleted = Array.isArray(remote.deletedGuestIds) ? remote.deletedGuestIds : [];
+    remoteDeleted.forEach((rawId) => {
+      const id = String(rawId || "").trim();
+      if (!id) return;
+      if (!blocked.has(id)) {
+        blocked.add(id);
+        if (!Array.isArray(state.deletedGuestIds)) state.deletedGuestIds = [];
+        if (!state.deletedGuestIds.includes(id)) state.deletedGuestIds.push(id);
+        changed++;
+      }
+      const before = state.guests.length;
+      state.guests = state.guests.filter((guest) => guest.id !== id);
+      if (state.guests.length !== before) changed++;
+    });
+
+    const byId = new Map(remote.guests.map((g) => [g.id, g]));
     state.guests.forEach((g) => {
+      if (blocked.has(g.id)) return;
       const r = byId.get(g.id);
       if (!r || !r.rsvpAt) return;
       const localAt = Date.parse(g.rsvpAt || "") || 0;
@@ -1750,7 +1803,7 @@
 
     const usedIds = new Set(state.guests.map((guest) => guest.id));
     remote.guests.forEach((raw) => {
-      if (!raw || raw.unlisted !== true || usedIds.has(raw.id)) return;
+      if (!raw || raw.unlisted !== true || usedIds.has(raw.id) || blocked.has(raw.id)) return;
       const record = makeGuestRecord(raw, usedIds);
       if (!record) return;
       state.guests.push(record);
@@ -1822,26 +1875,17 @@
     }
     savingCloud = true;
     const savedStamp = state.updatedAt;
+    // Salvar é sempre unidirecional: este dispositivo é a fonte da verdade.
+    // O snapshot evita que uma leitura remota altere a tela durante o envio.
+    const uploadState = normalizeState(JSON.parse(JSON.stringify(state)));
     setCloudPhase("syncing");
     if (opts.fromSettings) setConfigState("Enviando os dados para o GitHub…");
 
     try {
       await verifyPrivateRepo();
       const head = await gh("GET");
-      const sha = head.notFound ? null : head.sha;
-
-      // Preserva respostas de presença que chegaram pelo convite depois da última cópia local.
-      let mergedRsvps = 0;
-      if (!head.notFound && head.content) {
-        try {
-          const remote = normalizeState(JSON.parse(b64decode(head.content)));
-          if (remote) mergedRsvps = mergeRsvpsFrom(remote);
-        } catch (e) {
-          /* arquivo remoto inválido: mantém os dados locais */
-        }
-      }
-
-      const content = b64encode(JSON.stringify(state, null, 2));
+      let sha = head.notFound ? null : head.sha;
+      const content = b64encode(JSON.stringify(uploadState, null, 2));
 
       const body = {
         message:
@@ -1852,7 +1896,24 @@
       };
       if (sha) body.sha = sha;
 
-      const result = await gh("PUT", body);
+      let result;
+      try {
+        result = await gh("PUT", body);
+      } catch (writeError) {
+        // Se outro aparelho gravou entre o GET e o PUT, atualiza somente o SHA
+        // e repete exatamente o mesmo snapshot local. Nenhum dado remoto é
+        // baixado ou mesclado durante um comando de salvar.
+        if (writeError.status !== 409 && writeError.status !== 422) throw writeError;
+        const latest = await gh("GET");
+        if (latest.notFound) {
+          delete body.sha;
+          sha = null;
+        } else {
+          sha = latest.sha;
+          body.sha = sha;
+        }
+        result = await gh("PUT", body);
+      }
       if (result && result.content && result.content.sha) {
         cloud.sha = result.content.sha;
       } else {
@@ -1866,21 +1927,16 @@
         cloud.pending = false;
       }
       saveCloudCfg();
-      if (mergedRsvps) {
-        saveLocal();
-        renderGuests();
-        renderHero();
-      }
       setCloudPhase("idle");
       if (opts.fromSettings) {
         setConfigState(
           sha
-            ? "Enviado! O arquivo do GitHub foi atualizado."
+            ? "Enviado! A versão atual deste dispositivo substituiu a versão da nuvem."
             : "Enviado! O arquivo foi criado no GitHub."
         );
       }
       if (!opts.silent) {
-        toast(sha ? "Checklist salvo no GitHub ☁️" : "Arquivo criado no GitHub ☁️", "ok");
+        toast(sha ? "Versão atual salva na nuvem ☁️" : "Arquivo criado no GitHub ☁️", "ok");
       }
     } catch (e) {
       let msg = e.message || "erro desconhecido";
@@ -1888,7 +1944,7 @@
       if (e.status === 403) msg = "o token não tem permissão de escrita neste repositório.";
       if (e.status === 404) msg = "repositório, branch ou token sem acesso a este repositório.";
       if (e.status === 409 || e.status === 422) {
-        msg = "conflito com uma versão mais nova no GitHub. Baixe da nuvem antes de salvar.";
+        msg = "outra versão foi salva ao mesmo tempo. Tente salvar novamente.";
       }
       setCloudPhase("error", msg);
       if (opts.fromSettings) setConfigState("Não foi possível enviar: " + msg);
@@ -2149,6 +2205,7 @@
       guest = makeGuestRecord({ name, type, status }, usedIds);
       if (!guest) return;
       state.guests.push(guest);
+      reviveGuest(guest.id);
     } else if (type !== guest.type) {
       state.guests.forEach((g) => {
         if (g.type === "child" && Array.isArray(g.guardians)) {
@@ -2217,6 +2274,7 @@
     if (!window.confirm('Remover "' + guest.name + '" da lista?')) return;
 
     state.guests = state.guests.filter((g) => g.id !== guest.id);
+    markGuestDeleted(guest.id);
     state.guests.forEach((g) => {
       if (g.type === "child" && Array.isArray(g.guardians)) {
         g.guardians = g.guardians.filter((x) => x !== guest.id);
@@ -2827,6 +2885,7 @@
 
     if (mode === "replace") {
       state.guests = normalizeGuestList(list);
+      state.deletedGuestIds = [];
       added = state.guests.length;
     } else {
       const existing = new Set(state.guests.map((g) => norm(g.name) + "|" + g.type));
@@ -2841,6 +2900,7 @@
         if (!record) return;
         existing.add(key);
         state.guests.push(record);
+        reviveGuest(record.id);
         added++;
       });
       state.guests = normalizeGuestList(state.guests);
