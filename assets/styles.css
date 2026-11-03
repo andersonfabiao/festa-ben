@@ -2292,7 +2292,27 @@ body.no-scroll { overflow: hidden; }
 .rsvp-panel .invite-search { margin-bottom: 8px; text-align: left; }
 .rsvp-panel .invite-search .input { min-height: 52px; border: 2px solid #9cc9ee; background: #fff; font-size: 1rem; }
 .rsvp-panel .invite-search .input:focus { border-color: #287fc3; box-shadow: 0 0 0 4px rgba(40,127,195,.15); }
-.rsvp-panel .invite-search-hint { padding: 10px 12px; border: 1px dashed #cbdced; border-radius: 12px; background: rgba(255,255,255,.76); }
+.rsvp-panel .invite-search-hint {
+  padding: 4px 2px;
+  border: 0;
+  background: transparent;
+  color: #7b899a;
+  font-size: .72rem;
+  font-weight: 700;
+}
+.invite-search-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 46px;
+  margin: 2px 0 8px;
+  color: #356487;
+  font-size: .78rem;
+  font-weight: 800;
+  animation: search-status-in .2s ease-out both;
+}
+.invite-search-progress .invite-spinner { width: 19px; height: 19px; border-width: 3px; }
 .rsvp-panel .invite-guest-btn { min-height: 49px; border: 1px solid #cadceb; background: #fff; }
 .rsvp-panel .invite-guest-btn:hover { border-color: #f0be38; background: #fff9e5; }
 .rsvp-panel .invite-rsvp { text-align: left; }
@@ -2322,6 +2342,10 @@ body.no-scroll { overflow: hidden; }
 @keyframes invite-arrival {
   from { opacity: 0; transform: translateY(22px) scale(.975); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes search-status-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes curtain-left {
   from { transform: translateX(70%); opacity: .8; }

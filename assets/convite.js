@@ -281,12 +281,11 @@
 
     $("#inviteContent").innerHTML =
       '<div class="invite-picker">' +
-        '<p class="invite-step-label"><span>1</span> Digite 3 letras e escolha seu nome</p>' +
+        '<p class="invite-step-label"><span>1</span> Digite seu nome para buscar na lista</p>' +
         '<label class="field-label invite-search">🔎' +
           '<input id="guestSearch" class="input" type="search" placeholder="Digite seu nome para confirmar…" autocomplete="off" aria-label="Digite seu nome para confirmar presença" />' +
         "</label>" +
         '<div id="guestPickList" class="invite-guest-list"></div>' +
-        '<p class="invite-hint">Se o seu nome não aparecer, você poderá avisar os pais do Ben por aqui.</p>' +
       "</div>";
 
     renderPickList("");
@@ -295,9 +294,22 @@
       search.addEventListener("input", () => {
         clearTimeout(lookupTimer);
         const value = search.value;
-        lookupTimer = setTimeout(() => renderPickList(value), 280);
+        if (norm(value).length < 3) {
+          renderPickList(value);
+          return;
+        }
+        const list = $("#guestPickList");
+        if (list) list.innerHTML = lookupLoadingMarkup();
+        lookupTimer = setTimeout(() => renderPickList(value), 100);
       });
     }
+  }
+
+  function lookupLoadingMarkup() {
+    return '<div class="invite-search-progress" role="status">' +
+      '<span class="invite-spinner" aria-hidden="true"></span>' +
+      '<span>Buscando seu nome…</span>' +
+    '</div>';
   }
 
   async function renderPickList(query) {
@@ -314,7 +326,7 @@
     const sequence = ++lookupSequence;
     let source = guests;
     if (remoteDirectory) {
-      list.innerHTML = '<p class="invite-hint invite-search-hint">Buscando seu nome…</p>';
+      list.innerHTML = lookupLoadingMarkup();
       try {
         const remote = await remoteLookup({ q });
         if (sequence !== lookupSequence) return;

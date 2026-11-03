@@ -2343,15 +2343,10 @@
   function inviteMessageText(options) {
     const opts = options || {};
     const m = state.meta;
-    const map = mapsLink();
     return (
-      "🎉 " + m.name + " faz " + m.age + " anos!\n" +
-      "Tema: " + m.theme + " 🤠🚀\n" +
-      "📅 " + longDate(m.date) + (m.time ? " às " + m.time.replace(":", "h") : "") + "\n" +
-      "📍 " + (m.location || "Local a definir") + "\n" +
-      (map ? "🗺️ Mapa: " + map + "\n" : "") +
-      "\nAbra o convite: " + (opts.animatedUrl || animatedInviteUrl()) + "\n" +
-      "Confirme sua presença: " + (opts.confirmUrl || invitePageUrl())
+      "🚀 Você foi chamado para uma aventura! " + m.name + " faz " + m.age + " anos!\n" +
+      "Toque abaixo para abrir o convite animado:\n" +
+      (opts.animatedUrl || animatedInviteUrl())
     );
   }
 
@@ -2361,7 +2356,6 @@
     const phone = digits.length <= 11 ? "55" + digits : digits;
     const text = inviteMessageText({
       animatedUrl: guestAnimatedInviteUrl(guest),
-      confirmUrl: guestInviteUrl(guest),
     });
     return "https://wa.me/" + phone + "?text=" + encodeURIComponent(text);
   }
@@ -2397,15 +2391,7 @@
   }
 
   async function copyInvite() {
-    const m = state.meta;
-    const map = mapsLink();
-    const text =
-      "🎉 " + m.name + " faz " + m.age + " anos!\n" +
-      "Tema: " + m.theme + " 🤠🚀\n" +
-      "📅 " + longDate(m.date) + (m.time ? " às " + m.time.replace(":", "h") : "") + "\n" +
-      "📍 " + (m.location || "Local a definir") + "\n" +
-      (map ? "🗺️ Mapa: " + map + "\n" : "") +
-      "\nConfirme sua presença: " + invitePageUrl();
+    const text = inviteMessageText();
 
     const ok = await copyText(text);
     toast(ok ? "Convite com o link copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
@@ -2424,19 +2410,10 @@
   async function copyInviteMessage() {
     const name = (($("#invName") && $("#invName").value) || state.meta.name || "Ben").trim();
     const age = parseInt($("#invAge") && $("#invAge").value, 10) || state.meta.age;
-    const date = ($("#invDate") && $("#invDate").value) || state.meta.date;
-    const time = ($("#invTime") && $("#invTime").value) || state.meta.time;
-    const location = (($("#invLocation") && $("#invLocation").value) || state.meta.location || "").trim();
-    const customMap = safeUrl($("#invMapsUrl") && $("#invMapsUrl").value);
-    const map = customMap || (location ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(location) : "");
     const text =
-      "🎉 " + name + " faz " + age + " anos!\n" +
-      "Tema: " + state.meta.theme + " 🤠🚀\n" +
-      "📅 " + longDate(date) + (time ? " às " + time.replace(":", "h") : "") + "\n" +
-      "📍 " + (location || "Local a definir") + "\n" +
-      (map ? "🗺️ Mapa: " + map + "\n" : "") +
-      "\nAbra o convite: " + animatedInviteUrl() + "\n" +
-      "Confirme sua presença: " + invitePageUrl();
+      "🚀 Você foi chamado para uma aventura! " + name + " faz " + age + " anos!\n" +
+      "Toque abaixo para abrir o convite animado:\n" +
+      animatedInviteUrl();
 
     const ok = await copyText(text);
     toast(ok ? "Mensagem do convite copiada." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
