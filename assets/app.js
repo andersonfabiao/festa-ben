@@ -38,6 +38,8 @@
   };
 
   const PARTY_LOCATION = "Enjoy Kids, Liv Mall Shopping — Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005";
+  const LEGACY_RSVP_URL = "https://script.google.com/macros/s/AKfycbwAlOwqZ9z6TxtMI0XSdKg0Y4YLml9tZxptpYoGkTu3vLloHOBrQtehW-WL3qcCrPeX/exec";
+  const CURRENT_RSVP_URL = "https://script.google.com/macros/s/AKfycbw3NwS0-EGoW-qc3NgewX0P1d-iEWGReQN9bOhCrampwYTRN8eh8Kkj6ZrxyHDFzRtd/exec";
 
   function stageList() {
     const names = state && state.meta && state.meta.stageNames ? state.meta.stageNames : {};
@@ -435,6 +437,7 @@
     meta.budget = parseMoney(meta.budget);
     meta.theme = String(meta.theme || "Toy Story");
     meta.rsvpUrl = safeUrl(meta.rsvpUrl);
+    if (meta.rsvpUrl === LEGACY_RSVP_URL) meta.rsvpUrl = CURRENT_RSVP_URL;
     meta.mapsUrl = safeUrl(meta.mapsUrl);
     meta.fatherPhone = normalizePhone(meta.fatherPhone);
     meta.motherPhone = normalizePhone(meta.motherPhone);
