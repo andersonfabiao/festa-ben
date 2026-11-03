@@ -216,21 +216,34 @@
       /* os textos padrão mantêm o convite utilizável */
     }
 
-    if (remoteDirectory) {
-      try {
-        const configUrl = new URL(meta.rsvpUrl);
-        configUrl.searchParams.set("action", "config");
-        const configResponse = await fetch(configUrl.toString(), { cache: "no-store", redirect: "follow" });
-        const config = await configResponse.json();
-        if (config && config.ok) {
-          meta.fatherPhone = String(config.fatherPhone || "").replace(/\D/g, "").slice(0, 15);
-          meta.motherPhone = String(config.motherPhone || "").replace(/\D/g, "").slice(0, 15);
-        }
-      } catch (e) {
-        /* Os contatos são opcionais. */
-      }
-    }
+    // Os contatos são opcionais: carregam em segundo plano para não atrasar a busca.
+    if (remoteDirectory) loadParentContacts();
     return remoteDirectory;
+  }
+
+  async function loadParentContacts() {
+    if (!remoteDirectory || !meta.rsvpUrl) return;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 7000);
+    try {
+      const configUrl = new URL(meta.rsvpUrl);
+      configUrl.searchParams.set("action", "config");
+      const configResponse = await fetch(configUrl.toString(), {
+        cache: "no-store",
+        redirect: "follow",
+        signal: controller.signal,
+      });
+      const config = await configResponse.json().catch(() => null);
+      if (config && config.ok) {
+        meta.fatherPhone = String(config.fatherPhone || "").replace(/\D/g, "").slice(0, 15);
+        meta.motherPhone = String(config.motherPhone || "").replace(/\D/g, "").slice(0, 15);
+        renderParentContacts();
+      }
+    } catch (e) {
+      /* Os contatos são opcionais. */
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   function calendarHref() {
@@ -279,14 +292,30 @@
     const url = new URL(meta.rsvpUrl);
     url.searchParams.set("action", "lookup");
     Object.keys(params).forEach((key) => url.searchParams.set(key, params[key]));
-    const response = await fetch(url.toString(), { cache: "no-store", redirect: "follow" });
-    const data = await response.json().catch(() => null);
-    if (!response.ok || !data || data.ok === false || !Array.isArray(data.guests)) {
-      throw appError((data && data.error) || "Não foi possível consultar a lista.");
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const response = await fetch(url.toString(), {
+        cache: "no-store",
+        redirect: "follow",
+        signal: controller.signal,
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data || data.ok === false || !Array.isArray(data.guests)) {
+        throw appError((data && data.error) || "Não foi possível consultar a lista.");
+      }
+      mergeGuests(data.guests);
+      mergeGuests(data.related);
+      return data.guests.map((item) => normalizeGuest(item)).filter(Boolean);
+    } catch (error) {
+      if (error && error.name === "AbortError") {
+        throw appError("A busca demorou demais. Verifique sua internet e tente de novo.");
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
     }
-    mergeGuests(data.guests);
-    mergeGuests(data.related);
-    return data.guests.map((item) => normalizeGuest(item)).filter(Boolean);
   }
 
   function renderMeta() {
