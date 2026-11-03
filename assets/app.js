@@ -2133,8 +2133,8 @@
     $("#setTime").value = meta.time;
     $("#setLocation").value = meta.location || "";
     $("#setMapsUrl").value = meta.mapsUrl || "";
-    $("#setFatherPhone").value = formatPhone(meta.fatherPhone || "");
-    $("#setMotherPhone").value = formatPhone(meta.motherPhone || "");
+    $("#setFatherPhone").value = formatPhoneBR(meta.fatherPhone || "");
+    $("#setMotherPhone").value = formatPhoneBR(meta.motherPhone || "");
     $("#setBudget").value = meta.budget ? String(meta.budget).replace(".", ",") : "";
     $("#setMaxAdults").value = meta.maxAdults;
     $("#setMaxChildren").value = meta.maxChildren;
