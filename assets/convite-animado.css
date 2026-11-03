@@ -169,6 +169,31 @@ button { color: inherit; }
   gap: 9px;
 }
 
+.buzz-sound-hint {
+  position: absolute;
+  z-index: 2;
+  top: max(67px, calc(env(safe-area-inset-top) + 61px));
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - 34px);
+  margin: 0;
+  padding: 7px 13px;
+  border: 1px solid rgba(255,255,255,.78);
+  border-radius: 999px;
+  color: #17466c;
+  font-size: clamp(.72rem, 3vw, .88rem);
+  font-weight: 900;
+  text-align: center;
+  background: rgba(255,255,255,.86);
+  box-shadow: 0 5px 18px rgba(18, 55, 81, .13);
+  backdrop-filter: blur(6px);
+  transform: translateX(-50%);
+  transition: opacity .35s ease, visibility .35s ease, transform .35s ease;
+  pointer-events: none;
+}
+
+.is-buzz-sound-on .buzz-sound-hint { opacity: 0; visibility: hidden; transform: translate(-50%, -7px); }
+
 .buzz-prelude-control {
   display: grid;
   place-items: center;

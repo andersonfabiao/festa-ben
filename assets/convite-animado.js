@@ -41,6 +41,7 @@
     buzzSoundToggle.firstElementChild.textContent = isMuted ? "🔇" : "🔊";
     buzzSoundToggle.setAttribute("aria-label", isMuted ? "Ativar som do Buzz" : "Deixar Buzz sem som");
     buzzSoundToggle.setAttribute("aria-pressed", String(isMuted));
+    experience.classList.toggle("is-buzz-sound-on", !isMuted);
   };
 
   const enableBuzzSound = () => {
