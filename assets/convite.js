@@ -730,7 +730,7 @@
     document.body.classList.add("is-invite-closing");
     $("#inviteContent").innerHTML =
       '<div class="invite-goodbye" role="status">' +
-        '<img class="goodbye-character" src="assets/convite/woody-fim.gif" alt="Woody fazendo uma saudação de despedida" />' +
+        '<img class="goodbye-character" src="assets/convite/woody-fim.webp?v=20261103" alt="Woody fazendo uma saudação de despedida" />' +
         '<p class="goodbye-kicker">Resposta registrada</p>' +
         '<h2>' + (confirmed ? "Presença confirmada!" : "Obrigado por avisar!") + '</h2>' +
         '<p>' + (confirmed ? "Obrigado, nos vemos lá! 🎉" : "Não tem problema, nos vemos em breve! 🚀") + '</p>' +
