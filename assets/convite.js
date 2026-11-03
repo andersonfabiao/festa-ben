@@ -532,9 +532,9 @@
 
     let answer = "";
     if (guest.status === "confirmed") {
-      answer = '<div class="invite-answer ok">✅ Presença confirmada — Obrigado, nos vemos lá!<span>' + esc(when) + "</span></div>";
+      answer = '<div class="invite-answer ok"><small>Status da confirmação</small>✅ Presença confirmada<span>Obrigado, nos vemos lá!' + esc(when) + "</span></div>";
     } else if (guest.status === "declined") {
-      answer = '<div class="invite-answer no">Não tem problema, nos vemos em breve! Obrigado!<span>' + esc(when) + "</span></div>";
+      answer = '<div class="invite-answer no"><small>Status da confirmação</small>Presença não confirmada<span>Não tem problema, nos vemos em breve!' + esc(when) + "</span></div>";
     }
 
     const kids = linkedChildren(guest);
@@ -579,12 +579,17 @@
 
     const responseArea = guest.status === "declined"
       ? '<div class="decline-farewell">' +
-          '<p>Se quiser deixar uma mensagem para o Ben, fique à vontade!</p>' +
           messageField +
-          '<button class="btn decline-exit-btn" type="button" data-exit-invite><span aria-hidden="true">🚪</span> Salvar recado e sair</button>' +
-          '<button class="invite-link-btn" type="button" data-rsvp="confirmed">Mudei de ideia: vou comemorar</button>' +
+          '<button class="btn decline-exit-btn" type="button" data-exit-invite>Salvar recado e encerrar</button>' +
+          '<button class="btn change-to-confirm-btn" type="button" data-rsvp="confirmed">🎉 Mudei de ideia — vou comemorar</button>' +
         '</div>'
-      : messageField +
+      : guest.status === "confirmed"
+        ? '<div class="confirmed-farewell">' +
+            messageField +
+            '<button class="btn invite-confirm-btn finish-invite-btn" type="button" data-finish-invite>Salvar recado e encerrar</button>' +
+            '<button class="invite-link-btn" type="button" data-rsvp="declined">Alterar para: não poderei ir</button>' +
+          '</div>'
+        : messageField +
         '<p class="invite-step-label">Escolha sua resposta</p>' +
         '<div class="invite-actions">' +
           '<button class="btn btn-primary invite-btn invite-confirm-btn' + (guest.status === "confirmed" ? " is-current" : "") +
@@ -691,13 +696,16 @@
     }
   }
 
-  function showFarewell() {
+  function showFarewell(status) {
+    const confirmed = status === "confirmed";
     document.body.classList.add("is-invite-closing");
     $("#inviteContent").innerHTML =
       '<div class="invite-goodbye" role="status">' +
-        '<div class="goodbye-door" aria-hidden="true"><span></span></div>' +
-        '<h2>Obrigado por responder!</h2>' +
-        '<p>Nos vemos em breve! 🚀</p>' +
+        '<img class="goodbye-character" src="assets/convite/woody-fim.gif" alt="Woody fazendo uma saudação de despedida" />' +
+        '<p class="goodbye-kicker">Resposta registrada</p>' +
+        '<h2>' + (confirmed ? "Presença confirmada!" : "Obrigado por avisar!") + '</h2>' +
+        '<p>' + (confirmed ? "Obrigado, nos vemos lá! 🎉" : "Não tem problema, nos vemos em breve! 🚀") + '</p>' +
+        '<span class="goodbye-close-hint">Você já pode fechar esta página.</span>' +
       '</div>';
   }
 
@@ -763,7 +771,9 @@
           : "Resposta registrada. Obrigado!";
       }
       toast(status === "confirmed" ? "Presença confirmada! 🎉" : "Resposta enviada. 💙", "ok");
-      if (exitAfter) window.setTimeout(showFarewell, 250);
+      if (exitAfter || status === "confirmed") {
+        window.setTimeout(() => showFarewell(status), status === "confirmed" ? 1100 : 350);
+      }
     } catch (e) {
       sending = false;
       renderRsvp(guest);
@@ -798,6 +808,10 @@
 
       if (event.target.closest("[data-exit-invite]")) {
         submit("declined", true);
+        return;
+      }
+      if (event.target.closest("[data-finish-invite]")) {
+        submit("confirmed", true);
         return;
       }
 
