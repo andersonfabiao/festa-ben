@@ -1,5 +1,6 @@
 (() => {
   const experience = document.querySelector("#experience");
+  const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
   const buzzSoundToggle = document.querySelector("#buzzSoundToggle");
   const buzzSkip = document.querySelector("#buzzSkip");
@@ -34,30 +35,60 @@
     if (buzzPreludeVideo) buzzPreludeVideo.pause();
   };
 
+  const updateBuzzSoundControl = () => {
+    if (!buzzSoundToggle || !buzzPreludeVideo) return;
+    const isMuted = buzzPreludeVideo.muted;
+    buzzSoundToggle.firstElementChild.textContent = isMuted ? "🔇" : "🔊";
+    buzzSoundToggle.setAttribute("aria-label", isMuted ? "Ativar som do Buzz" : "Deixar Buzz sem som");
+    buzzSoundToggle.setAttribute("aria-pressed", String(isMuted));
+  };
+
+  const enableBuzzSound = () => {
+    if (!buzzPreludeVideo || !buzzPreludeVideo.muted) return;
+    buzzPreludeVideo.muted = false;
+    buzzPreludeVideo.volume = 0.9;
+    buzzPreludeVideo.play().catch(() => {
+      buzzPreludeVideo.muted = true;
+      updateBuzzSoundControl();
+    });
+    updateBuzzSoundControl();
+  };
+
   if (reduceMotion.matches) {
     finishPrelude();
   } else if (buzzPreludeVideo) {
     buzzPreludeVideo.addEventListener("ended", finishPrelude, { once: true });
-    buzzPreludeVideo.muted = true;
+    buzzPreludeVideo.muted = false;
     buzzPreludeVideo.volume = 0.9;
     buzzPreludeVideo.currentTime = 0;
-    const startBuzz = () => {
+    const startBuzz = async () => {
       experience.classList.add("is-buzz-playing");
-      buzzPreludeVideo.play().catch(finishPrelude);
+      updateBuzzSoundControl();
+      try {
+        await buzzPreludeVideo.play();
+      } catch {
+        buzzPreludeVideo.muted = true;
+        updateBuzzSoundControl();
+        buzzPreludeVideo.play().catch(finishPrelude);
+      }
       window.setTimeout(finishPrelude, 16000);
     };
     if (buzzPreludeVideo.readyState >= 2) startBuzz();
     else buzzPreludeVideo.addEventListener("canplay", startBuzz, { once: true });
 
     if (buzzSoundToggle) {
-      buzzSoundToggle.addEventListener("click", () => {
+      buzzSoundToggle.addEventListener("click", (event) => {
+        event.stopPropagation();
         buzzPreludeVideo.muted = !buzzPreludeVideo.muted;
-        buzzSoundToggle.firstElementChild.textContent = buzzPreludeVideo.muted ? "🔇" : "🔊";
-        buzzSoundToggle.setAttribute("aria-label", buzzPreludeVideo.muted ? "Ativar som do Buzz" : "Deixar Buzz sem som");
-        buzzSoundToggle.setAttribute("aria-pressed", String(buzzPreludeVideo.muted));
+        if (!buzzPreludeVideo.muted) buzzPreludeVideo.play().catch(() => {});
+        updateBuzzSoundControl();
       });
     }
-    if (buzzSkip) buzzSkip.addEventListener("click", finishPrelude);
+    if (buzzSkip) buzzSkip.addEventListener("click", (event) => {
+      event.stopPropagation();
+      finishPrelude();
+    });
+    if (buzzPrelude) buzzPrelude.addEventListener("click", enableBuzzSound);
   } else {
     finishPrelude();
   }
