@@ -728,6 +728,10 @@
   function showFarewell(status) {
     const confirmed = status === "confirmed";
     document.body.classList.add("is-invite-closing");
+    const heading = document.querySelector(".rsvp-heading");
+    if (heading) heading.hidden = true;
+    const subtitle = $("#inviteSub");
+    if (subtitle) subtitle.textContent = "Sua resposta já foi registrada.";
     $("#inviteContent").innerHTML =
       '<div class="invite-goodbye" role="status">' +
         '<img class="goodbye-character" src="assets/convite/woody-fim.webp?v=20261103" alt="Woody fazendo uma saudação de despedida" />' +

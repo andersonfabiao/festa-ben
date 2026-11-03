@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261102p4" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261103p6" />
 </head>
 <body>
   <header class="hero">
@@ -47,7 +47,6 @@
         <div class="cloud-actions">
           <button class="btn btn-sm btn-ghost" id="pullBtn" type="button" hidden>⬇️ Carregar</button>
           <button class="btn btn-sm btn-cloud" id="saveCloudBtn" type="button">☁️ Salvar na nuvem</button>
-          <button class="btn btn-sm btn-ghost" id="settingsBtn" type="button">⚙️ Ajustes</button>
         </div>
       </div>
 
@@ -156,7 +155,6 @@
           <button class="btn btn-ghost" id="copyInviteLinkBtn" type="button">🔗 Link do convite</button>
           <button class="btn btn-ghost" id="importGuestsBtn" type="button">📂 Importar arquivo</button>
           <button class="btn btn-cloud" id="saveCloudGuestsBtn" type="button">☁️ Salvar na nuvem</button>
-          <button class="btn btn-ghost" id="settingsGuestsBtn" type="button">⚙️ Ajustes</button>
           <input type="file" id="guestImportFile" accept=".txt,.csv,.json,text/plain,text/csv,application/json" hidden />
         </div>
       </div>
@@ -198,7 +196,6 @@
         </div>
         <div class="head-actions">
           <button class="btn btn-cloud" id="saveInviteCloudBtn" type="button">☁️ Salvar na nuvem</button>
-          <button class="btn btn-ghost" id="settingsInviteBtn" type="button">⚙️ Ajustes completos</button>
         </div>
       </div>
 
@@ -347,11 +344,11 @@
     </div>
   </div>
 
-  <!-- Modal de ajustes -->
+  <!-- Modal de edição -->
   <div class="modal" id="settingsModal" hidden>
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <div class="modal-head">
-        <h2 id="settingsTitle">Ajustes</h2>
+        <h2 id="settingsTitle">Editar festa</h2>
         <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
       </div>
       <form id="settingsForm">
@@ -492,7 +489,7 @@
         <div class="modal-actions">
           <span class="spacer"></span>
           <button type="button" class="btn btn-ghost" data-close>Fechar</button>
-          <button type="submit" class="btn btn-primary">Salvar ajustes</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
         </div>
       </form>
     </div>
@@ -600,6 +597,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261103p5"></script>
+  <script src="assets/app.js?v=20261103p6"></script>
 </body>
 </html>

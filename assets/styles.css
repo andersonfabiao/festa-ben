@@ -1162,6 +1162,7 @@ body.hide-values .money-input:focus {
 .guest-main { flex: 1; min-width: 0; }
 .guest-name { font-weight: 800; font-size: 0.94rem; color: #26344f; overflow-wrap: anywhere; }
 .guest-unlisted-badge { display: inline-flex; align-items: center; margin-left: 7px; padding: 2px 7px; border-radius: 999px; background: #fff1c7; color: #8a5800; font-size: .64rem; font-weight: 900; letter-spacing: .02em; vertical-align: middle; }
+.guest-host-badge { display: inline-flex; align-items: center; margin-left: 7px; padding: 2px 7px; border-radius: 999px; background: #e3f0ff; color: #1c5f97; font-size: .64rem; font-weight: 900; letter-spacing: .02em; vertical-align: middle; }
 .guest-type { font-size: 0.74rem; font-weight: 700; color: var(--muted); }
 .guest-contact { margin-top: 3px; font-size: 0.75rem; font-weight: 700; color: #31506f; overflow-wrap: anywhere; }
 .guest-contact a { color: var(--blue); font-weight: 800; text-decoration: none; }

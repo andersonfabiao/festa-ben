@@ -649,7 +649,7 @@
     $("#progressFill").style.width = s.pct + "%";
 
     if (activeView === "invite") {
-      const guests = state.guests;
+      const guests = countableGuests(state.guests);
       const confirmed = guests.filter((g) => g.status === "confirmed").length;
       const pending = guests.filter((g) => g.status === "pending").length;
       const declined = guests.filter((g) => g.status === "declined").length;
@@ -670,7 +670,7 @@
     }
 
     if (activeView === "guests") {
-      const guests = state.guests;
+      const guests = countableGuests(state.guests);
       const confirmed = guests.filter((g) => g.status === "confirmed").length;
       const children = guests.filter((g) => g.type === "child").length;
       const adults = guests.filter((g) => g.type === "adult").length;
@@ -926,7 +926,7 @@
       {
         label: "Orçamento total",
         value: money(s.budget),
-        note: "definido nos ajustes",
+        note: "definido em Editar festa",
         cls: "highlight",
       },
       {
@@ -984,7 +984,7 @@
 
     const s = summary();
     const meta = state.meta;
-    const guests = state.guests.slice();
+    const guests = countableGuests(state.guests).slice();
     const adultGuests = guests
       .filter((g) => g.type === "adult")
       .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
@@ -1159,6 +1159,15 @@
       .join("");
   }
 
+  function isHostGuest(guest) {
+    const relation = norm(guest && guest.relation);
+    return relation === "pai" || relation === "mae" || relation === "papai" || relation === "mamae";
+  }
+
+  function countableGuests(list) {
+    return (Array.isArray(list) ? list : []).filter((guest) => !isHostGuest(guest));
+  }
+
   function displayGuestName(guest) {
     return [String(guest.relation || "").trim(), guest.name].filter(Boolean).join(" ");
   }
@@ -1191,6 +1200,9 @@
     const unlistedBadge = g.unlisted
       ? '<span class="guest-unlisted-badge" title="Confirmou presença sem estar na lista inicial">Novo convidado</span>'
       : "";
+    const hostBadge = isHostGuest(g)
+      ? ' <span class="guest-host-badge" title="Anfitrião: aparece na lista, mas não entra na contagem de convidados">Anfitrião</span>'
+      : "";
 
     const guardians =
       g.type === "child"
@@ -1213,7 +1225,7 @@
     return (
       '<div class="guest-row">' +
         '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
-        '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + unlistedBadge + "</div>" +
+        '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + unlistedBadge + hostBadge + "</div>" +
           '<div class="guest-type">' + (g.type === "child" ? "Criança" : "Adulto") +
           " · " + gs.label + "</div>" + phone + notes + guardianLine + kidsLine +
           rsvpNote + rsvpMsg + "</div>" +
@@ -1233,7 +1245,8 @@
   }
 
   function renderGuests() {
-    const guests = state.guests;
+    const allGuests = state.guests;
+    const guests = countableGuests(allGuests);
     const confirmed = guests.filter((g) => g.status === "confirmed").length;
     const pending = guests.filter((g) => g.status === "pending").length;
     const declined = guests.filter((g) => g.status === "declined").length;
@@ -1292,12 +1305,12 @@
       .join("");
 
     const counts = {
-      all: guests.length,
-      adult: adults,
-      child: children,
-      confirmed,
-      pending,
-      declined,
+      all: allGuests.length,
+      adult: allGuests.filter((g) => g.type === "adult").length,
+      child: allGuests.filter((g) => g.type === "child").length,
+      confirmed: allGuests.filter((g) => g.status === "confirmed").length,
+      pending: allGuests.filter((g) => g.status === "pending").length,
+      declined: allGuests.filter((g) => g.status === "declined").length,
     };
     const labels = {
       all: "Todos",
@@ -1317,7 +1330,7 @@
     });
 
     const list = $("#guestList");
-    if (!guests.length) {
+    if (!allGuests.length) {
       list.innerHTML =
         '<div class="empty"><span class="emoji">🎟️</span><h3>Lista vazia</h3>' +
         "<p>Adicione os convidados para acompanhar as confirmações.</p></div>";
@@ -1325,7 +1338,7 @@
     }
 
     const q = norm(guestQuery);
-    const visible = guests.filter((g) => {
+    const visible = allGuests.filter((g) => {
       if (guestFilter === "adult" || guestFilter === "child") {
         if (g.type !== guestFilter) return false;
       } else if (guestFilter !== "all") {
@@ -1560,7 +1573,7 @@
   async function pullCloud(options) {
     const opts = options || {};
     if (!hasCloud()) {
-      toast("Configure o GitHub nos Ajustes primeiro.", "warn");
+      toast("Abra Editar festa e configure o GitHub primeiro.", "warn");
       openSettings();
       return;
     }
@@ -1654,7 +1667,7 @@
     if (!hasCloud() || !cloud.verified) {
       if (opts.manual) {
         if (stateEl) stateEl.textContent = "Configure a nuvem para atualizar as respostas.";
-        toast("Configure a nuvem nos Ajustes para buscar respostas.", "warn");
+        toast("Configure a nuvem em Editar festa para buscar respostas.", "warn");
       }
       return;
     }
@@ -1699,7 +1712,7 @@
   async function saveCloud(options) {
     const opts = options || {};
     if (!hasCloud()) {
-      toast("Configure o GitHub nos Ajustes para usar a nuvem.", "warn");
+      toast("Configure o GitHub em Editar festa para usar a nuvem.", "warn");
       openSettings();
       return;
     }
@@ -2083,8 +2096,8 @@
 
     if (isNew) {
       const max = type === "adult" ? state.meta.maxAdults : state.meta.maxChildren;
-      const count = state.guests.filter((g) => g.type === type).length;
-      if (count > max) {
+      const count = countableGuests(state.guests).filter((g) => g.type === type).length;
+      if (!isHostGuest(guest) && count > max) {
         toast(
           "Convidado adicionado, mas o limite de " +
             (type === "adult" ? "adultos" : "crianças") +
@@ -2245,7 +2258,7 @@
 
     if (needsUpload) {
       const send = window.confirm(
-        "Ajustes salvos!\n\nAinda não há dados deste aparelho no GitHub.\n\n" +
+        "Festa atualizada!\n\nAinda não há dados deste aparelho no GitHub.\n\n" +
           "OK = enviar agora e criar o arquivo (use se está começando).\n" +
           "Cancelar = não enviar (use “Baixar da nuvem” se o arquivo já existir)."
       );
@@ -2257,7 +2270,7 @@
     } else if (!wasCloud && hasCloud()) {
       toast("Nuvem conectada. Use “Baixar” ou “Salvar na nuvem” para começar.", "ok");
     } else {
-      toast("Ajustes salvos.", "ok");
+      toast("Festa atualizada.", "ok");
     }
   }
 
@@ -2676,12 +2689,15 @@
 
     pendingGuestImport = parsed.guests;
 
-    const adults = parsed.guests.filter((g) => g.type === "adult").length;
-    const kids = parsed.guests.filter((g) => g.type === "child").length;
+    const counted = countableGuests(parsed.guests);
+    const hosts = parsed.guests.length - counted.length;
+    const adults = counted.filter((g) => g.type === "adult").length;
+    const kids = counted.filter((g) => g.type === "child").length;
     $("#guestImportSummary").textContent =
-      parsed.guests.length +
-      " nome(s) " + sourceLabel + ": " +
-      adults + " adulto(s) e " + kids + " criança(s).";
+      counted.length +
+      " convidado(s) " + sourceLabel + ": " +
+      adults + " adulto(s) e " + kids + " criança(s)." +
+      (hosts ? " " + hosts + " anfitrião(ões) fora da contagem." : "");
 
     const preview = parsed.guests.slice(0, 8);
     let previewHtml = preview
@@ -2825,14 +2841,11 @@
     $("#statusFilter").addEventListener("change", renderChecklist);
     $("#pendingOnly").addEventListener("change", renderChecklist);
     $("#addItemBtn").addEventListener("click", () => openItemModal());
-    $("#settingsBtn").addEventListener("click", () => openSettings());
     $("#editStageNamesBtn").addEventListener("click", () => openSettings(true));
     // Não repasse o evento de clique/toque para openSettings. Em celulares, o
     // evento era interpretado como `focusStageNames = true`, deslocando o modal
-    // e abrindo o teclado assim que a tela de ajustes aparecia.
+    // e abrindo o teclado assim que a tela de edição aparecia.
     $("#heroEditBtn").addEventListener("click", () => openSettings(false));
-    $("#settingsGuestsBtn").addEventListener("click", () => openSettings(false));
-    $("#settingsInviteBtn").addEventListener("click", () => openSettings(false));
 
     $("#inviteForm").addEventListener("submit", handleInviteSubmit);
     $("#inviteForm").addEventListener("input", renderInvitePreview);
@@ -3097,7 +3110,7 @@
     });
 
     $("#clearBtn").addEventListener("click", () => {
-      if (!window.confirm("Apagar todos os itens e convidados?\n\nOs ajustes da festa serão mantidos.")) return;
+      if (!window.confirm("Apagar todos os itens e convidados?\n\nOs dados da festa serão mantidos.")) return;
       state.items = [];
       state.guests = [];
       touch();

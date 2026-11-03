@@ -5,16 +5,16 @@ Projeto com duas áreas: convite público para os convidados e painel de organiz
 ## O que tem
 
 - **Checklist por etapas** — planejamento, local, decoração, convidados, comida, look do Ben, lembrancinhas, atividades e o dia da festa.
-- **Etapas personalizáveis** — use **✏️ Editar nomes das etapas** no checklist (ou **Ajustes → Nomes das etapas do checklist**); os itens permanecem vinculados à etapa original. O checklist começa expandido.
+- **Etapas personalizáveis** — use **✏️ Editar nomes das etapas** no checklist (ou **Editar festa → Nomes das etapas do checklist**); os itens permanecem vinculados à etapa original. O checklist começa expandido.
 - **Status por item** — a fazer, em andamento, contratado e concluído, com checkbox para marcar rápido.
 - **Valores** — custo previsto, valor já pago, fornecedor, link, data limite e observações.
 - **Orçamento** — total, previsto, contratado, pago, a pagar e saldo; gráfico de gastos por etapa e tabela completa.
-- **Convidados** — lista com criança/adulto, confirmação de presença, parentesco/apelido opcional (ex.: “Vovô Tito”), WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. O parentesco aparece na busca e na saudação do convite. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros e busca por nome. Importação de lista em `.txt`, `.csv` ou `.json`.
+- **Convidados** — lista com criança/adulto, confirmação de presença, parentesco/apelido opcional (ex.: “Vovô Tito”), WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. O parentesco aparece na busca e na saudação do convite. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros e busca por nome. Convidados com parentesco **Pai** ou **Mãe** aparecem na lista com o selo **Anfitrião**, mas não entram nas contagens, nos limites nem no resumo em PDF. Importação de lista em `.txt`, `.csv` ou `.json`.
 - **WhatsApp do convidado** — o telefone é formatado sozinho (`(83) 99999-9999`) e validado ao salvar (DDD + 10 ou 11 dígitos). Em cada convidado com número aparecem dois atalhos: **WhatsApp ↗** (abre a conversa) e **Enviar convite ↗** (abre o WhatsApp com a mensagem do convite já pronta, incluindo os links individualizados do convite animado e da confirmação).
 - **Página de confirmação** — página responsiva acessada pelo link enviado junto ao convite oficial. Mostra um resumo da festa e leva o convidado diretamente à busca do nome e aos botões **Vou comemorar** / **Não poderei ir**, com recado opcional. A página respeita a preferência do aparelho por menos movimento e não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, estrelas sobem pela tela em comemoração.
 - **Convite oficial animado** — experiência separada em `convite-animado.html`, com identidade **Ben Story**, personagens, envelope animado, sugestões de presente e música iniciada após o primeiro toque. Os dados públicos do evento vêm de `event.json`; lista, telefones e orçamento não são carregados pelo convite.
 - **Aba Convite** — em **💌 Convite** você ajusta nome, idade, data, horário, local, link do mapa, URL do Apps Script e o modo de busca, com prévia do convite. A mesma aba reúne os links do **convite animado** e da **página de confirmação**, com botões para abrir e copiar (e também copiar a mensagem pronta para o WhatsApp). As alterações aparecem no topo da organização, no convite animado e na confirmação depois de salvar na nuvem.
-- **Limite de convidados** — os cards de **Adultos** e **Crianças** mostram a ocupação do limite: verde até 75%, amarelo de 76% a 95% e vermelho acima de 95%. O card **Confirmados** mostra o percentual de presença confirmada em verde. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Ajustes → Limite de convidados**.
+- **Limite de convidados** — os cards de **Adultos** e **Crianças** mostram a ocupação do limite: verde até 75%, amarelo de 76% a 95% e vermelho acima de 95%. O card **Confirmados** mostra o percentual de presença confirmada em verde. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Editar festa → Limite de convidados**.
 - **Resumo em PDF** — em **💰 Orçamento → 📄 Exportar resumo PDF**, abra a impressão e escolha **Salvar como PDF** para gerar um relatório com dados da festa, resumo financeiro, itens do checklist/orçamento e convidados separados por adultos e crianças.
 - **Olho dos valores** — o botão **👁️ Valores** no topo esconde (desfoca) todos os valores da página com um clique; a escolha fica salva no aparelho. Na aba **Convidados** os valores nem aparecem: ela é só para configurações e informações da lista.
 - **Contagem regressiva** para a festa.
@@ -62,7 +62,7 @@ O painel usa a API do GitHub para ler e gravar `data.json` em um segundo reposit
 
 ### 2. Configure na página
 
-1. Abra a página e clique em **☁️ Ativar nuvem** (ou **⚙️ Ajustes**).
+1. Abra a página e clique em **☁️ Ativar nuvem** (ou **✏️ Editar festa**).
 2. Preencha:
    - **Usuário / organização**: seu usuário do GitHub
    - **Repositório**: `festa-ben-dados`
@@ -70,11 +70,11 @@ O painel usa a API do GitHub para ler e gravar `data.json` em um segundo reposit
    - **Arquivo de dados**: `data.json`
    - **Token**: o token criado acima
 3. Marque **Salvar automaticamente na nuvem** se quiser que cada alteração seja enviada sozinha (recomendado depois da primeira sincronização).
-4. Clique em **Salvar ajustes**. A página pergunta se você quer enviar os dados deste aparelho agora — responda **OK** para criar o `data.json`.
+4. Clique em **Salvar**. A página pergunta se você quer enviar os dados deste aparelho agora — responda **OK** para criar o `data.json`.
 
 Na primeira configuração, a página **não envia nada automaticamente**. Use:
 
-- **☁️ Salvar na nuvem** (na barra do checklist) ou **☁️ Enviar para a nuvem** (dentro de Ajustes) — envia o que está neste aparelho para o GitHub (cria o `data.json`).
+- **☁️ Salvar na nuvem** (na barra do checklist) ou **☁️ Enviar para a nuvem** (dentro de Editar festa) — envia o que está neste aparelho para o GitHub (cria o `data.json`).
 - **⬇️ Carregar** — traz o que já está no GitHub para este aparelho.
 
 > Se você já usa a página em outro aparelho, use **Carregar** primeiro. Se está começando agora, use **Salvar na nuvem** primeiro.
@@ -150,7 +150,7 @@ O link também inclui título, descrição e uma imagem horizontal própria (`as
 
 ### Local com link para o Google Maps
 
-O local da festa está definido como **Enjoy Kids**, dentro do **Liv Mall Shopping**, na Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005. O chip de localização abre o Google Maps com esse endereço. Se você tiver um link exato do local, cole em **⚙️ Ajustes → Link do Google Maps (opcional)** — ele tem prioridade sobre a busca automática. O mesmo link aparece no texto do **📋 Copiar convite**.
+O local da festa está definido como **Enjoy Kids**, dentro do **Liv Mall Shopping**, na Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005. O chip de localização abre o Google Maps com esse endereço. Se você tiver um link exato do local, cole em **✏️ Editar festa → Link do Google Maps (opcional)** — ele tem prioridade sobre a busca automática. O mesmo link aparece no texto do **📋 Copiar convite**.
 
 ### Editar convidados e vincular crianças
 
@@ -170,9 +170,9 @@ O vínculo é feito nos dois sentidos: marcar um adulto na criança também faz 
 
 ### Links do convite
 
-- **Link único (para o grupo)** — o convidado abre o convite e digita pelo menos 3 letras do nome; só então aparecem as opções (no máximo 12). A lista completa nunca é exibida. Use **🔗 Link do convite** na aba **Convidados** ou o campo em **Ajustes → Convite e RSVP**.
+- **Link único (para o grupo)** — o convidado abre o convite e digita pelo menos 3 letras do nome; só então aparecem as opções (no máximo 12). A lista completa nunca é exibida. Use **🔗 Link do convite** na aba **Convidados** ou o campo em **Editar festa → Convite e RSVP**.
 - **Link individual** — cada convidado tem um link próprio, que já abre o convite com o nome dele. Clique no **🔗** ao lado do nome na lista para copiar. O link usa um ID estável salvo no convidado, então **continua o mesmo mesmo se o nome for alterado**.
-- **Modo somente links** — em **Ajustes → Convite e RSVP → Como o convidado encontra o nome**, escolha **Somente link individual**. O convite deixa de ter busca e pede o link pessoal, sem expor nenhum nome. Ideal para grupos menores ou quando a privacidade for prioridade.
+- **Modo somente links** — em **Editar festa → Convite e RSVP → Como o convidado encontra o nome**, escolha **Somente link individual**. O convite deixa de ter busca e pede o link pessoal, sem expor nenhum nome. Ideal para grupos menores ou quando a privacidade for prioridade.
 
 O botão **📋 Copiar convite** copia um texto pronto com data, local e o link único para colar no WhatsApp.
 
@@ -194,7 +194,7 @@ O convite envia a busca e a resposta para um **Google Apps Script**, que acessa 
 2. Crie `festa-ben-dados` como repositório privado e um token fine-grained com **Contents: Read and write** somente nele.
 3. Nas **Propriedades do script**, defina `GH_TOKEN`, `GH_OWNER`, `GH_REPO` (e, se quiser, `GH_BRANCH` e `GH_PATH`).
 4. **Implantar → Nova implantação → Aplicativo da Web**, executar como **Eu** e acesso **Qualquer pessoa**.
-5. Copie a URL `/exec`, cole em **Ajustes → Convite e RSVP → URL do Google Apps Script**, clique em **Salvar** e depois em **☁️ Salvar na nuvem**.
+5. Copie a URL `/exec`, cole em **Editar festa → Convite e RSVP → URL do Google Apps Script**, clique em **Salvar** e depois em **☁️ Salvar na nuvem**.
 6. Teste `SUA_URL/exec?ping=1` no navegador: deve responder `{"ok":true,…}`.
 
 Sem essa URL, o convite abre normalmente, mas os botões ficam desativados e aparece um aviso para falar com os anfitriões.
@@ -210,8 +210,8 @@ Sem essa URL, o convite abre normalmente, mas os botões ficam desativados e apa
 
 ## Backup e impressão
 
-- **Ajustes → Exportar JSON** baixa um arquivo com todos os dados.
-- **Ajustes → Importar JSON** restaura um backup (substitui os dados do aparelho).
+- **Editar festa → Exportar JSON** baixa um arquivo com todos os dados.
+- **Editar festa → Importar JSON** restaura um backup (substitui os dados do aparelho).
 - **Ctrl/Cmd + P** abre a impressão; o layout é limpo, sem botões, bom para salvar em PDF.
 
 ## Personalizar
@@ -248,10 +248,10 @@ lista_convidados.txt  mesma lista em texto simples
 | Sintoma | O que fazer |
 | --- | --- |
 | “Token inválido” | Gere outro token e confira se ele tem **Contents: Read and write** no repositório certo. |
-| “Arquivo ainda não existe” ao carregar | Normal na primeira vez. Use **Enviar para a nuvem** (em Ajustes) ou **Salvar na nuvem** para criar o `data.json`. Se você já salvou em outro aparelho, confira o token (**Contents: Read and write**) e se o branch é o mesmo. |
+| “Arquivo ainda não existe” ao carregar | Normal na primeira vez. Use **Enviar para a nuvem** (em Editar festa) ou **Salvar na nuvem** para criar o `data.json`. Se você já salvou em outro aparelho, confira o token (**Contents: Read and write**) e se o branch é o mesmo. |
 | Erro de conflito ao salvar | Alguém/algo atualizou o arquivo. Use **Carregar**, confira e salve de novo. |
 | Dados diferentes entre celular e computador | Falta sincronizar: **Carregar** no aparelho ou **Salvar** no que está atualizado. |
-| Botões do convite desativados | Falta configurar a URL do Apps Script em **Ajustes → Convite e RSVP** e clicar em **Salvar**. |
+| Botões do convite desativados | Falta configurar a URL do Apps Script em **Editar festa → Convite e RSVP** e clicar em **Salvar**. |
 | Resposta do convite não aparece | Clique em **🔄 Atualizar respostas**. Se persistir, teste `SUA_URL/exec?ping=1` e veja [`apps-script/README.md`](apps-script/README.md). |
 | Convite diz "não encontrei esse convite" | O convite foi removido da lista ou o `data.json` ainda não foi atualizado | Importe/edite a lista, clique em **☁️ Salvar na nuvem** e copie o link novo pelo **🔗**. |
 | Página em branco no GitHub Pages | Confira se o Pages está em **main / (root)** e se os arquivos estão na raiz do repositório. |

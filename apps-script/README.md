@@ -73,7 +73,7 @@ Se aparecer `"ok":false`, a mensagem de erro indica o que falta (token, reposit�
 
 ## 6. Ligar o convite ao script
 
-1. Abra o site da festa e vá em **⚙️ Ajustes**.
+1. Abra o site da festa e vá em **✏️ Editar festa**.
 2. No campo **URL do Google Apps Script**, cole a URL `/exec`.
 3. Clique em **Salvar**.
 4. Configure também o mesmo repositório privado na seção **Sincronização privada com GitHub**.
@@ -108,7 +108,7 @@ A partir daí, o convite mostra os botões **🎉 Vou comemorar** e **😢 Não 
 | `GitHub recusou a leitura (404)` | Dono/repositório/caminho errados | Confira `GH_OWNER`, `GH_REPO` e `GH_PATH`. |
 | `O repositório de dados precisa ser privado` | O script ainda aponta para o site público | Crie `festa-ben-dados` como privado e atualize `GH_REPO`. |
 | `Convidado não encontrado` | Nome alterado ou lista ainda não enviada à nuvem | Importe a lista no app e clique em **☁️ Salvar na nuvem**. |
-| Botões desativados no convite | URL do Apps Script não configurada | Cole a URL em **Ajustes** e clique em **Salvar** + **☁️ Salvar na nuvem**. |
+| Botões desativados no convite | URL do Apps Script não configurada | Cole a URL em **Editar festa** e clique em **Salvar** + **☁️ Salvar na nuvem**. |
 | Resposta não aparece | Ainda não atualizou / link antigo | Clique em **🔄 Atualizar respostas**; confira se o convite usou o link novo. |
 
 ## Segurança
