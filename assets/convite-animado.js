@@ -40,7 +40,7 @@
     const startPrelude = () => buzzPreludeVideo.play().catch(finishPrelude);
     if (buzzPreludeVideo.readyState >= 2) startPrelude();
     else buzzPreludeVideo.addEventListener("canplay", startPrelude, { once: true });
-    window.setTimeout(finishPrelude, 5200);
+    window.setTimeout(finishPrelude, 16000);
   } else {
     finishPrelude();
   }
@@ -94,6 +94,7 @@
 
   const showFinal = () => {
     clearTimers();
+    experience.classList.remove("is-between-scenes");
     setScene("final");
   };
 
@@ -113,8 +114,9 @@
       revealVideo.play().catch(() => {});
     }
     playAudio(restartAudio);
-    later(() => experience.classList.add("is-reveal-leaving"), 5700);
-    later(showFinal, 6460);
+    later(() => experience.classList.add("is-between-scenes"), 6000);
+    later(() => setScene("final"), 6550);
+    later(() => experience.classList.remove("is-between-scenes"), 7400);
   };
 
   startButton.addEventListener("click", () => runAnimation({ restartAudio: true }));

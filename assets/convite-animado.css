@@ -351,16 +351,11 @@ button { color: inherit; }
 .reveal-frame {
   position: relative;
   z-index: 2;
-  height: min(82vh, 720px);
+  height: min(90vh, 780px);
   aspect-ratio: 128 / 240;
-  padding: 8px;
-  border: 3px solid rgba(255,255,255,.88);
-  border-radius: 24px;
-  background: rgba(255,255,255,.88);
-  box-shadow: 0 28px 75px rgba(9,55,88,.35), 0 0 0 8px rgba(255,255,255,.13);
   opacity: 0;
   transform: translateY(35px) scale(.88);
-  overflow: hidden;
+  filter: drop-shadow(0 24px 24px rgba(9,55,88,.2));
 }
 
 .is-reveal .reveal-frame { animation: reveal-card-arrives .75s .12s cubic-bezier(.15,.9,.25,1.12) forwards; }
@@ -370,27 +365,10 @@ button { color: inherit; }
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 15px;
   object-fit: cover;
   background: #65bce1;
-}
-
-.reveal-frame p {
-  position: absolute;
-  z-index: 3;
-  right: 14px;
-  bottom: 15px;
-  left: 14px;
-  margin: 0;
-  padding: 9px 11px;
-  border-radius: 999px;
-  color: #fff;
-  background: rgba(16,67,105,.72);
-  box-shadow: 0 5px 18px rgba(10,44,70,.2);
-  font-size: clamp(.66rem, 1.6vw, .82rem);
-  font-weight: 900;
-  text-align: center;
-  backdrop-filter: blur(6px);
+  -webkit-mask-image: radial-gradient(ellipse 64% 58% at center, #000 76%, transparent 100%);
+  mask-image: radial-gradient(ellipse 64% 58% at center, #000 76%, transparent 100%);
 }
 
 .intro-scene { display: grid; place-items: center; opacity: 0; transition: opacity .6s ease; }
@@ -729,6 +707,16 @@ button { color: inherit; }
 .is-departing .smoke-transition span:nth-child(4),
 .is-departing .smoke-transition span:nth-child(8) { animation-delay: .23s; }
 
+.is-between-scenes .smoke-transition { visibility: visible; animation: smoke-scene-layer 1.4s ease-in-out forwards; }
+.is-between-scenes .smoke-transition::after { animation: smoke-scene-whiteout 1.4s ease-in-out forwards; }
+.is-between-scenes .smoke-transition span { animation: smoke-scene-bloom 1.25s cubic-bezier(.15,.7,.2,1) forwards; }
+.is-between-scenes .smoke-transition span:nth-child(2),
+.is-between-scenes .smoke-transition span:nth-child(6),
+.is-between-scenes .smoke-transition span:nth-child(9) { animation-delay: .06s; }
+.is-between-scenes .smoke-transition span:nth-child(3),
+.is-between-scenes .smoke-transition span:nth-child(7),
+.is-between-scenes .smoke-transition span:nth-child(10) { animation-delay: .12s; }
+
 @keyframes opening-float { 50% { transform: translateY(-7px); } }
 @keyframes reveal-card-arrives { to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes reveal-card-leaves { to { opacity: 0; transform: translateY(-24px) scale(1.04); filter: blur(5px); } }
@@ -786,6 +774,9 @@ button { color: inherit; }
 @keyframes smoke-layer-in { to { opacity: 1; } }
 @keyframes smoke-bloom { 35% { opacity: .92; } 100% { opacity: 1; transform: scale(2.15) translateY(-5%); } }
 @keyframes smoke-whiteout { to { opacity: 1; } }
+@keyframes smoke-scene-layer { 0% { opacity: 0; visibility: visible; } 38%, 70% { opacity: 1; visibility: visible; } 100% { opacity: 0; visibility: hidden; } }
+@keyframes smoke-scene-bloom { 0% { opacity: 0; transform: scale(.15); } 42%, 68% { opacity: 1; transform: scale(2.15) translateY(-5%); } 100% { opacity: 0; transform: scale(2.45) translateY(-8%); } }
+@keyframes smoke-scene-whiteout { 0%, 28% { opacity: 0; } 46%, 67% { opacity: 1; } 100% { opacity: 0; } }
 
 @media (min-width: 681px) {
   .intro-copy {
@@ -810,7 +801,7 @@ button { color: inherit; }
   .opening-card { padding-top: 42px; }
   .opening-logo .opening-peek { top: 0; right: 92%; bottom: auto; left: auto; width: .62em; }
   .reveal-scene { padding: 12px; }
-  .reveal-frame { width: min(78vw, 350px); height: auto; max-height: 79vh; }
+  .reveal-frame { width: min(88vw, 390px); height: auto; max-height: 88vh; }
   .intro-copy { top: 12%; }
   .hero-characters { bottom: 5%; width: 92vw; }
   .orbit-alien { left: -18px; bottom: 19%; }
