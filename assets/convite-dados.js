@@ -37,6 +37,21 @@
     return minutes === "00" ? parseInt(hours, 10) + "h" : parseInt(hours, 10) + "h" + minutes;
   };
 
+  const calendarHref = (meta) => {
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(meta.date) ? meta.date : "2027-01-09";
+    const time = /^\d{2}:\d{2}$/.test(meta.time) ? meta.time : "18:00";
+    const start = date.replace(/-/g, "") + "T" + time.replace(":", "") + "00";
+    const ics = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Festa Ben//Convite//PT-BR", "BEGIN:VEVENT",
+      "DTSTART;TZID=America/Sao_Paulo:" + start,
+      "DTEND;TZID=America/Sao_Paulo:" + date.replace(/-/g, "") + "T220000",
+      "SUMMARY:Aniversário do " + String(meta.name || "Ben") + " - " + (parseInt(meta.age, 10) || 5) + " anos",
+      "LOCATION:" + String(meta.location || "Enjoy Kids - Liv Mall Shopping").replace(/,/g, "\\,"),
+      "DESCRIPTION:Venha comemorar com a gente!", "END:VEVENT", "END:VCALENDAR"
+    ].join("\r\n");
+    return "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+  };
+
   const splitLocation = (value) => {
     const cleaned = String(value || "").trim();
     if (!cleaned) return ["Local a definir", ""];
@@ -70,7 +85,9 @@
 
     setText("animatedAge", String(age));
     setText("animatedDateText", longDate(date));
-    setText("animatedWeekday", weekday(date));
+    setText("animatedWeekday", weekday(date) + " · adicionar à agenda");
+    const calendar = $("animatedDate");
+    if (calendar) calendar.href = calendarHref(meta);
     setText("animatedTimeText", displayTime(time));
     setText("animatedLocationName", location[0]);
 

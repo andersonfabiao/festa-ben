@@ -2320,6 +2320,7 @@ body.no-scroll { overflow: hidden; }
 .rsvp-panel .invite-hint { text-align: left; }
 .rsvp-panel .field-label { text-align: left; }
 .rsvp-panel .invite-textarea { min-height: 76px; }
+.invite-message-label > span { color: #77879a; font-size: .72rem; font-weight: 700; }
 .rsvp-panel .invite-actions { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
 .rsvp-panel .invite-confirm-btn {
   border-color: #24823c;
@@ -2332,6 +2333,21 @@ body.no-scroll { overflow: hidden; }
 .rsvp-panel .invite-btn[data-rsvp="declined"] { border: 1px solid #d7e1ec; background: #fff; color: #53647a; box-shadow: none; }
 .rsvp-panel .invite-btn.is-current { outline-color: rgba(47,168,79,.5); }
 .rsvp-panel .invite-warning { padding: 10px; border-radius: 11px; }
+.decline-farewell { padding: 13px; border-radius: 16px; background: #f4f8ff; text-align: left; }
+.decline-farewell > p { margin: 0 0 11px; color: #53677e; font-weight: 700; }
+.decline-exit-btn { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; margin-top: 10px; border: 0; color: #fff; background: linear-gradient(135deg,#47708f,#244863); box-shadow: 0 4px 0 #173349; }
+.decline-exit-btn span { display: inline-block; transition: transform .35s ease; }
+.decline-exit-btn:hover span { transform: rotateY(55deg); }
+.invite-goodbye { min-height: 290px; display: grid; place-content: center; justify-items: center; text-align: center; animation: search-status-in .4s ease both; }
+.invite-goodbye h2 { margin: 18px 0 3px; color: #174b76; }
+.invite-goodbye p { margin: 0; color: #60768b; font-weight: 800; }
+.goodbye-door { position: relative; width: 72px; height: 105px; border: 7px solid #8c572f; border-bottom: 0; background: #d58a47; perspective: 500px; overflow: hidden; }
+.goodbye-door span { position: absolute; inset: 0; background: linear-gradient(90deg,#b76c35,#df9852); transform-origin: left; animation: close-door 1.1s cubic-bezier(.2,.8,.2,1) both; }
+.goodbye-door span::after { content:""; position:absolute; right:8px; top:50%; width:7px; height:7px; border-radius:50%; background:#f5cf54; }
+.rsvp-parent-help { margin: 0 34px 26px; padding: 15px 18px; border-radius: 16px; background: #f5fbff; color: #1d557c; font-size: .82rem; font-weight: 900; text-align: center; }
+.parent-contact-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 9px; margin-top: 10px; }
+.parent-contact-actions a { display:inline-flex; align-items:center; gap:6px; padding:8px 13px; border-radius:999px; color:#fff; background:#25a95b; text-decoration:none; box-shadow:0 3px 0 #16743b; }
+.parent-contact-actions a:hover { transform: translateY(-1px); }
 .invite-loading { padding: 18px 0; }
 .invite-spinner { border-color: #d4e5f4; border-top-color: #e6af20; }
 .invite-search .input { margin-top: 5px; }
@@ -2346,6 +2362,14 @@ body.no-scroll { overflow: hidden; }
 @keyframes search-status-in {
   from { opacity: 0; transform: translateY(-3px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes close-door {
+  from { transform: rotateY(-76deg); }
+  to { transform: rotateY(0); }
+}
+
+@media (max-width: 620px) {
+  .rsvp-parent-help { margin: 0 14px 18px; }
 }
 @keyframes curtain-left {
   from { transform: translateX(70%); opacity: .8; }

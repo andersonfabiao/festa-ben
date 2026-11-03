@@ -379,6 +379,16 @@
           <input id="setMapsUrl" class="input" type="url" placeholder="https://maps.app.goo.gl/…" autocomplete="off" />
         </label>
         <p class="hint">Se ficar vazio, o convite cria sozinho um link de busca no Google Maps com o local acima.</p>
+        <h3 class="form-section">Contato dos pais</h3>
+        <p class="hint">Estes números aparecem somente como botões de ajuda na página de confirmação.</p>
+        <div class="grid-2">
+          <label class="field-label">WhatsApp do papai
+            <input id="setFatherPhone" class="input" inputmode="tel" maxlength="24" placeholder="(83) 99999-9999" autocomplete="tel" />
+          </label>
+          <label class="field-label">WhatsApp da mamãe
+            <input id="setMotherPhone" class="input" inputmode="tel" maxlength="24" placeholder="(83) 99999-9999" autocomplete="tel" />
+          </label>
+        </div>
         <label class="field-label">Orçamento total (R$)
           <input id="setBudget" class="input" inputmode="decimal" placeholder="0,00" />
         </label>
@@ -590,6 +600,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261103p1"></script>
+  <script src="assets/app.js?v=20261103p2"></script>
 </body>
 </html>

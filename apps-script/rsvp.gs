@@ -437,6 +437,21 @@ function updateGuest_(body) {
 /* GET /exec?ping=1 — teste rápido; ?action=lookup&q=ana consulta sem expor a lista. */
 function doGet(e) {
   var params = (e && e.parameter) || {};
+  if (params.action === 'config') {
+    try {
+      var contactCfg = config_();
+      assertPrivateRepo_(contactCfg);
+      var contactFile = readFile_(contactCfg);
+      var contactMeta = contactFile.json && contactFile.json.meta || {};
+      return json_({
+        ok: true,
+        fatherPhone: String(contactMeta.fatherPhone || '').replace(/\D/g, '').slice(0, 15),
+        motherPhone: String(contactMeta.motherPhone || '').replace(/\D/g, '').slice(0, 15),
+      });
+    } catch (contactError) {
+      return json_({ ok: false, error: String(contactError.message || contactError) });
+    }
+  }
   if (params.action === 'lookup') {
     try {
       var lookupCfg = config_();

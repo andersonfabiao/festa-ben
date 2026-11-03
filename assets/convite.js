@@ -24,6 +24,8 @@
     theme: "Toy Story",
     rsvpUrl: "",
     mapsUrl: "",
+    fatherPhone: "",
+    motherPhone: "",
     inviteMode: "search",
   };
 
@@ -157,6 +159,8 @@
       mapsUrl: /^https?:\/\//i.test(String(base.mapsUrl || "").trim())
         ? String(base.mapsUrl).trim()
         : "",
+      fatherPhone: String(base.fatherPhone || "").replace(/\D/g, "").slice(0, 15),
+      motherPhone: String(base.motherPhone || "").replace(/\D/g, "").slice(0, 15),
       inviteMode: base.inviteMode === "links" ? "links" : "search",
     };
   }
@@ -212,7 +216,57 @@
       /* os textos padrão mantêm o convite utilizável */
     }
 
+    if (remoteDirectory) {
+      try {
+        const configUrl = new URL(meta.rsvpUrl);
+        configUrl.searchParams.set("action", "config");
+        const configResponse = await fetch(configUrl.toString(), { cache: "no-store", redirect: "follow" });
+        const config = await configResponse.json();
+        if (config && config.ok) {
+          meta.fatherPhone = String(config.fatherPhone || "").replace(/\D/g, "").slice(0, 15);
+          meta.motherPhone = String(config.motherPhone || "").replace(/\D/g, "").slice(0, 15);
+        }
+      } catch (e) {
+        /* Os contatos são opcionais. */
+      }
+    }
     return remoteDirectory;
+  }
+
+  function calendarHref() {
+    const compactDate = meta.date.replace(/-/g, "");
+    const compactTime = meta.time.replace(":", "") + "00";
+    const ics = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Festa Ben//Convite//PT-BR", "BEGIN:VEVENT",
+      "DTSTART;TZID=America/Sao_Paulo:" + compactDate + "T" + compactTime,
+      "DTEND;TZID=America/Sao_Paulo:" + compactDate + "T220000",
+      "SUMMARY:Aniversário do " + meta.name + " - " + meta.age + " anos",
+      "LOCATION:" + String(meta.location || "").replace(/,/g, "\\,"),
+      "DESCRIPTION:Venha comemorar com a gente!", "END:VEVENT", "END:VCALENDAR"
+    ].join("\r\n");
+    return "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+  }
+
+  function whatsappHref(phone, parent) {
+    let digits = String(phone || "").replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.length <= 11) digits = "55" + digits;
+    const text = "Olá! Preciso de ajuda com a confirmação do aniversário do Ben.";
+    return "https://wa.me/" + digits + "?text=" + encodeURIComponent(text);
+  }
+
+  function renderParentContacts() {
+    const host = $("#parentContacts");
+    if (!host) return;
+    const links = [
+      { label: "Papai", phone: meta.fatherPhone },
+      { label: "Mamãe", phone: meta.motherPhone },
+    ].filter((item) => item.phone);
+    host.innerHTML = '<span>Se tiver alguma dificuldade, fale com o papai ou a mamãe!</span>' +
+      (links.length ? '<div class="parent-contact-actions">' + links.map((item) =>
+        '<a href="' + esc(whatsappHref(item.phone, item.label)) + '" target="_blank" rel="noopener noreferrer" aria-label="Falar com ' + item.label + ' pelo WhatsApp">' +
+          '<span aria-hidden="true">💬</span> ' + item.label +
+        '</a>').join("") + '</div>' : '');
   }
 
   async function remoteLookup(params) {
@@ -248,7 +302,7 @@
     document.title = "Confirmação de presença · " + meta.name + " faz " + meta.age + "!";
 
     const chips = [];
-    chips.push('<span class="invite-chip">📅 ' + esc(longDate(meta.date)) + "</span>");
+    chips.push('<a class="invite-chip invite-chip-link" href="' + esc(calendarHref()) + '" download="aniversario-ben.ics" title="Adicionar à agenda">📅 ' + esc(longDate(meta.date)) + " · adicionar ↗</a>");
     if (meta.time) {
       chips.push('<span class="invite-chip">🕒 ' + esc(displayTime(meta.time)) + "</span>");
     }
@@ -262,6 +316,7 @@
         : '<span class="invite-chip">📍 ' + esc(place) + "</span>"
     );
     $("#inviteMeta").innerHTML = chips.join("");
+    renderParentContacts();
   }
 
   function renderPicker() {
@@ -281,8 +336,8 @@
 
     $("#inviteContent").innerHTML =
       '<div class="invite-picker">' +
-        '<p class="invite-step-label"><span>1</span> Digite seu nome para buscar na lista</p>' +
-        '<label class="field-label invite-search">🔎' +
+        '<p class="invite-step-label">🔎 Digite seu nome para buscar na lista</p>' +
+        '<label class="field-label invite-search">' +
           '<input id="guestSearch" class="input" type="search" placeholder="Digite seu nome para confirmar…" autocomplete="off" aria-label="Digite seu nome para confirmar presença" />' +
         "</label>" +
         '<div id="guestPickList" class="invite-guest-list"></div>' +
@@ -308,7 +363,7 @@
   function lookupLoadingMarkup() {
     return '<div class="invite-search-progress" role="status">' +
       '<span class="invite-spinner" aria-hidden="true"></span>' +
-      '<span>Buscando seu nome…</span>' +
+      '<span>Estamos buscando seu nome…</span>' +
     '</div>';
   }
 
@@ -472,15 +527,10 @@
 
     let answer = "";
     if (guest.status === "confirmed") {
-      answer = '<div class="invite-answer ok">✅ Presença confirmada<span>' + esc(when) + "</span></div>";
+      answer = '<div class="invite-answer ok">✅ Presença confirmada — Obrigado, nos vemos lá!<span>' + esc(when) + "</span></div>";
     } else if (guest.status === "declined") {
-      answer = '<div class="invite-answer no">💙 Você marcou que não poderá ir<span>' + esc(when) + "</span></div>";
+      answer = '<div class="invite-answer no">Não tem problema, nos vemos em breve! Obrigado!<span>' + esc(when) + "</span></div>";
     }
-
-    const hint =
-      guest.status === "pending"
-        ? "Sua resposta ajuda a organizar tudo. Escolha uma opção:"
-        : "Mudou de ideia? É só responder de novo.";
 
     const kids = linkedChildren(guest);
     const kidsHtml = kids.length
@@ -514,26 +564,36 @@
       }
     }
 
+    const messageField =
+      '<label class="field-label invite-message-label">Quer deixar um recadinho para o Ben? <span>(opcional)</span>' +
+        '<textarea id="rsvpMessage" class="input invite-textarea" maxlength="280" rows="3" ' +
+          'placeholder="Ex.: Estamos animados para comemorar com você!">' +
+          esc(guest.rsvpMessage || "") +
+        "</textarea>" +
+      "</label>";
+
+    const responseArea = guest.status === "declined"
+      ? '<div class="decline-farewell">' +
+          '<p>Se quiser deixar uma mensagem para o Ben, fique à vontade!</p>' +
+          messageField +
+          '<button class="btn decline-exit-btn" type="button" data-exit-invite><span aria-hidden="true">🚪</span> Salvar recado e sair</button>' +
+          '<button class="invite-link-btn" type="button" data-rsvp="confirmed">Mudei de ideia: vou comemorar</button>' +
+        '</div>'
+      : messageField +
+        '<p class="invite-step-label">Escolha sua resposta</p>' +
+        '<div class="invite-actions">' +
+          '<button class="btn btn-primary invite-btn invite-confirm-btn' + (guest.status === "confirmed" ? " is-current" : "") +
+            '" type="button" data-rsvp="confirmed"' + (configured ? "" : " disabled") + ">🎉 Vou comemorar</button>" +
+          '<button class="btn btn-ghost invite-btn" type="button" data-rsvp="declined"' + (configured ? "" : " disabled") + ">😢 Não poderei ir</button>" +
+        "</div>";
+
     $("#inviteContent").innerHTML =
       '<div class="invite-rsvp">' +
         '<p class="invite-hello">Olá, <strong>' + esc(displayGuestName(guest)) + "</strong>! 🎉</p>" +
         answer +
         guardianNote +
-        '<p class="invite-hint">' + hint + "</p>" +
         kidsHtml +
-        '<label class="field-label">Recado para os anfitriões (opcional)' +
-          '<textarea id="rsvpMessage" class="input invite-textarea" maxlength="280" rows="3" ' +
-            'placeholder="Ex.: Vamos adorar! O Ben está ansioso?">' +
-            esc(guest.rsvpMessage || "") +
-          "</textarea>" +
-        "</label>" +
-        '<p class="invite-step-label"><span>2</span> Escolha sua resposta</p>' +
-        '<div class="invite-actions">' +
-          '<button class="btn btn-primary invite-btn invite-confirm-btn' + (guest.status === "confirmed" ? " is-current" : "") +
-            '" type="button" data-rsvp="confirmed"' + (configured ? "" : " disabled") + ">🎉 Vou comemorar</button>" +
-          '<button class="btn btn-ghost invite-btn' + (guest.status === "declined" ? " is-current" : "") +
-            '" type="button" data-rsvp="declined"' + (configured ? "" : " disabled") + ">😢 Não poderei ir</button>" +
-        "</div>" +
+        responseArea +
         '<p class="invite-status" id="rsvpStatus" role="status" aria-live="polite">' +
           (guest.status === "pending" ? "Status atual: " + status.label : "") +
         "</p>" +
@@ -626,7 +686,17 @@
     }
   }
 
-  async function submit(status) {
+  function showFarewell() {
+    document.body.classList.add("is-invite-closing");
+    $("#inviteContent").innerHTML =
+      '<div class="invite-goodbye" role="status">' +
+        '<div class="goodbye-door" aria-hidden="true"><span></span></div>' +
+        '<h2>Obrigado por responder!</h2>' +
+        '<p>Nos vemos em breve! 🚀</p>' +
+      '</div>';
+  }
+
+  async function submit(status, exitAfter) {
     if (!current || sending) return;
     if (!meta.rsvpUrl) {
       toast("A confirmação online ainda não foi configurada.", "warn");
@@ -688,6 +758,7 @@
           : "Resposta registrada. Obrigado!";
       }
       toast(status === "confirmed" ? "Presença confirmada! 🎉" : "Resposta enviada. 💙", "ok");
+      if (exitAfter) window.setTimeout(showFarewell, 250);
     } catch (e) {
       sending = false;
       renderRsvp(guest);
@@ -717,6 +788,11 @@
       const rsvp = event.target.closest("[data-rsvp]");
       if (rsvp) {
         submit(rsvp.dataset.rsvp);
+        return;
+      }
+
+      if (event.target.closest("[data-exit-invite]")) {
+        submit("declined", true);
         return;
       }
 

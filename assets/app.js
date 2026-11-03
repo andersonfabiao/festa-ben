@@ -329,6 +329,8 @@
       theme: "Toy Story",
       rsvpUrl: "",
       mapsUrl: "",
+      fatherPhone: "",
+      motherPhone: "",
       inviteMode: "search",
       maxAdults: 50,
       maxChildren: 25,
@@ -434,6 +436,8 @@
     meta.theme = String(meta.theme || "Toy Story");
     meta.rsvpUrl = safeUrl(meta.rsvpUrl);
     meta.mapsUrl = safeUrl(meta.mapsUrl);
+    meta.fatherPhone = normalizePhone(meta.fatherPhone);
+    meta.motherPhone = normalizePhone(meta.motherPhone);
     meta.inviteMode = meta.inviteMode === "links" ? "links" : "search";
     meta.maxAdults = Math.min(999, Math.max(1, parseInt(meta.maxAdults, 10) || 50));
     meta.maxChildren = Math.min(999, Math.max(1, parseInt(meta.maxChildren, 10) || 25));
@@ -2129,6 +2133,8 @@
     $("#setTime").value = meta.time;
     $("#setLocation").value = meta.location || "";
     $("#setMapsUrl").value = meta.mapsUrl || "";
+    $("#setFatherPhone").value = formatPhone(meta.fatherPhone || "");
+    $("#setMotherPhone").value = formatPhone(meta.motherPhone || "");
     $("#setBudget").value = meta.budget ? String(meta.budget).replace(".", ",") : "";
     $("#setMaxAdults").value = meta.maxAdults;
     $("#setMaxChildren").value = meta.maxChildren;
@@ -2203,6 +2209,8 @@
     meta.time = $("#setTime").value || "18:00";
     meta.location = $("#setLocation").value.trim();
     meta.mapsUrl = safeUrl($("#setMapsUrl").value.trim());
+    meta.fatherPhone = normalizePhone($("#setFatherPhone").value);
+    meta.motherPhone = normalizePhone($("#setMotherPhone").value);
     meta.budget = parseMoney($("#setBudget").value);
     meta.maxAdults = Math.min(999, Math.max(1, parseInt($("#setMaxAdults").value, 10) || 50));
     meta.maxChildren = Math.min(999, Math.max(1, parseInt($("#setMaxChildren").value, 10) || 25));
