@@ -44,12 +44,12 @@
     // A fumaça nasce no ponto em que o Buzz cai, cobre o corte entre as cenas
     // e revela a carta somente depois do branco total.
     experience.classList.add("is-prelude-transition", "is-impacting");
-    window.setTimeout(() => experience.classList.remove("is-impacting"), 420);
+    window.setTimeout(() => experience.classList.remove("is-impacting"), 680);
     window.setTimeout(() => {
       experience.classList.add("is-prelude-complete");
       startOpeningTheme();
-    }, 520);
-    window.setTimeout(() => experience.classList.remove("is-prelude-transition"), 1900);
+    }, 820);
+    window.setTimeout(() => experience.classList.remove("is-prelude-transition"), 2850);
   };
 
   const updateBuzzSoundControl = () => {

@@ -754,17 +754,25 @@ button { color: inherit; }
    alcança o branco total e desaparece já sobre a próxima cena. */
 .is-prelude-transition .smoke-transition {
   visibility: visible;
-  animation: smoke-prelude-layer 1.9s ease-in-out forwards;
+  animation: smoke-prelude-layer 2.8s ease-in-out forwards;
 }
-.is-prelude-transition .smoke-transition::after { animation: smoke-prelude-whiteout 1.9s ease-in-out forwards; }
+.is-prelude-transition .smoke-transition::after {
+  background: rgba(190, 231, 249, .98);
+  animation: smoke-prelude-whiteout 2.8s ease-in-out forwards;
+}
 .is-prelude-transition .smoke-transition span {
   top: auto;
   right: auto;
   bottom: var(--smoke-y, -14%);
   left: var(--smoke-x, 45%);
   width: clamp(150px, 31vw, 420px);
-  animation: smoke-prelude-bloom 1.55s var(--smoke-delay, 0s) cubic-bezier(.12,.72,.18,1) forwards;
+  background: rgba(115, 202, 239, .96);
+  box-shadow: 0 0 82px 42px rgba(127, 211, 246, .72), inset 0 0 42px rgba(255,255,255,.42);
+  filter: blur(10px);
+  animation: smoke-prelude-bloom 2.2s var(--smoke-delay, 0s) cubic-bezier(.12,.72,.18,1) forwards;
 }
+.is-prelude-transition .smoke-transition span:nth-child(2n) { background: rgba(163, 222, 247, .97); }
+.is-prelude-transition .smoke-transition span:nth-child(3n) { background: rgba(83, 181, 226, .9); }
 .is-prelude-transition .smoke-transition span:nth-child(1) { --smoke-x: 34%; --smoke-y: -18%; --smoke-delay: 0s; }
 .is-prelude-transition .smoke-transition span:nth-child(2) { --smoke-x: 49%; --smoke-y: -15%; --smoke-delay: .04s; }
 .is-prelude-transition .smoke-transition span:nth-child(3) { --smoke-x: 18%; --smoke-y: -12%; --smoke-delay: .09s; }
@@ -858,10 +866,10 @@ button { color: inherit; }
 @keyframes smoke-scene-layer { 0% { opacity: 0; visibility: visible; } 38%, 70% { opacity: 1; visibility: visible; } 100% { opacity: 0; visibility: hidden; } }
 @keyframes smoke-scene-bloom { 0% { opacity: 0; transform: scale(.15); } 42%, 68% { opacity: 1; transform: scale(2.15) translateY(-5%); } 100% { opacity: 0; transform: scale(2.45) translateY(-8%); } }
 @keyframes smoke-scene-whiteout { 0%, 28% { opacity: 0; } 46%, 67% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes smoke-prelude-layer { 0% { opacity:0; visibility:visible; } 24%, 76% { opacity:1; visibility:visible; } 100% { opacity:0; visibility:hidden; } }
-@keyframes smoke-prelude-bloom { 0% { opacity:0; transform:translate(-50%, 28%) scale(.08); } 42%, 72% { opacity:1; transform:translate(-50%, -18%) scale(2.25); } 100% { opacity:0; transform:translate(-50%, -44%) scale(2.75); } }
-@keyframes smoke-prelude-whiteout { 0%, 25% { opacity:0; } 43%, 67% { opacity:1; } 100% { opacity:0; } }
-@keyframes buzz-impact-shake { 0%,100% { transform:none; } 20% { transform:translate3d(-5px,3px,0) rotate(-.2deg); } 42% { transform:translate3d(5px,-2px,0) rotate(.18deg); } 65% { transform:translate3d(-3px,1px,0); } 82% { transform:translate3d(2px,0,0); } }
+@keyframes smoke-prelude-layer { 0% { opacity:0; visibility:visible; } 20%, 80% { opacity:1; visibility:visible; } 100% { opacity:0; visibility:hidden; } }
+@keyframes smoke-prelude-bloom { 0% { opacity:0; transform:translate(-50%, 32%) scale(.06); } 46%, 73% { opacity:1; transform:translate(-50%, -22%) scale(2.45); } 100% { opacity:0; transform:translate(-50%, -52%) scale(3); } }
+@keyframes smoke-prelude-whiteout { 0%, 27% { opacity:0; } 43%, 68% { opacity:1; } 100% { opacity:0; } }
+@keyframes buzz-impact-shake { 0%,100% { transform:none; } 12% { transform:translate3d(-8px,5px,0) rotate(-.32deg); } 27% { transform:translate3d(9px,-4px,0) rotate(.28deg); } 43% { transform:translate3d(-7px,3px,0) rotate(-.2deg); } 59% { transform:translate3d(6px,-2px,0) rotate(.16deg); } 75% { transform:translate3d(-4px,1px,0); } 88% { transform:translate3d(2px,0,0); } }
 
 @media (min-width: 681px) {
   .intro-copy {
