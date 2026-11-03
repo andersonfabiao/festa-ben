@@ -214,6 +214,8 @@ button { color: inherit; }
 .buzz-prelude-control:focus-visible { outline: 3px solid #ffdc58; outline-offset: 3px; }
 
 .is-prelude-complete .buzz-prelude { opacity: 0; visibility: hidden; pointer-events: none; }
+.is-impacting .experience,
+.experience.is-impacting { animation: buzz-impact-shake .38s cubic-bezier(.2,.8,.2,1) both; }
 
 .opening-screen {
   z-index: 100;
@@ -748,6 +750,32 @@ button { color: inherit; }
 .smoke-transition span:nth-child(9) { right: 12%; top: -9%; }
 .smoke-transition span:nth-child(10) { right: -12%; top: 18%; }
 
+/* Queda do Buzz → carta de abertura. A fumaça começa concentrada na base,
+   alcança o branco total e desaparece já sobre a próxima cena. */
+.is-prelude-transition .smoke-transition {
+  visibility: visible;
+  animation: smoke-prelude-layer 1.9s ease-in-out forwards;
+}
+.is-prelude-transition .smoke-transition::after { animation: smoke-prelude-whiteout 1.9s ease-in-out forwards; }
+.is-prelude-transition .smoke-transition span {
+  top: auto;
+  right: auto;
+  bottom: var(--smoke-y, -14%);
+  left: var(--smoke-x, 45%);
+  width: clamp(150px, 31vw, 420px);
+  animation: smoke-prelude-bloom 1.55s var(--smoke-delay, 0s) cubic-bezier(.12,.72,.18,1) forwards;
+}
+.is-prelude-transition .smoke-transition span:nth-child(1) { --smoke-x: 34%; --smoke-y: -18%; --smoke-delay: 0s; }
+.is-prelude-transition .smoke-transition span:nth-child(2) { --smoke-x: 49%; --smoke-y: -15%; --smoke-delay: .04s; }
+.is-prelude-transition .smoke-transition span:nth-child(3) { --smoke-x: 18%; --smoke-y: -12%; --smoke-delay: .09s; }
+.is-prelude-transition .smoke-transition span:nth-child(4) { --smoke-x: 62%; --smoke-y: -10%; --smoke-delay: .12s; }
+.is-prelude-transition .smoke-transition span:nth-child(5) { --smoke-x: 4%; --smoke-y: -7%; --smoke-delay: .18s; }
+.is-prelude-transition .smoke-transition span:nth-child(6) { --smoke-x: 75%; --smoke-y: -6%; --smoke-delay: .2s; }
+.is-prelude-transition .smoke-transition span:nth-child(7) { --smoke-x: 27%; --smoke-y: 9%; --smoke-delay: .2s; }
+.is-prelude-transition .smoke-transition span:nth-child(8) { --smoke-x: 54%; --smoke-y: 13%; --smoke-delay: .24s; }
+.is-prelude-transition .smoke-transition span:nth-child(9) { --smoke-x: -8%; --smoke-y: 16%; --smoke-delay: .28s; }
+.is-prelude-transition .smoke-transition span:nth-child(10) { --smoke-x: 82%; --smoke-y: 18%; --smoke-delay: .3s; }
+
 .is-departing .smoke-transition { visibility: visible; animation: smoke-layer-in 1.05s ease-out forwards; }
 .is-departing .smoke-transition::after { animation: smoke-whiteout .48s .55s ease-in forwards; }
 .is-departing .smoke-transition span { animation: smoke-bloom .78s cubic-bezier(.15,.7,.2,1) forwards; }
@@ -830,6 +858,10 @@ button { color: inherit; }
 @keyframes smoke-scene-layer { 0% { opacity: 0; visibility: visible; } 38%, 70% { opacity: 1; visibility: visible; } 100% { opacity: 0; visibility: hidden; } }
 @keyframes smoke-scene-bloom { 0% { opacity: 0; transform: scale(.15); } 42%, 68% { opacity: 1; transform: scale(2.15) translateY(-5%); } 100% { opacity: 0; transform: scale(2.45) translateY(-8%); } }
 @keyframes smoke-scene-whiteout { 0%, 28% { opacity: 0; } 46%, 67% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes smoke-prelude-layer { 0% { opacity:0; visibility:visible; } 24%, 76% { opacity:1; visibility:visible; } 100% { opacity:0; visibility:hidden; } }
+@keyframes smoke-prelude-bloom { 0% { opacity:0; transform:translate(-50%, 28%) scale(.08); } 42%, 72% { opacity:1; transform:translate(-50%, -18%) scale(2.25); } 100% { opacity:0; transform:translate(-50%, -44%) scale(2.75); } }
+@keyframes smoke-prelude-whiteout { 0%, 25% { opacity:0; } 43%, 67% { opacity:1; } 100% { opacity:0; } }
+@keyframes buzz-impact-shake { 0%,100% { transform:none; } 20% { transform:translate3d(-5px,3px,0) rotate(-.2deg); } 42% { transform:translate3d(5px,-2px,0) rotate(.18deg); } 65% { transform:translate3d(-3px,1px,0); } 82% { transform:translate3d(2px,0,0); } }
 
 @media (min-width: 681px) {
   .intro-copy {

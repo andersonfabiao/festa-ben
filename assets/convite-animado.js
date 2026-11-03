@@ -27,12 +27,29 @@
   let timers = [];
   let soundEnabled = true;
   let navigatingToRsvp = false;
+  let preludeFinishing = false;
+  let startOpeningTheme = () => {};
 
   const finishPrelude = () => {
-    if (experience.classList.contains("is-prelude-complete")) return;
-    experience.classList.add("is-prelude-complete");
+    if (preludeFinishing || experience.classList.contains("is-prelude-complete")) return;
+    preludeFinishing = true;
     experience.classList.remove("is-buzz-playing");
     if (buzzPreludeVideo) buzzPreludeVideo.pause();
+    if (reduceMotion.matches) {
+      experience.classList.add("is-prelude-complete");
+      startOpeningTheme();
+      return;
+    }
+
+    // A fumaça nasce no ponto em que o Buzz cai, cobre o corte entre as cenas
+    // e revela a carta somente depois do branco total.
+    experience.classList.add("is-prelude-transition", "is-impacting");
+    window.setTimeout(() => experience.classList.remove("is-impacting"), 420);
+    window.setTimeout(() => {
+      experience.classList.add("is-prelude-complete");
+      startOpeningTheme();
+    }, 520);
+    window.setTimeout(() => experience.classList.remove("is-prelude-transition"), 1900);
   };
 
   const updateBuzzSoundControl = () => {
@@ -141,6 +158,25 @@
     }
   };
 
+  startOpeningTheme = async () => {
+    if (!soundEnabled || !audio.paused) return;
+    audio.currentTime = 0;
+    audio.volume = 0.06;
+    try {
+      await audio.play();
+      const startedAt = performance.now();
+      const fade = (now) => {
+        if (audio.paused || !soundEnabled) return;
+        const progress = Math.min(1, (now - startedAt) / 950);
+        audio.volume = 0.06 + (0.56 * progress);
+        if (progress < 1) requestAnimationFrame(fade);
+      };
+      requestAnimationFrame(fade);
+    } catch {
+      // Celulares que bloqueiam autoplay iniciarão a música no botão Abrir convite.
+    }
+  };
+
   const showFinal = () => {
     clearTimers();
     experience.classList.remove("is-between-scenes");
@@ -168,7 +204,7 @@
     later(() => experience.classList.remove("is-between-scenes"), 7400);
   };
 
-  startButton.addEventListener("click", () => runAnimation({ restartAudio: true }));
+  startButton.addEventListener("click", () => runAnimation({ restartAudio: false }));
   replayButton.addEventListener("click", () => runAnimation({ restartAudio: true }));
   skipButton.addEventListener("click", showFinal);
 
