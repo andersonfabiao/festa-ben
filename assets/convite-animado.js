@@ -1,7 +1,8 @@
 (() => {
   const experience = document.querySelector("#experience");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
-  const buzzSoundStart = document.querySelector("#buzzSoundStart");
+  const buzzSoundToggle = document.querySelector("#buzzSoundToggle");
+  const buzzSkip = document.querySelector("#buzzSkip");
   const startButton = document.querySelector("#startButton");
   const soundButton = document.querySelector("#soundButton");
   const replayButton = document.querySelector("#replayButton");
@@ -35,26 +36,28 @@
 
   if (reduceMotion.matches) {
     finishPrelude();
-  } else if (buzzPreludeVideo && buzzSoundStart) {
+  } else if (buzzPreludeVideo) {
     buzzPreludeVideo.addEventListener("ended", finishPrelude, { once: true });
-    buzzPreludeVideo.muted = false;
+    buzzPreludeVideo.muted = true;
     buzzPreludeVideo.volume = 0.9;
     buzzPreludeVideo.currentTime = 0;
-    buzzSoundStart.addEventListener("click", async () => {
-      buzzSoundStart.disabled = true;
-      buzzPreludeVideo.muted = false;
-      buzzPreludeVideo.volume = 0.9;
-      buzzPreludeVideo.currentTime = 0;
-      try {
-        await buzzPreludeVideo.play();
-        experience.classList.add("is-buzz-playing");
-        window.setTimeout(finishPrelude, 16000);
-      } catch {
-        buzzSoundStart.disabled = false;
-        const label = buzzSoundStart.lastElementChild;
-        if (label) label.textContent = "Tentar novamente";
-      }
-    });
+    const startBuzz = () => {
+      experience.classList.add("is-buzz-playing");
+      buzzPreludeVideo.play().catch(finishPrelude);
+      window.setTimeout(finishPrelude, 16000);
+    };
+    if (buzzPreludeVideo.readyState >= 2) startBuzz();
+    else buzzPreludeVideo.addEventListener("canplay", startBuzz, { once: true });
+
+    if (buzzSoundToggle) {
+      buzzSoundToggle.addEventListener("click", () => {
+        buzzPreludeVideo.muted = !buzzPreludeVideo.muted;
+        buzzSoundToggle.firstElementChild.textContent = buzzPreludeVideo.muted ? "🔇" : "🔊";
+        buzzSoundToggle.setAttribute("aria-label", buzzPreludeVideo.muted ? "Ativar som do Buzz" : "Deixar Buzz sem som");
+        buzzSoundToggle.setAttribute("aria-pressed", String(buzzPreludeVideo.muted));
+      });
+    }
+    if (buzzSkip) buzzSkip.addEventListener("click", finishPrelude);
   } else {
     finishPrelude();
   }
