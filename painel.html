@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104p10" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104p11" />
 </head>
 <body>
   <header class="hero">
@@ -159,6 +159,7 @@
       </div>
 
       <div id="guestStats" class="stat-grid small"></div>
+      <div id="rsvpDeadlineStatus" class="rsvp-deadline-status" aria-live="polite"></div>
 
       <div class="guest-tools">
         <div class="guest-filters" role="group" aria-label="Filtrar convidados">
@@ -262,6 +263,9 @@
               <input id="invTime" class="input" type="time" />
             </label>
           </div>
+          <label class="field-label">Prazo para confirmação
+            <input id="invRsvpDeadline" class="input" type="date" />
+          </label>
           <label class="field-label">Local
             <input id="invLocation" class="input" maxlength="120" placeholder="Ex.: Enjoy Kids — Liv Mall Shopping" />
           </label>
@@ -381,6 +385,9 @@
             <input id="setTime" class="input" type="time" />
           </label>
         </div>
+        <label class="field-label">Prazo para os convidados confirmarem
+          <input id="setRsvpDeadline" class="input" type="date" />
+        </label>
         <label class="field-label">Local
           <input id="setLocation" class="input" maxlength="120" placeholder="Ex.: Buffet Alegria — Salão 2" />
         </label>
@@ -631,6 +638,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261104p12"></script>
+  <script src="assets/app.js?v=20261104p13"></script>
 </body>
 </html>

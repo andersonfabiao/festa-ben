@@ -19,6 +19,7 @@
     name: "Ben",
     age: 5,
     date: "2027-01-09",
+    rsvpDeadline: "2026-12-20",
     time: "18:00",
     location: "Enjoy Kids, Liv Mall Shopping — Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005",
     theme: "Toy Story",
@@ -56,6 +57,12 @@
       year: "numeric",
     });
     return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function shortDate(iso) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ""))) return "data a definir";
+    const parts = iso.split("-");
+    return parts[2] + "/" + parts[1] + "/" + parts[0];
   }
 
   function displayTime(value) {
@@ -152,6 +159,7 @@
       name: String(base.name || "Ben").slice(0, 40),
       age: Math.min(99, Math.max(1, parseInt(base.age, 10) || 5)),
       date: /^\d{4}-\d{2}-\d{2}$/.test(base.date) ? base.date : FALLBACK_META.date,
+      rsvpDeadline: /^\d{4}-\d{2}-\d{2}$/.test(base.rsvpDeadline) ? base.rsvpDeadline : FALLBACK_META.rsvpDeadline,
       time: /^\d{2}:\d{2}$/.test(base.time) ? base.time : FALLBACK_META.time,
       location,
       theme: String(base.theme || "Toy Story"),
@@ -366,6 +374,8 @@
         : '<span class="invite-chip">📍 ' + esc(place) + "</span>"
     );
     $("#inviteMeta").innerHTML = chips.join("");
+    const deadline = $("#inviteRsvpDeadline");
+    if (deadline) deadline.textContent = "Prazo para confirmar: " + shortDate(meta.rsvpDeadline);
     renderParentContacts();
   }
 

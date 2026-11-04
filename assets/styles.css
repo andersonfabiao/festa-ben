@@ -905,6 +905,14 @@ textarea.input { resize: vertical; min-height: 78px; }
 .stat-progress-pct.limit-low { color: var(--green); }
 .stat-progress-pct.limit-mid { color: #ae7900; }
 .stat-progress-pct.limit-high { color: var(--red); }
+.rsvp-deadline-status { display:flex; align-items:center; gap:11px; margin:0 0 14px; padding:11px 14px; border:1px solid #f0d78c; border-radius:14px; color:#785a00; background:#fff9df; }
+.rsvp-deadline-status > span { font-size:1.2rem; }
+.rsvp-deadline-status div { display:flex; flex-direction:column; min-width:0; }
+.rsvp-deadline-status strong { color:#684b00; font-size:.86rem; }
+.rsvp-deadline-status small { font-weight:700; }
+.rsvp-deadline-status.is-urgent { border-color:#efb36c; background:#fff1da; }
+.rsvp-deadline-status.is-overdue { border-color:#efaaa7; color:#8c2824; background:#fff0ef; }
+.rsvp-deadline-status.is-overdue strong { color:#8c2824; }
 
 .card {
   background: #fff;
@@ -2290,7 +2298,8 @@ body.no-scroll { overflow: hidden; }
   text-transform: uppercase;
 }
 .invite-sub { margin: 5px 0 17px; color: #465a78; font-weight: 800; }
-.invite-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 auto 23px; }
+.invite-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 auto 12px; }
+.invite-rsvp-deadline { width:fit-content; margin:0 auto 18px; padding:7px 13px; border-radius:999px; color:#795500; background:#fff2bd; font-size:.78rem; font-weight:900; }
 .invite-chip {
   justify-content: center;
   min-height: 42px;

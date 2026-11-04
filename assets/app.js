@@ -330,6 +330,7 @@
       name: "Ben",
       age: 5,
       date: "2027-01-09",
+      rsvpDeadline: "2026-12-20",
       time: "18:00",
       location: PARTY_LOCATION,
       budget: 7000,
@@ -461,6 +462,7 @@
     meta.name = String(meta.name || "Ben").slice(0, 40);
     meta.age = Math.min(99, Math.max(1, parseInt(meta.age, 10) || 5));
     meta.date = /^\d{4}-\d{2}-\d{2}$/.test(meta.date) ? meta.date : base.date;
+    meta.rsvpDeadline = /^\d{4}-\d{2}-\d{2}$/.test(meta.rsvpDeadline) ? meta.rsvpDeadline : base.rsvpDeadline;
     meta.time = /^\d{2}:\d{2}$/.test(meta.time) ? meta.time : "18:00";
     meta.location = String(meta.location || "");
     if (["enjoy livmall", "buffet alegria — salão 2"].includes(meta.location.trim().toLowerCase())) {
@@ -1504,6 +1506,24 @@
       )
       .join("");
 
+    const deadlineEl = $("#rsvpDeadlineStatus");
+    if (deadlineEl) {
+      const deadline = /^\d{4}-\d{2}-\d{2}$/.test(meta.rsvpDeadline) ? new Date(meta.rsvpDeadline + "T23:59:59") : null;
+      const days = deadline ? Math.ceil((deadline.getTime() - Date.now()) / 86400000) : null;
+      const pendingText = pending + (pending === 1 ? " confirmação pendente" : " confirmações pendentes");
+      const tone = days === null ? "" : days < 0 ? " is-overdue" : days <= 7 ? " is-urgent" : "";
+      const timing = days === null
+        ? "Defina o prazo em Editar festa."
+        : days < 0
+          ? "O prazo terminou há " + Math.abs(days) + (Math.abs(days) === 1 ? " dia." : " dias.")
+          : days === 0
+            ? "O prazo termina hoje."
+            : "Faltam " + days + (days === 1 ? " dia." : " dias.");
+      deadlineEl.className = "rsvp-deadline-status" + tone;
+      deadlineEl.innerHTML = '<span aria-hidden="true">⏳</span><div><strong>Confirmações até ' + esc(longDate(meta.rsvpDeadline)) +
+        '</strong><small>' + esc(timing + " · " + pendingText) + "</small></div>";
+    }
+
     const counts = {
       all: allGuests.length,
       parents: allGuests.filter(isHostGuest).length,
@@ -2415,6 +2435,7 @@
     $("#setName").value = meta.name;
     $("#setAge").value = meta.age;
     $("#setDate").value = meta.date;
+    $("#setRsvpDeadline").value = meta.rsvpDeadline || "";
     $("#setTime").value = meta.time;
     $("#setLocation").value = meta.location || "";
     $("#setMapsUrl").value = meta.mapsUrl || "";
@@ -2491,6 +2512,9 @@
     meta.name = $("#setName").value.trim() || "Ben";
     meta.age = Math.min(99, Math.max(1, parseInt($("#setAge").value, 10) || 5));
     meta.date = $("#setDate").value || meta.date;
+    meta.rsvpDeadline = /^\d{4}-\d{2}-\d{2}$/.test($("#setRsvpDeadline").value)
+      ? $("#setRsvpDeadline").value
+      : meta.rsvpDeadline;
     meta.time = $("#setTime").value || "18:00";
     meta.location = $("#setLocation").value.trim();
     meta.mapsUrl = safeUrl($("#setMapsUrl").value.trim());
@@ -2702,6 +2726,7 @@
     const name = (($("#invName") && $("#invName").value) || state.meta.name || "Ben").trim().slice(0, 40);
     const age = parseInt($("#invAge") && $("#invAge").value, 10) || state.meta.age;
     const date = ($("#invDate") && $("#invDate").value) || state.meta.date;
+    const rsvpDeadline = ($("#invRsvpDeadline") && $("#invRsvpDeadline").value) || state.meta.rsvpDeadline;
     const time = ($("#invTime") && $("#invTime").value) || state.meta.time;
     const location = (($("#invLocation") && $("#invLocation").value) || "").trim();
     const customMap = safeUrl($("#invMapsUrl") && $("#invMapsUrl").value);
@@ -2714,6 +2739,7 @@
     const chips = [];
     chips.push('<span class="invite-preview-chip">📅 ' + esc(longDate(date)) + "</span>");
     if (time) chips.push('<span class="invite-preview-chip">⏰ ' + esc(time.replace(":", "h")) + "</span>");
+    if (rsvpDeadline) chips.push('<span class="invite-preview-chip">⏳ Confirmar até ' + esc(longDate(rsvpDeadline)) + "</span>");
     if (location) {
       chips.push(
         map
@@ -2752,6 +2778,7 @@
     setValue("#invName", meta.name);
     setValue("#invAge", meta.age);
     setValue("#invDate", meta.date);
+    setValue("#invRsvpDeadline", meta.rsvpDeadline || "");
     setValue("#invTime", meta.time);
     setValue("#invLocation", meta.location || "");
     setValue("#invMapsUrl", meta.mapsUrl || "");
@@ -2785,6 +2812,8 @@
     meta.name = name.slice(0, 40);
     meta.age = Math.min(99, Math.max(1, parseInt($("#invAge").value, 10) || meta.age));
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) meta.date = date;
+    const rsvpDeadline = $("#invRsvpDeadline").value;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rsvpDeadline)) meta.rsvpDeadline = rsvpDeadline;
     if (/^\d{2}:\d{2}$/.test(time)) meta.time = time;
     meta.location = $("#invLocation").value.trim().slice(0, 120);
     meta.mapsUrl = safeUrl($("#invMapsUrl").value.trim());

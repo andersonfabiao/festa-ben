@@ -72,6 +72,7 @@
     const name = String(meta.name || "Ben").trim().slice(0, 40) || "Ben";
     const age = Math.min(99, Math.max(1, parseInt(meta.age, 10) || 5));
     const date = /^\d{4}-\d{2}-\d{2}$/.test(meta.date) ? meta.date : "";
+    const rsvpDeadline = /^\d{4}-\d{2}-\d{2}$/.test(meta.rsvpDeadline) ? meta.rsvpDeadline : "2026-12-20";
     const time = /^\d{2}:\d{2}$/.test(meta.time) ? meta.time : "";
     const location = splitLocation(meta.location);
 
@@ -89,6 +90,7 @@
     const calendar = $("animatedDate");
     if (calendar) calendar.href = calendarHref(meta);
     setText("animatedTimeText", displayTime(time));
+    setText("animatedRsvpDeadline", "Confirme sua presença até " + longDate(rsvpDeadline) + " 💫");
     setText("animatedLocationName", location[0]);
 
     const detail = $("animatedLocationDetail");
