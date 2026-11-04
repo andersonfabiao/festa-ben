@@ -500,15 +500,31 @@
         stage: STAGES.some((s) => s.id === i.stage) ? i.stage : "planejamento",
         status: STATUS[i.status] ? i.status : "todo",
         quantity: Math.max(0.01, Number(i.quantity) || 1),
+        unit: ["un.", "pacote", "caixa", "cento", "pessoa", "kg", "litro"].includes(i.unit) ? i.unit : "un.",
         unitPrice: parseMoney(i.unitPrice) || (parseMoney(i.cost) / Math.max(0.01, Number(i.quantity) || 1)),
         cost: parseMoney(i.cost),
         paid: parseMoney(i.paid),
+        payments: (Array.isArray(i.payments) ? i.payments : (parseMoney(i.paid) ? [{ id: "legacy-" + String(i.id || "item"), amount: parseMoney(i.paid), date: "", method: "", note: "Pagamento anterior" }] : []))
+          .filter((payment) => payment && typeof payment === "object" && parseMoney(payment.amount) > 0)
+          .map((payment) => ({
+            id: String(payment.id || uid()),
+            amount: parseMoney(payment.amount),
+            date: /^\d{4}-\d{2}-\d{2}$/.test(payment.date) ? payment.date : "",
+            method: String(payment.method || "").slice(0, 40),
+            note: String(payment.note || "").slice(0, 120),
+          })),
         supplier: String(i.supplier || "").slice(0, 120),
         due: /^\d{4}-\d{2}-\d{2}$/.test(i.due) ? i.due : "",
         link: String(i.link || ""),
         notes: String(i.notes || "").slice(0, 1000),
         createdAt: i.createdAt || nowISO(),
-      }));
+      }))
+      .map((item) => {
+        if (item.payments.length) {
+          item.paid = Math.round(item.payments.reduce((sum, payment) => sum + payment.amount, 0) * 100) / 100;
+        }
+        return item;
+      });
 
     const deletedGuestIds = Array.isArray(raw.deletedGuestIds)
       ? Array.from(
@@ -555,6 +571,8 @@
   let guestFilter = "all";
   let guestQuery = "";
   let selectedGuestIds = new Set();
+  let editingPayments = [];
+  let checklistAlertFilter = "";
   let bulkInviteQueue = [];
   let bulkInviteIndex = 0;
   let valuesHidden = false;
@@ -859,6 +877,15 @@
     if (f.stage && item.stage !== f.stage) return false;
     if (f.status && item.status !== f.status) return false;
     if (f.pending && item.status === "done") return false;
+    if (checklistAlertFilter === "overdue" && !(item.due && item.due < todayISO() && item.status !== "done")) return false;
+    if (checklistAlertFilter === "today" && !(item.due === todayISO() && item.status !== "done")) return false;
+    if (checklistAlertFilter === "soon") {
+      const limit = new Date();
+      limit.setDate(limit.getDate() + 7);
+      const limitISO = limit.toLocaleDateString("sv-SE");
+      if (!(item.due && item.due > todayISO() && item.due <= limitISO && item.status !== "done")) return false;
+    }
+    if (checklistAlertFilter === "balance" && !(num(item.cost) > num(item.paid))) return false;
     if (f.q) {
       const hay = norm(
         [item.title, item.supplier, item.notes, stageById(item.stage).name].join(" ")
@@ -890,7 +917,7 @@
     const quantity = Math.max(0.01, Number(item.quantity) || 1);
     const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
     if (quantity !== 1 || unitPrice > 0) {
-      metaBits.push("<span>📦 " + esc(String(quantity).replace(".", ",")) + " × " + money(unitPrice) + "</span>");
+      metaBits.push("<span>📦 " + esc(String(quantity).replace(".", ",")) + " " + esc(item.unit || "un.") + " × " + money(unitPrice) + "</span>");
     }
     if (item.due) {
       metaBits.push(
@@ -928,14 +955,25 @@
             statusOptions(item.status) +
           "</select>" +
         "</div>" +
-        '<button class="icon-btn" type="button" data-edit="' + esc(item.id) +
-          '" aria-label="Editar ' + esc(item.title) + '">✏️</button>' +
+        '<div class="item-actions">' +
+          '<button class="icon-btn" type="button" data-duplicate="' + esc(item.id) +
+            '" aria-label="Duplicar ' + esc(item.title) + '" title="Duplicar item">⧉</button>' +
+          '<button class="icon-btn" type="button" data-edit="' + esc(item.id) +
+            '" aria-label="Editar ' + esc(item.title) + '" title="Editar item">✏️</button>' +
+        '</div>' +
       "</article>"
     );
   }
 
   function sortItems(items) {
     return items.slice().sort((a, b) => {
+      const mode = ($("#sortItems") && $("#sortItems").value) || "due";
+      if (mode === "name") return a.title.localeCompare(b.title, "pt-BR");
+      if (mode === "cost") return num(b.cost) - num(a.cost) || a.title.localeCompare(b.title, "pt-BR");
+      if (mode === "status") {
+        const order = { doing: 0, todo: 1, contracted: 2, done: 3 };
+        return (order[a.status] ?? 9) - (order[b.status] ?? 9) || a.title.localeCompare(b.title, "pt-BR");
+      }
       const ad = a.status === "done" ? 1 : 0;
       const bd = b.status === "done" ? 1 : 0;
       if (ad !== bd) return ad - bd;
@@ -951,8 +989,20 @@
     if (!wrap) return;
     const f = getFilters();
     const filtered = state.items.filter((i) => itemMatches(i, f));
+    const today = todayISO();
+    const soonDate = new Date();
+    soonDate.setDate(soonDate.getDate() + 7);
+    const soonISO = soonDate.toLocaleDateString("sv-SE");
+    const alerts = [
+      { id: "overdue", icon: "⚠️", label: "Atrasados", count: state.items.filter((item) => item.due && item.due < today && item.status !== "done").length },
+      { id: "today", icon: "📅", label: "Vencem hoje", count: state.items.filter((item) => item.due === today && item.status !== "done").length },
+      { id: "soon", icon: "⏰", label: "Próximos 7 dias", count: state.items.filter((item) => item.due && item.due > today && item.due <= soonISO && item.status !== "done").length },
+      { id: "balance", icon: "💳", label: "Com saldo", count: state.items.filter((item) => num(item.cost) > num(item.paid)).length },
+    ];
+    const alertWrap = $("#checklistAlerts");
+    if (alertWrap) alertWrap.innerHTML = alerts.map((alert) => '<button class="checklist-alert' + (checklistAlertFilter === alert.id ? " is-active" : "") + (alert.count ? " has-items" : "") + '" type="button" data-check-alert="' + alert.id + '"><span>' + alert.icon + '</span><b>' + alert.count + '</b><small>' + alert.label + "</small></button>").join("");
 
-    if (!filtered.length && (f.q || f.status || f.pending)) {
+    if (!filtered.length && (f.q || f.status || f.pending || checklistAlertFilter)) {
       wrap.innerHTML =
         '<div class="empty"><span class="emoji">🔍</span><h3>Nada por aqui</h3>' +
         "<p>Nenhum item combina com os filtros escolhidos.</p>" +
@@ -962,7 +1012,7 @@
 
     const html = stageList().map((stage) => {
       const items = filtered.filter((i) => i.stage === stage.id);
-      const showEmptyStage = !f.q && !f.status && !f.pending && (!f.stage || f.stage === stage.id);
+      const showEmptyStage = !f.q && !f.status && !f.pending && !checklistAlertFilter && (!f.stage || f.stage === stage.id);
       if (!items.length && !showEmptyStage) return "";
       const sorted = sortItems(items);
       const total = items.length;
@@ -981,6 +1031,7 @@
               stage.icon + "</span>" +
             '<span class="stage-title"><h2>' + esc(stage.name) + "</h2>" +
               '<span class="stage-sub">' + done + "/" + total + " concluídos" +
+              " · " + (total - done) + " pendentes" +
               (subtotal ? ' · <span class="money">' + money(subtotal) + "</span>" : "") + "</span></span>" +
             '<span class="stage-progress"><div style="width:' + pct + "%;background:" + stage.color + '"></div></span>' +
             '<span class="stage-chevron">⌄</span>' +
@@ -1095,7 +1146,7 @@
           const quantity = Math.max(0.01, Number(item.quantity) || 1);
           const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
           return '<tr><td>' + esc(item.title) + '</td><td>' + esc(stage.name) +
-            '</td><td>' + esc(status.label) + '</td><td>' + esc(String(quantity).replace(".", ",")) + '</td><td>' + money(unitPrice) + '</td><td>' + money(item.cost) +
+            '</td><td>' + esc(status.label) + '</td><td>' + esc(String(quantity).replace(".", ",") + " " + (item.unit || "un.")) + '</td><td>' + money(unitPrice) + '</td><td>' + money(item.cost) +
             '</td><td>' + money(item.paid) + '</td><td>' + due + '</td></tr>';
         }).join("")
       : '<tr><td colspan="8">Nenhum item no checklist.</td></tr>';
@@ -1291,7 +1342,7 @@
               stage.icon + " " + esc(stage.name) + "</span></td>" +
             '<td><span class="status-cell"><span class="status-dot" style="background:' + st.color +
               '"></span>' + st.label + "</span></td>" +
-            '<td class="num hide-sm">' + esc(String(Math.max(0.01, Number(item.quantity) || 1)).replace(".", ",")) + '</td>' +
+            '<td class="num hide-sm">' + esc(String(Math.max(0.01, Number(item.quantity) || 1)).replace(".", ",") + " " + (item.unit || "un.")) + '</td>' +
             '<td class="num hide-sm money">' + money(num(item.unitPrice) || (num(item.cost) / Math.max(0.01, Number(item.quantity) || 1))) + '</td>' +
             '<td class="num' + (num(item.cost) ? " money" : "") + '">' + (num(item.cost) ? money(item.cost) : "—") + "</td>" +
             '<td class="num' + (num(item.paid) ? " paid money" : "") + '">' +
@@ -1886,13 +1937,6 @@
       return;
     }
 
-    if (!opts.silent) {
-      const ok = window.confirm(
-        "Baixar os dados da nuvem?\n\nOs itens e convidados deste dispositivo serão substituídos pelo que está no GitHub."
-      );
-      if (!ok) return;
-    }
-
     setCloudPhase("syncing");
     try {
       await verifyPrivateRepo();
@@ -1923,6 +1967,26 @@
 
       const next = normalizeState(parsed);
       if (!next) throw new Error("O arquivo do GitHub não tem o formato esperado.");
+
+      if (!opts.silent) {
+        const localTime = Date.parse(state.updatedAt || "") || 0;
+        const cloudTime = Date.parse(next.updatedAt || "") || 0;
+        let message = "Carregar os dados da nuvem neste dispositivo?";
+        if (cloudTime > localTime) {
+          message = "A versão da nuvem é mais recente.\n\nDeseja atualizar este dispositivo com os dados mais novos?";
+        } else if (localTime > cloudTime) {
+          message =
+            "Atenção: este dispositivo tem alterações mais recentes que a nuvem.\n\n" +
+            "Se continuar, essas alterações locais serão substituídas. Deseja carregar mesmo assim?";
+        } else {
+          message += "\n\nOs itens e convidados locais serão substituídos pela versão online.";
+        }
+        if (!window.confirm(message)) {
+          setCloudPhase("idle");
+          toast("Carregamento cancelado. Os dados deste dispositivo foram preservados.", "warn");
+          return;
+        }
+      }
 
       state = next;
       addActivity("cloud", "Dados carregados da nuvem neste dispositivo");
@@ -2185,6 +2249,43 @@
     $("#itemCost").value = total ? total.toFixed(2).replace(".", ",") : "";
   }
 
+  function renderPaymentRows() {
+    const wrap = $("#paymentRows");
+    if (!wrap) return;
+    const methods = ["", "Pix", "Dinheiro", "Cartão", "Transferência", "Boleto"];
+    wrap.innerHTML = editingPayments.length
+      ? editingPayments.map((payment) => '<div class="payment-row" data-payment-id="' + esc(payment.id) + '">' +
+          '<label class="field-label">Data<input class="input" type="date" data-payment-field="date" value="' + esc(payment.date || "") + '"></label>' +
+          '<label class="field-label">Valor (R$)<input class="input" inputmode="decimal" data-payment-field="amount" value="' + esc(payment.amount ? String(payment.amount).replace(".", ",") : "") + '" placeholder="0,00"></label>' +
+          '<label class="field-label">Forma<select class="input" data-payment-field="method">' + methods.map((method) => '<option value="' + esc(method) + '"' + (method === payment.method ? " selected" : "") + '>' + esc(method || "Não informado") + '</option>').join("") + '</select></label>' +
+          '<label class="field-label">Observação<input class="input" maxlength="120" data-payment-field="note" value="' + esc(payment.note || "") + '" placeholder="Ex.: sinal"></label>' +
+          '<button class="icon-btn payment-remove" type="button" data-payment-remove="' + esc(payment.id) + '" aria-label="Remover pagamento">🗑</button>' +
+        "</div>").join("")
+      : '<div class="payment-empty">Nenhum pagamento registrado.</div>';
+    const totalPaid = editingPayments.reduce((sum, payment) => sum + parseMoney(payment.amount), 0);
+    $("#itemPaid").value = totalPaid ? totalPaid.toFixed(2).replace(".", ",") : "";
+  }
+
+  function collectPaymentsFromRows() {
+    editingPayments = $$("#paymentRows [data-payment-id]").map((row) => ({
+      id: row.dataset.paymentId,
+      date: row.querySelector('[data-payment-field="date"]').value,
+      amount: parseMoney(row.querySelector('[data-payment-field="amount"]').value),
+      method: row.querySelector('[data-payment-field="method"]').value,
+      note: row.querySelector('[data-payment-field="note"]').value.trim().slice(0, 120),
+    })).filter((payment) => payment.amount > 0);
+    return editingPayments;
+  }
+
+  function addPaymentRow() {
+    collectPaymentsFromRows();
+    editingPayments.push({ id: uid(), date: todayISO(), amount: 0, method: "Pix", note: "" });
+    renderPaymentRows();
+    const rows = $$("#paymentRows [data-payment-id]");
+    const last = rows[rows.length - 1];
+    if (last) last.querySelector('[data-payment-field="amount"]').focus();
+  }
+
   function openItemModal(id, preferredStage) {
     const form = $("#itemForm");
     form.reset();
@@ -2202,9 +2303,12 @@
       const quantity = Math.max(0.01, Number(item.quantity) || 1);
       const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
       $("#itemQuantity").value = String(quantity);
+      $("#itemUnit").value = item.unit || "un.";
       $("#itemUnitPrice").value = unitPrice ? String(unitPrice).replace(".", ",") : "";
       updateItemCalculatedTotal();
-      $("#itemPaid").value = item.paid ? String(item.paid).replace(".", ",") : "";
+      editingPayments = (Array.isArray(item.payments) ? item.payments : []).map((payment) => Object.assign({}, payment));
+      if (!editingPayments.length && item.paid) editingPayments = [{ id: uid(), amount: item.paid, date: "", method: "", note: "Pagamento anterior" }];
+      renderPaymentRows();
       $("#itemDue").value = item.due || "";
       $("#itemSupplier").value = item.supplier || "";
       $("#itemLink").value = item.link || "";
@@ -2216,9 +2320,12 @@
       const filterStage = $("#stageFilter").value;
       $("#itemStage").value = preferredStage || filterStage || "planejamento";
       $("#itemQuantity").value = "1";
+      $("#itemUnit").value = "un.";
       $("#itemUnitPrice").value = "";
       updateItemCalculatedTotal();
       $("#itemDue").value = "";
+      editingPayments = [];
+      renderPaymentRows();
       if (preferredStage) {
         collapsed.delete(preferredStage);
         saveCollapsed();
@@ -2238,14 +2345,17 @@
 
     const quantity = Math.max(0.01, Number(String($("#itemQuantity").value || "1").replace(",", ".")) || 1);
     const unitPrice = parseMoney($("#itemUnitPrice").value);
+    const payments = collectPaymentsFromRows();
     const data = {
       title,
       stage: $("#itemStage").value,
       status: $("#itemStatus").value,
       quantity,
+      unit: $("#itemUnit").value,
       unitPrice,
       cost: Math.round(quantity * unitPrice * 100) / 100,
-      paid: parseMoney($("#itemPaid").value),
+      paid: Math.round(payments.reduce((sum, payment) => sum + payment.amount, 0) * 100) / 100,
+      payments,
       supplier: $("#itemSupplier").value.trim(),
       due: $("#itemDue").value,
       link: $("#itemLink").value.trim(),
@@ -3207,10 +3317,40 @@
     $("#searchInput").addEventListener("input", renderChecklist);
     $("#stageFilter").addEventListener("change", renderChecklist);
     $("#statusFilter").addEventListener("change", renderChecklist);
+    $("#sortItems").addEventListener("change", renderChecklist);
     $("#pendingOnly").addEventListener("change", renderChecklist);
+    $("#expandStagesBtn").addEventListener("click", () => {
+      collapsed.clear();
+      saveCollapsed();
+      renderChecklist();
+    });
+    $("#collapseStagesBtn").addEventListener("click", () => {
+      collapsed = new Set(stageList().map((stage) => stage.id));
+      saveCollapsed();
+      renderChecklist();
+    });
+    $("#checklistAlerts").addEventListener("click", (event) => {
+      const alert = event.target.closest("[data-check-alert]");
+      if (!alert) return;
+      checklistAlertFilter = checklistAlertFilter === alert.dataset.checkAlert ? "" : alert.dataset.checkAlert;
+      renderChecklist();
+    });
     $("#addItemBtn").addEventListener("click", () => openItemModal());
     $("#itemQuantity").addEventListener("input", updateItemCalculatedTotal);
     $("#itemUnitPrice").addEventListener("input", updateItemCalculatedTotal);
+    $("#addPaymentBtn").addEventListener("click", addPaymentRow);
+    $("#paymentRows").addEventListener("input", () => {
+      collectPaymentsFromRows();
+      const totalPaid = editingPayments.reduce((sum, payment) => sum + payment.amount, 0);
+      $("#itemPaid").value = totalPaid ? totalPaid.toFixed(2).replace(".", ",") : "";
+    });
+    $("#paymentRows").addEventListener("click", (event) => {
+      const remove = event.target.closest("[data-payment-remove]");
+      if (!remove) return;
+      collectPaymentsFromRows();
+      editingPayments = editingPayments.filter((payment) => payment.id !== remove.dataset.paymentRemove);
+      renderPaymentRows();
+    });
     $("#editStageNamesBtn").addEventListener("click", () => openSettings(true));
     // Não repasse o evento de clique/toque para openSettings. Em celulares, o
     // evento era interpretado como `focusStageNames = true`, deslocando o modal
@@ -3328,6 +3468,25 @@
         return;
       }
 
+      const duplicate = event.target.closest("[data-duplicate]");
+      if (duplicate) {
+        const original = state.items.find((item) => item.id === duplicate.dataset.duplicate);
+        if (!original) return;
+        const copy = JSON.parse(JSON.stringify(original));
+        copy.id = uid();
+        copy.title = original.title + " (cópia)";
+        copy.status = "todo";
+        copy.paid = 0;
+        copy.payments = [];
+        copy.createdAt = nowISO();
+        state.items.push(copy);
+        addActivity("update", "Item duplicado: " + original.title);
+        touch();
+        renderAll();
+        toast("Item duplicado.", "ok");
+        return;
+      }
+
       const addStage = event.target.closest("[data-add-stage]");
       if (addStage) {
         openItemModal(null, addStage.dataset.addStage);
@@ -3344,6 +3503,7 @@
         $("#stageFilter").value = "";
         $("#statusFilter").value = "";
         $("#pendingOnly").checked = false;
+        checklistAlertFilter = "";
         renderChecklist();
       }
     });

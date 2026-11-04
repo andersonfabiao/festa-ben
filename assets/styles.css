@@ -603,6 +603,13 @@ textarea.input { resize: vertical; min-height: 78px; }
 /* ---------- Checklist ---------- */
 
 .checklist { display: grid; gap: 16px; }
+.checklist-alert-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:0 0 12px; }
+.checklist-alert { display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:7px; min-height:48px; padding:9px 12px; border:1px solid var(--line); border-radius:14px; color:var(--muted); background:rgba(255,255,255,.78); text-align:left; transition:transform .2s ease,border-color .2s ease,background .2s ease; }
+.checklist-alert:hover { transform:translateY(-1px); border-color:#b9cde2; }
+.checklist-alert b { color:var(--navy); font-size:1.08rem; }
+.checklist-alert small { font-weight:800; }
+.checklist-alert.has-items { border-color:#f2c877; background:#fffaf0; }
+.checklist-alert.is-active { border-color:var(--blue); background:#eaf4ff; box-shadow:0 0 0 2px rgba(47,128,237,.12); }
 
 .stage-group {
   background: #fff;
@@ -674,6 +681,15 @@ textarea.input { resize: vertical; min-height: 78px; }
 .stage-add-row .btn { color:var(--stage); border-color:color-mix(in srgb, var(--stage) 35%, #dbe7f3); background:#fff; }
 .stage-empty { padding:18px 16px; border-top:1px solid #edf3fa; color:#718096; text-align:center; font-size:.8rem; font-weight:700; }
 .calculated-input { color:#1d6e36; font-weight:900; background:#f3faf5; }
+.payment-editor { margin:3px 0 14px; padding:14px; border:1px solid var(--line); border-radius:16px; background:#f8fbff; }
+.payment-editor-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:10px; }
+.payment-editor-head h3 { color:var(--navy); font-size:1rem; }
+.payment-editor-head .hint { margin:2px 0 0; }
+.payment-rows { display:grid; gap:8px; }
+.payment-row { display:grid; grid-template-columns:130px 120px 140px minmax(140px,1fr) 34px; gap:8px; align-items:end; }
+.payment-row .field-label { min-width:0; font-size:.7rem; }
+.payment-row .input { min-width:0; padding:9px 10px; }
+.payment-empty { padding:10px; border:1px dashed #cbdced; border-radius:12px; color:var(--muted); text-align:center; font-size:.78rem; font-weight:700; }
 
 .item {
   display: grid;
@@ -686,6 +702,7 @@ textarea.input { resize: vertical; min-height: 78px; }
 }
 .item:first-child { border-top: 0; }
 .item:hover { background: #fbfdff; }
+.item-actions { display:flex; align-items:center; gap:2px; }
 
 .item-check {
   appearance: none;
@@ -1945,6 +1962,9 @@ body.no-scroll { overflow: hidden; }
   .toolbar select.input { flex: 1 1 45%; min-width: 0; }
   .toolbar .btn-primary { flex: 1 1 100%; }
   .check-inline { margin-left: 2px; }
+  .checklist-alert-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+  .checklist-alert { grid-template-columns:auto auto; min-height:58px; padding:8px 10px; }
+  .checklist-alert small { grid-column:1 / -1; }
 
   .stage-head { padding: 11px 12px; gap: 9px; }
   .stage-add-row .btn { width:100%; }
@@ -1956,8 +1976,14 @@ body.no-scroll { overflow: hidden; }
   .item-money { text-align: left; display: flex; align-items: baseline; gap: 8px; }
   .item-money strong { display: inline; }
   .item-money span { display: inline; }
-  .item > .icon-btn { grid-column: 3 / 4; grid-row: 1; width: 30px; height: 30px; }
+  .item-actions { grid-column:3 / 4; grid-row:1; }
+  .item-actions .icon-btn { width:30px; height:30px; }
   .item-meta { font-size: 0.74rem; gap: 3px 10px; }
+  .payment-editor-head { align-items:stretch; flex-direction:column; }
+  .payment-editor-head .btn { width:100%; }
+  .payment-row { grid-template-columns:1fr 1fr; padding:10px; border:1px solid #dce8f3; border-radius:12px; background:#fff; }
+  .payment-row .field-label:nth-child(4) { grid-column:1 / -1; }
+  .payment-row .icon-btn { justify-self:end; }
 
   .section-head h2 { font-size: 1.4rem; }
   .head-actions { width: 100%; }
@@ -2018,7 +2044,7 @@ body.no-scroll { overflow: hidden; }
   body { background: #fff; }
   .hero { border-radius: 0; padding-bottom: 24px; background: #fff; }
   .clouds, .spark, .tabs, .toolbar, .cloud-bar, .hero-edit,
-  .site-footer, .item > .icon-btn, .status-select, .bd-track,
+  .site-footer, .item-actions, .status-select, .bd-track,
   .section-head .btn, .budget-edit, .data-actions, .modal, .toast { display: none !important; }
   .shell { margin-top: 0; padding: 0; max-width: none; }
   .view { display: block !important; }
