@@ -1189,6 +1189,14 @@ body.hide-values .money-input:focus {
 .guest-contact a { color: var(--blue); font-weight: 800; text-decoration: none; }
 .guest-contact a.guest-wa-invite { color: var(--green); }
 .guest-contact a:hover { text-decoration: underline; }
+.guest-wa-chat { display:inline-grid; place-items:center; width:20px; height:20px; margin-left:3px; border-radius:50%; color:#fff !important; background:#25a95b; vertical-align:middle; box-shadow:0 1px 0 #16743b; }
+.guest-wa-chat svg { width:15px; height:15px; }
+.guest-wa-chat:hover { transform:translateY(-1px); text-decoration:none !important; }
+.guest-invite-status { position:relative; color:#8798aa; background:#f3f6f9; }
+.guest-invite-status b { position:absolute; right:1px; bottom:0; display:none; width:13px; height:13px; place-items:center; border:2px solid #fff; border-radius:50%; color:#fff; background:#28a74f; font:900 8px/1 sans-serif; }
+.guest-invite-status.is-sent { color:#16863b; background:#e5f7ea; border-color:#a8dfb8; }
+.guest-invite-status.is-sent b { display:grid; }
+.guest-row .guest-invite-status:hover { color:#126f32; background:#d7f2df; border-color:#84ce9b; }
 .guest-notes { margin-top: 3px; font-size: 0.76rem; color: #5c6b82; overflow-wrap: anywhere; }
 .guest-links { margin-top: 3px; font-size: 0.74rem; font-weight: 700; color: #5a7794; overflow-wrap: anywhere; }
 .guest-row .status-select { flex: none; }

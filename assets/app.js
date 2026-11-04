@@ -193,6 +193,10 @@
     return "https://wa.me/" + (digits.length <= 11 ? "55" + digits : digits);
   }
 
+  function whatsappIconSvg() {
+    return '<svg aria-hidden="true" viewBox="0 0 32 32" focusable="false"><path fill="currentColor" d="M16 3a12.7 12.7 0 0 0-11 19l-1.5 5.5L9.2 26A12.8 12.8 0 1 0 16 3Zm6.8 18.1c-.3.9-1.8 1.7-2.5 1.8-.7.1-1.6.2-5.2-1.3-4.4-1.9-7.2-6.4-7.4-6.7-.2-.3-1.8-2.4-1.8-4.6s1.1-3.2 1.5-3.7c.4-.4.9-.5 1.2-.5h.9c.3 0 .6 0 .8.7l1.2 2.9c.1.2.1.5 0 .7l-.5.8-.7.8c-.2.2-.4.5-.2.9.2.4 1.1 1.8 2.4 2.9 1.7 1.5 3.1 2 3.5 2.2.4.2.7.2.9-.1l1.3-1.6c.3-.4.6-.3 1-.2l2.7 1.3c.4.2.7.3.8.5.2.2.2 1 .1 1.9Z"/></svg>';
+  }
+
   function b64encode(str) {
     const bytes = new TextEncoder().encode(str);
     let bin = "";
@@ -311,6 +315,7 @@
       rsvpAt: "",
       rsvpMessage: "",
       rsvpSource: "",
+      inviteSentAt: "",
     });
     return [
       g("Tia Ana", "adult", "confirmed"),
@@ -416,6 +421,10 @@
       guardians: Array.isArray(g.guardians) ? g.guardians.map(String) : [],
       rsvpAt,
       rsvpMessage: String(g.rsvpMessage || "").slice(0, 280),
+      inviteSentAt:
+        typeof g.inviteSentAt === "string" && !isNaN(Date.parse(g.inviteSentAt))
+          ? g.inviteSentAt
+          : "",
       rsvpSource:
         rsvpAt && (g.rsvpSource === "owner" || g.rsvpSource === "guest")
           ? g.rsvpSource
@@ -523,7 +532,7 @@
   const GUEST_VIEW_KEY = "ben-guest-view-v1";
   const GUEST_GROUPS_KEY = "ben-guest-groups-v1";
   const HIDE_VALUES_KEY = "ben-hide-values-v1";
-  const GUEST_FILTERS = ["all", "adult", "child", "confirmed", "pending", "declined"];
+  const GUEST_FILTERS = ["all", "parents", "adult", "child", "confirmed", "pending", "declined"];
   let guestFilter = "all";
   let guestQuery = "";
   let valuesHidden = false;
@@ -1310,11 +1319,12 @@
     const phone = g.phone
       ? '<div class="guest-contact">📱 ' + esc(g.phone) +
         (waLink(g.phone)
-          ? ' · <a href="' + esc(waLink(g.phone)) +
-            '" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>'
+          ? ' <a class="guest-wa-chat" href="' + esc(waLink(g.phone)) +
+            '" target="_blank" rel="noopener noreferrer" aria-label="Abrir conversa com ' + esc(g.name) +
+            ' no WhatsApp" title="Abrir conversa no WhatsApp">' + whatsappIconSvg() + '</a>'
           : "") +
         (waInviteLink(g)
-          ? ' · <a class="guest-wa-invite" href="' + esc(waInviteLink(g)) +
+          ? ' · <a class="guest-wa-invite" data-guest-send="' + esc(g.id) + '" href="' + esc(waInviteLink(g)) +
             '" target="_blank" rel="noopener noreferrer">Enviar convite ↗</a>'
           : "") +
         "</div>"
@@ -1326,6 +1336,16 @@
     const hostBadge = isHostGuest(g)
       ? ' <span class="guest-host-badge" title="Anfitrião: aparece na lista, mas não entra na contagem de convidados">Anfitrião</span>'
       : "";
+    const sentAt = g.inviteSentAt ? new Date(g.inviteSentAt) : null;
+    const sentLabel = sentAt && !isNaN(sentAt.getTime())
+      ? sentAt.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+      : "";
+    const inviteSentButton =
+      '<button class="icon-btn guest-invite-status' + (sentLabel ? " is-sent" : "") +
+        '" type="button" data-guest-invite-toggle="' + esc(g.id) +
+        '" aria-label="' + (sentLabel ? "Convite enviado para " : "Marcar convite como enviado para ") + esc(g.name) +
+        '" title="' + (sentLabel ? "Convite enviado em " + esc(sentLabel) + " · clique para desmarcar" : "Convite ainda não enviado · clique para marcar") +
+        '"><span aria-hidden="true">✉</span><b aria-hidden="true">✓</b></button>';
 
     const guardians =
       g.type === "child"
@@ -1349,7 +1369,7 @@
       '<div class="guest-row">' +
         '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
         '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + unlistedBadge + hostBadge + "</div>" +
-          '<div class="guest-type">' + (g.type === "child" ? "Criança" : "Adulto") +
+          '<div class="guest-type">' + (isHostGuest(g) ? "Pais" : g.type === "child" ? "Criança" : "Adulto") +
           " · " + gs.label + "</div>" + phone + notes + guardianLine + kidsLine +
           rsvpNote + rsvpMsg + "</div>" +
         '<select class="status-select" data-guest-status="' + esc(g.id) +
@@ -1362,7 +1382,7 @@
           '" aria-label="Copiar link do convite de ' + esc(g.name) +
           '" title="Copiar link do convite">🔗</button>' +
         '<button class="icon-btn" type="button" data-guest-del="' + esc(g.id) +
-          '" aria-label="Remover ' + esc(g.name) + '">🗑</button>' +
+          '" aria-label="Remover ' + esc(g.name) + '">🗑</button>' + inviteSentButton +
       "</div>"
     );
   }
@@ -1429,7 +1449,8 @@
 
     const counts = {
       all: allGuests.length,
-      adult: allGuests.filter((g) => g.type === "adult").length,
+      parents: allGuests.filter(isHostGuest).length,
+      adult: allGuests.filter((g) => g.type === "adult" && !isHostGuest(g)).length,
       child: allGuests.filter((g) => g.type === "child").length,
       confirmed: allGuests.filter((g) => g.status === "confirmed").length,
       pending: allGuests.filter((g) => g.status === "pending").length,
@@ -1437,6 +1458,7 @@
     };
     const labels = {
       all: "Todos",
+      parents: "Pais",
       adult: "Adultos",
       child: "Crianças",
       confirmed: "Confirmados",
@@ -1462,8 +1484,12 @@
 
     const q = norm(guestQuery);
     const visible = allGuests.filter((g) => {
-      if (guestFilter === "adult" || guestFilter === "child") {
-        if (g.type !== guestFilter) return false;
+      if (guestFilter === "parents") {
+        if (!isHostGuest(g)) return false;
+      } else if (guestFilter === "adult") {
+        if (g.type !== "adult" || isHostGuest(g)) return false;
+      } else if (guestFilter === "child") {
+        if (g.type !== "child") return false;
       } else if (guestFilter !== "all") {
         if (g.status !== guestFilter) return false;
       }
@@ -1487,10 +1513,16 @@
 
     const groups = [
       {
+        id: "parents",
+        title: "Pais",
+        icon: "👨‍👩‍👦",
+        items: visible.filter(isHostGuest).sort(byName),
+      },
+      {
         id: "adult",
         title: "Adultos",
         icon: "🧑",
-        items: visible.filter((g) => g.type === "adult").sort(byName),
+        items: visible.filter((g) => g.type === "adult" && !isHostGuest(g)).sort(byName),
       },
       {
         id: "child",
@@ -3166,6 +3198,30 @@
             ok ? "ok" : "err"
           );
         });
+        return;
+      }
+
+      const sentToggle = event.target.closest("[data-guest-invite-toggle]");
+      if (sentToggle) {
+        const guest = state.guests.find((g) => g.id === sentToggle.dataset.guestInviteToggle);
+        if (!guest) return;
+        guest.inviteSentAt = guest.inviteSentAt ? "" : nowISO();
+        touch();
+        renderGuests();
+        renderCloudBar();
+        toast(guest.inviteSentAt ? "Convite marcado como enviado." : "Marcação de envio removida.", "ok");
+        return;
+      }
+
+      const sendInvite = event.target.closest("[data-guest-send]");
+      if (sendInvite) {
+        const guest = state.guests.find((g) => g.id === sendInvite.dataset.guestSend);
+        if (guest) {
+          guest.inviteSentAt = nowISO();
+          touch();
+          renderCloudBar();
+          window.setTimeout(renderGuests, 0);
+        }
         return;
       }
 
