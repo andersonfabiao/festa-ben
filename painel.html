@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104p13" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104p14" />
 </head>
 <body>
   <header class="hero">
@@ -45,7 +45,7 @@
       <div class="cloud-bar" aria-label="Sincronização dos dados">
         <div class="cloud-status"><span class="dot" id="cloudDot"></span><span id="cloudText">Salvo neste dispositivo</span></div>
         <div class="cloud-actions">
-          <button class="btn btn-sm btn-ghost" id="pullBtn" type="button" hidden>⬇️ Carregar</button>
+          <button class="btn btn-sm btn-ghost" id="pullBtn" type="button">⬇️ Carregar da nuvem</button>
           <button class="btn btn-sm btn-cloud" id="saveCloudBtn" type="button">☁️ Salvar na nuvem</button>
         </div>
       </div>
@@ -88,6 +88,10 @@
       </div>
 
       <div id="checklist" class="checklist"></div>
+      <section class="card activity-card" aria-labelledby="activityTitle">
+        <div class="card-head"><div><h3 id="activityTitle">Atividade recente</h3><p class="muted">Alterações importantes feitas no painel.</p></div></div>
+        <div id="activityLog" class="activity-log"></div>
+      </section>
     </section>
 
     <section id="view-budget" class="view" aria-label="Orçamento" hidden>
@@ -643,6 +647,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261104p15"></script>
+  <script src="assets/app.js?v=20261104p16"></script>
 </body>
 </html>

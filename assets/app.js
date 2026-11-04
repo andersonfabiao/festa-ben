@@ -354,6 +354,7 @@
       meta,
       items: seedItems(meta.date),
       guests: seedGuests(),
+      activity: [],
       deletedGuestIds: [],
       updatedAt: nowISO(),
     };
@@ -365,6 +366,7 @@
       meta: defaultMeta(),
       items: [],
       guests: [],
+      activity: [],
       deletedGuestIds: [],
       updatedAt: nowISO(),
     };
@@ -518,7 +520,15 @@
     const deletedGuestSet = new Set(deletedGuestIds);
     const guests = normalizeGuestList(raw.guests).filter((guest) => !deletedGuestSet.has(guest.id));
 
-    return { version: 1, meta, items, guests, deletedGuestIds, updatedAt: raw.updatedAt || nowISO() };
+    const activity = (Array.isArray(raw.activity) ? raw.activity : []).filter((entry) => entry && typeof entry === "object")
+      .map((entry) => ({
+        id: String(entry.id || uid()),
+        type: String(entry.type || "update").slice(0, 24),
+        text: String(entry.text || "").slice(0, 180),
+        at: typeof entry.at === "string" && !isNaN(Date.parse(entry.at)) ? entry.at : nowISO(),
+      })).filter((entry) => entry.text).slice(-40);
+
+    return { version: 1, meta, items, guests, activity, deletedGuestIds, updatedAt: raw.updatedAt || nowISO() };
   }
 
   /* ---------- Estado ---------- */
@@ -684,6 +694,23 @@
 
   /* ---------- Render: hero ---------- */
 
+  function addActivity(type, text) {
+    if (!Array.isArray(state.activity)) state.activity = [];
+    state.activity.push({ id: uid(), type: type || "update", text: String(text || "").slice(0, 180), at: nowISO() });
+    state.activity = state.activity.slice(-40);
+  }
+
+  function renderActivity() {
+    const el = $("#activityLog");
+    if (!el) return;
+    const icons = { invite: "✉️", reminder: "🔔", rsvp: "✅", guest: "👤", cloud: "☁️", update: "✏️" };
+    const entries = (Array.isArray(state.activity) ? state.activity : []).slice(-8).reverse();
+    el.innerHTML = entries.length
+      ? entries.map((entry) => '<div class="activity-item"><span aria-hidden="true">' + (icons[entry.type] || icons.update) +
+        '</span><div><strong>' + esc(entry.text) + '</strong><small>' + esc(timeAgo(entry.at)) + "</small></div></div>").join("")
+      : '<div class="activity-empty">As próximas alterações importantes aparecerão aqui.</div>';
+  }
+
   function renderHero() {
     const meta = state.meta;
     const s = summary();
@@ -734,6 +761,7 @@
         '" aria-valuemin="0" aria-valuemax="' + Math.max(1, s.total) + '" aria-valuenow="' + st.count + '"><span class="stat-progress-fill checklist" style="width:' + pct +
         '%"></span></div><span class="stat-progress-pct">' + pct + "%</span></div></div>";
     }).join("");
+    renderActivity();
   }
 
   function partyTarget() {
@@ -1265,7 +1293,10 @@
   }
 
   function displayGuestName(guest) {
-    return [String(guest.relation || "").trim(), guest.name].filter(Boolean).join(" ");
+    const relation = String(guest.relation || "").trim();
+    const name = String(guest.name || "").trim();
+    if (relation && norm(name).startsWith(norm(relation) + " ")) return name;
+    return [relation, name].filter(Boolean).join(" ");
   }
 
   function guestMatchesActiveFilter(g) {
@@ -1641,7 +1672,8 @@
     const pullBtn = $("#pullBtn");
     if (!dot || !text) return;
 
-    pullBtn.hidden = !hasCloud();
+    pullBtn.hidden = false;
+    pullBtn.textContent = hasCloud() ? "⬇️ Carregar da nuvem" : "⬇️ Configurar e carregar";
     saveBtn.textContent = hasCloud() ? "☁️ Salvar na nuvem" : "☁️ Ativar nuvem";
     text.removeAttribute("title");
 
@@ -1860,6 +1892,7 @@
       if (!next) throw new Error("O arquivo do GitHub não tem o formato esperado.");
 
       state = next;
+      addActivity("cloud", "Dados carregados da nuvem neste dispositivo");
       cloud.sha = data.sha;
       cloud.lastSync = nowISO();
       cloud.verified = true;
@@ -2174,6 +2207,7 @@
       toast("Item adicionado ao checklist.", "ok");
     }
 
+    addActivity("guest", displayGuestName(guest) + (isNew ? " foi adicionado à lista" : " teve os dados atualizados"));
     touch();
     closeModal($("#itemModal"));
     renderAll();
@@ -2386,6 +2420,7 @@
     if (!window.confirm('Remover "' + guest.name + '" da lista?')) return;
 
     state.guests = state.guests.filter((g) => g.id !== guest.id);
+    addActivity("guest", displayGuestName(guest) + " foi removido da lista");
     markGuestDeleted(guest.id);
     state.guests.forEach((g) => {
       if (g.type === "child" && Array.isArray(g.guardians)) {
@@ -3283,6 +3318,7 @@
       if (!guest) return;
       window.open(waInviteLink(guest), "_blank", "noopener,noreferrer");
       guest.inviteSentAt = nowISO();
+      addActivity("invite", "Convite de " + displayGuestName(guest) + " aberto para envio");
       selectedGuestIds.delete(guest.id);
       bulkInviteIndex += 1;
       touch();
@@ -3306,6 +3342,7 @@
       guest.status = select.value;
       guest.rsvpAt = nowISO();
       guest.rsvpSource = "owner";
+      addActivity("rsvp", displayGuestName(guest) + ": " + (GUEST_STATUS[guest.status] || GUEST_STATUS.pending).label);
       touch();
       renderGuests();
       renderCloudBar();
@@ -3347,6 +3384,7 @@
         const guest = state.guests.find((g) => g.id === sentToggle.dataset.guestInviteToggle);
         if (!guest) return;
         guest.inviteSentAt = guest.inviteSentAt ? "" : nowISO();
+        addActivity("invite", "Convite de " + displayGuestName(guest) + (guest.inviteSentAt ? " marcado como enviado" : " marcado como não enviado"));
         touch();
         renderGuests();
         renderCloudBar();
@@ -3359,6 +3397,7 @@
         const guest = state.guests.find((g) => g.id === sendInvite.dataset.guestSend);
         if (guest) {
           guest.inviteSentAt = nowISO();
+          addActivity("invite", "Convite de " + displayGuestName(guest) + " aberto para envio");
           touch();
           renderCloudBar();
           window.setTimeout(renderGuests, 0);
@@ -3371,6 +3410,7 @@
         const guest = state.guests.find((g) => g.id === reminder.dataset.guestReminder);
         if (guest) {
           guest.reminderSentAt = nowISO();
+          addActivity("reminder", "Lembrete de " + displayGuestName(guest) + " aberto para envio");
           touch();
           renderCloudBar();
           window.setTimeout(renderGuests, 0);
