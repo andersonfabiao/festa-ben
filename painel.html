@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104p18" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104p19" />
 </head>
 <body>
   <header class="hero">
@@ -94,6 +94,7 @@
         <button class="btn btn-ghost btn-sm" id="expandStagesBtn" type="button">Expandir todas</button>
         <button class="btn btn-ghost btn-sm" id="collapseStagesBtn" type="button">Recolher todas</button>
         <button class="btn btn-ghost" id="editStageNamesBtn" type="button">✏️ Editar nomes das etapas</button>
+        <button class="btn btn-ghost" id="importChecklistBtn" type="button">📥 Importar CSV</button>
         <button class="btn btn-primary" id="addItemBtn" type="button">＋ Novo item</button>
       </div>
 
@@ -160,10 +161,10 @@
           <p class="muted">Monte a lista e acompanhe as confirmações de presença.</p>
         </div>
         <div class="head-actions">
-          <button class="btn btn-ghost" id="importGuestsBtn" type="button">📂 Importar arquivo</button>
+          <button class="btn btn-ghost" id="importGuestsBtn" type="button">📥 Importar CSV</button>
           <button class="btn btn-ghost" id="exportConfirmedPdfBtn" type="button">📄 PDF dos confirmados</button>
           <button class="btn btn-cloud" id="saveCloudGuestsBtn" type="button">☁️ Salvar na nuvem</button>
-          <input type="file" id="guestImportFile" accept=".txt,.csv,.json,text/plain,text/csv,application/json" hidden />
+          <input type="file" id="guestImportFile" accept=".csv,text/csv" hidden />
         </div>
       </div>
 
@@ -578,6 +579,17 @@
         <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
       </div>
       <div class="guest-import-body">
+        <section class="import-guide" aria-labelledby="guestCsvGuideTitle">
+          <h3 id="guestCsvGuideTitle">Padrão do arquivo CSV</h3>
+          <p>Use ponto e vírgula entre as colunas. A primeira linha deve conter os títulos abaixo:</p>
+          <code>nome;tipo;celular;parentesco;status;observacoes</code>
+          <p class="hint"><b>tipo:</b> adulto ou crianca · <b>status:</b> pendente, confirmado ou nao_vai. Apenas <b>nome</b> é obrigatório.</p>
+          <div class="import-guide-actions">
+            <button class="btn btn-ghost btn-sm" type="button" id="downloadGuestCsvBtn">⬇️ Baixar modelo CSV</button>
+            <button class="btn btn-cloud btn-sm" type="button" id="chooseGuestCsvBtn">📂 Escolher arquivo CSV</button>
+          </div>
+        </section>
+        <div id="guestImportResults" hidden>
         <p class="hint" id="guestImportSummary"></p>
         <ul class="guest-import-preview" id="guestImportPreview"></ul>
         <p class="hint" id="guestImportDupes" hidden></p>
@@ -598,6 +610,45 @@
           <span class="spacer"></span>
           <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
           <button type="button" class="btn btn-primary" id="guestImportConfirm">Importar</button>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de importação do checklist -->
+  <div class="modal" id="checklistImportModal" hidden>
+    <div class="modal-card modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="checklistImportTitle">
+      <div class="modal-head">
+        <h2 id="checklistImportTitle">Importar checklist em CSV</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <div class="guest-import-body">
+        <section class="import-guide" aria-labelledby="checklistCsvGuideTitle">
+          <h3 id="checklistCsvGuideTitle">Padrão do arquivo CSV</h3>
+          <p>Use ponto e vírgula entre as colunas. A primeira linha deve conter:</p>
+          <code>etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;link;observacoes</code>
+          <p class="hint"><b>status:</b> a_fazer, em_andamento, contratado ou concluido · <b>vencimento:</b> AAAA-MM-DD. Apenas <b>item</b> é obrigatório.</p>
+          <div class="import-guide-actions">
+            <button class="btn btn-ghost btn-sm" type="button" id="downloadChecklistCsvBtn">⬇️ Baixar modelo CSV</button>
+            <button class="btn btn-cloud btn-sm" type="button" id="chooseChecklistCsvBtn">📂 Escolher arquivo CSV</button>
+            <input type="file" id="checklistImportFile" accept=".csv,text/csv" hidden />
+          </div>
+        </section>
+        <div id="checklistImportResults" hidden>
+          <p class="hint" id="checklistImportSummary"></p>
+          <ul class="guest-import-preview" id="checklistImportPreview"></ul>
+          <p class="hint" id="checklistImportWarnings" hidden></p>
+          <fieldset class="import-mode">
+            <legend>O que fazer com o checklist atual?</legend>
+            <label class="check-inline"><input type="radio" name="checklistImportMode" value="merge" checked /> Adicionar aos itens atuais</label>
+            <label class="check-inline"><input type="radio" name="checklistImportMode" value="replace" /> Substituir o checklist atual</label>
+          </fieldset>
+          <div class="modal-actions">
+            <span class="spacer"></span>
+            <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
+            <button type="button" class="btn btn-primary" id="checklistImportConfirm">Importar</button>
+          </div>
         </div>
       </div>
     </div>
@@ -694,6 +745,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261104p21"></script>
+  <script src="assets/app.js?v=20261104p22"></script>
 </body>
 </html>

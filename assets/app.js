@@ -2807,6 +2807,68 @@
     reader.readAsText(file);
   }
 
+  function parseCsvRows(text) {
+    const source = String(text == null ? "" : text).replace(/^\uFEFF/, "");
+    const firstLine = source.split(/\r?\n/, 1)[0] || "";
+    const delimiter = (firstLine.match(/;/g) || []).length >= (firstLine.match(/,/g) || []).length ? ";" : ",";
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let quoted = false;
+    for (let index = 0; index < source.length; index++) {
+      const char = source[index];
+      if (char === '"') {
+        if (quoted && source[index + 1] === '"') {
+          cell += '"';
+          index++;
+        } else {
+          quoted = !quoted;
+        }
+      } else if (char === delimiter && !quoted) {
+        row.push(cell.trim());
+        cell = "";
+      } else if ((char === "\n" || char === "\r") && !quoted) {
+        if (char === "\r" && source[index + 1] === "\n") index++;
+        row.push(cell.trim());
+        if (row.some((value) => value !== "")) rows.push(row);
+        row = [];
+        cell = "";
+      } else {
+        cell += char;
+      }
+    }
+    row.push(cell.trim());
+    if (row.some((value) => value !== "")) rows.push(row);
+    return rows;
+  }
+
+  function csvKey(value) {
+    return norm(value).replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  }
+
+  function csvObjects(text) {
+    const rows = parseCsvRows(text);
+    if (rows.length < 2) return [];
+    const headers = rows[0].map(csvKey);
+    return rows.slice(1).map((cells, rowIndex) => {
+      const object = { _row: rowIndex + 2 };
+      headers.forEach((header, index) => { if (header) object[header] = cells[index] || ""; });
+      return object;
+    });
+  }
+
+  function downloadCsvTemplate(filename, lines) {
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
   /* ---------- Convite ---------- */
 
   function invitePageUrl() {
@@ -3042,7 +3104,7 @@
   }
 
   function parseGuestStatus(value) {
-    const v = norm(value);
+    const v = norm(value).replace(/[_-]+/g, " ");
     if (/confirm|present|^sim\b|vai\b/.test(v)) return "confirmed";
     if (/nao vai|^nao\b|declin|recus|^no\b/.test(v)) return "declined";
     return "pending";
@@ -3086,6 +3148,19 @@
       } catch (e) {
         return { guests: [], duplicates: 0, invalid: true };
       }
+    }
+
+    const csvRows = csvObjects(raw);
+    if (csvRows.length && Object.keys(csvRows[0]).some((key) => ["nome", "name", "convidado"].includes(key))) {
+      const guests = csvRows.map((row) => ({
+        name: cleanGuestName(row.nome || row.name || row.convidado),
+        type: parseGuestType(row.tipo || row.type, "adult"),
+        status: parseGuestStatus(row.status || row.confirmacao),
+        phone: row.celular || row.telefone || row.whatsapp || row.phone || "",
+        relation: row.parentesco || row.relacao || row.relation || "",
+        notes: row.observacoes || row.observacao || row.notes || "",
+      })).filter((guest) => guest.name);
+      return dedupeGuestList(guests);
     }
 
     const out = [];
@@ -3161,6 +3236,7 @@
     }
 
     pendingGuestImport = parsed.guests;
+    $("#guestImportResults").hidden = false;
 
     const counted = countableGuests(parsed.guests);
     const hosts = parsed.guests.length - counted.length;
@@ -3250,6 +3326,123 @@
     let msg = added + (added === 1 ? " convidado importado" : " convidados importados");
     if (skipped) msg += " · " + skipped + " repetido(s) ignorado(s)";
     toast(msg + ".", "ok");
+  }
+
+  function openGuestImportGuide() {
+    pendingGuestImport = null;
+    $("#guestImportResults").hidden = true;
+    $("#guestImportSummary").textContent = "";
+    $("#guestImportPreview").innerHTML = "";
+    $("#guestImportDupes").hidden = true;
+    openModal($("#guestImportModal"));
+  }
+
+  let pendingChecklistImport = null;
+
+  function parseChecklistStatus(value) {
+    const key = csvKey(value);
+    if (["concluido", "concluida", "done", "finalizado"].includes(key)) return "done";
+    if (["contratado", "contratada", "contracted"].includes(key)) return "contracted";
+    if (["em_andamento", "andamento", "doing"].includes(key)) return "doing";
+    return "todo";
+  }
+
+  function parseChecklistStage(value) {
+    const key = csvKey(value);
+    if (!key) return "planejamento";
+    const found = stageList().find((stage) => csvKey(stage.id) === key || csvKey(stage.name) === key);
+    return found ? found.id : "";
+  }
+
+  function parseChecklistUnit(value) {
+    const key = csvKey(value);
+    const units = {
+      un: "un.", unidade: "un.", unidades: "un.", pacote: "pacote", pacotes: "pacote",
+      caixa: "caixa", caixas: "caixa", cento: "cento", pessoa: "pessoa", pessoas: "pessoa",
+      kg: "kg", quilograma: "kg", litro: "litro", litros: "litro",
+    };
+    return units[key] || "un.";
+  }
+
+  function parseChecklistCsv(text) {
+    const rows = csvObjects(text);
+    const items = [];
+    const warnings = [];
+    rows.forEach((row) => {
+      const title = String(row.item || row.titulo || row.title || "").trim();
+      if (!title) {
+        warnings.push("Linha " + row._row + ": item sem nome.");
+        return;
+      }
+      const stageValue = row.etapa || row.stage || "planejamento";
+      const stage = parseChecklistStage(stageValue);
+      if (!stage) {
+        warnings.push("Linha " + row._row + ': etapa "' + stageValue + '" não reconhecida; usado Planejamento.');
+      }
+      const quantity = Math.max(0.01, Number(String(row.quantidade || row.qtd || "1").replace(",", ".")) || 1);
+      const unitPrice = parseMoney(row.preco_unitario || row.valor_unitario || row.unitario || 0);
+      const paid = parseMoney(row.total_pago || row.pago || 0);
+      const dueRaw = String(row.vencimento || row.data || "").trim();
+      const due = /^\d{4}-\d{2}-\d{2}$/.test(dueRaw) ? dueRaw : "";
+      if (dueRaw && !due) warnings.push("Linha " + row._row + ": vencimento deve usar AAAA-MM-DD.");
+      items.push({
+        id: uid(), title: title.slice(0, 200), stage: stage || "planejamento",
+        status: parseChecklistStatus(row.status), quantity, unit: parseChecklistUnit(row.unidade || row.unit),
+        unitPrice, cost: Math.round(quantity * unitPrice * 100) / 100, paid,
+        payments: paid ? [{ id: uid(), amount: paid, date: "", method: "", note: "Valor importado do CSV" }] : [],
+        supplier: String(row.fornecedor || row.loja || "").trim().slice(0, 120), due,
+        link: safeUrl(row.link || row.url || ""), notes: String(row.observacoes || row.observacao || row.notes || "").trim().slice(0, 1000),
+        createdAt: nowISO(),
+      });
+    });
+    return { items, warnings };
+  }
+
+  function openChecklistImportGuide() {
+    pendingChecklistImport = null;
+    $("#checklistImportResults").hidden = true;
+    $("#checklistImportSummary").textContent = "";
+    $("#checklistImportPreview").innerHTML = "";
+    $("#checklistImportWarnings").hidden = true;
+    openModal($("#checklistImportModal"));
+  }
+
+  function handleChecklistImportFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const parsed = parseChecklistCsv(String(reader.result || ""));
+      if (!parsed.items.length) {
+        toast("Não encontrei itens válidos. Confira o cabeçalho do modelo CSV.", "err");
+        return;
+      }
+      pendingChecklistImport = parsed.items;
+      $("#checklistImportResults").hidden = false;
+      $("#checklistImportSummary").textContent = parsed.items.length + (parsed.items.length === 1 ? " item pronto para importar." : " itens prontos para importar.");
+      $("#checklistImportPreview").innerHTML = parsed.items.slice(0, 8).map((item) =>
+        "<li>" + esc(item.title) + '<span class="muted">' + esc(stageById(item.stage).name) + " · " + money(item.cost) + "</span></li>"
+      ).join("") + (parsed.items.length > 8 ? '<li class="muted">… e mais ' + (parsed.items.length - 8) + "</li>" : "");
+      const warning = $("#checklistImportWarnings");
+      warning.hidden = !parsed.warnings.length;
+      warning.textContent = parsed.warnings.slice(0, 5).join(" ") + (parsed.warnings.length > 5 ? " Outros avisos foram omitidos." : "");
+      $("input[name=checklistImportMode][value=merge]").checked = true;
+    };
+    reader.onerror = () => toast("Não foi possível ler o arquivo.", "err");
+    reader.readAsText(file);
+  }
+
+  function confirmChecklistImport() {
+    if (!pendingChecklistImport || !pendingChecklistImport.length) return;
+    const mode = ($("input[name=checklistImportMode]:checked") || {}).value || "merge";
+    if (mode === "replace") state.items = [];
+    state.items.push(...pendingChecklistImport);
+    const count = pendingChecklistImport.length;
+    pendingChecklistImport = null;
+    addActivity("update", count + (count === 1 ? " item importado no checklist" : " itens importados no checklist"));
+    touch();
+    closeModal($("#checklistImportModal"));
+    renderAll();
+    toast(count + (count === 1 ? " item importado." : " itens importados."), "ok");
   }
 
   /* ---------- Toast ---------- */
@@ -3686,13 +3879,39 @@
 
     $("#copyInviteLinkBtn2").addEventListener("click", copyInviteLink);
     $("#refreshGuestsBtn").addEventListener("click", () => refreshGuestResponses({ manual: true }));
-    $("#importGuestsBtn").addEventListener("click", () => $("#guestImportFile").click());
+    $("#importGuestsBtn").addEventListener("click", openGuestImportGuide);
+    $("#chooseGuestCsvBtn").addEventListener("click", () => $("#guestImportFile").click());
+    $("#downloadGuestCsvBtn").addEventListener("click", () => downloadCsvTemplate(
+      "modelo-convidados-ben.csv",
+      [
+        "nome;tipo;celular;parentesco;status;observacoes",
+        "Maria Silva;adulto;5511999999999;Tia;pendente;",
+        "João Silva;crianca;;Primo;confirmado;Alergia a amendoim",
+      ]
+    ));
     $("#guestImportFile").addEventListener("change", (event) => {
       const file = event.target.files && event.target.files[0];
       if (file) handleGuestImportFile(file);
       event.target.value = "";
     });
     $("#guestImportConfirm").addEventListener("click", confirmGuestImport);
+
+    $("#importChecklistBtn").addEventListener("click", openChecklistImportGuide);
+    $("#chooseChecklistCsvBtn").addEventListener("click", () => $("#checklistImportFile").click());
+    $("#downloadChecklistCsvBtn").addEventListener("click", () => downloadCsvTemplate(
+      "modelo-checklist-ben.csv",
+      [
+        "etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;link;observacoes",
+        "Lembrancinhas;Sacolinhas Toy Story;a_fazer;25;unidade;12,50;100,00;2026-12-15;Loja Exemplo;;Confirmar cores",
+        "Comida & Bolo;Bolo principal;contratado;1;unidade;450,00;200,00;2027-01-05;Confeitaria Exemplo;;",
+      ]
+    ));
+    $("#checklistImportFile").addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (file) handleChecklistImportFile(file);
+      event.target.value = "";
+    });
+    $("#checklistImportConfirm").addEventListener("click", confirmChecklistImport);
 
     /* Item modal */
     $("#itemForm").addEventListener("submit", handleItemSubmit);
