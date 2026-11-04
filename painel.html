@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104p9" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104p10" />
 </head>
 <body>
   <header class="hero">
@@ -186,6 +186,15 @@
           <input id="guestSearch" class="guest-search-input" type="search" placeholder="Buscar convidado pelo nome…" autocomplete="off" aria-label="Buscar convidado pelo nome" />
         </label>
         <button class="btn btn-primary" id="addGuestBtn" type="button">＋ Adicionar convidado</button>
+      </div>
+
+      <div class="guest-bulk-bar" id="guestBulkBar" aria-live="polite">
+        <div><strong id="guestBulkCount">0 selecionados</strong><span id="guestBulkHint">Selecione convidados com telefone.</span></div>
+        <div class="guest-bulk-actions">
+          <button class="btn btn-ghost btn-sm" id="selectVisibleGuestsBtn" type="button">Selecionar deste filtro</button>
+          <button class="btn btn-ghost btn-sm" id="clearGuestSelectionBtn" type="button" disabled>Limpar</button>
+          <button class="btn btn-primary btn-sm" id="prepareGuestInvitesBtn" type="button" disabled>Preparar envios</button>
+        </div>
       </div>
 
       <div id="guestList" class="guest-list"></div>
@@ -597,9 +606,31 @@
     </div>
   </div>
 
+  <div class="modal" id="bulkInviteModal" hidden>
+    <div class="modal-card bulk-invite-card" role="dialog" aria-modal="true" aria-labelledby="bulkInviteTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="bulkInviteTitle">Enviar convites em sequência</h2>
+          <p class="muted">O WhatsApp será aberto um convidado por vez. Revise e toque em enviar em cada conversa.</p>
+        </div>
+        <button class="icon-btn" type="button" data-close-modal aria-label="Fechar">✕</button>
+      </div>
+      <div class="bulk-invite-body">
+        <div class="bulk-invite-progress" id="bulkInviteProgress"></div>
+        <div class="bulk-invite-current" id="bulkInviteCurrent"></div>
+        <div class="bulk-invite-list" id="bulkInviteList"></div>
+        <p class="hint">Por segurança, nenhuma mensagem é enviada automaticamente.</p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" type="button" data-close-modal>Fechar</button>
+          <button class="btn btn-primary" id="openNextInviteBtn" type="button">Abrir próximo no WhatsApp ↗</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261104p10"></script>
+  <script src="assets/app.js?v=20261104p11"></script>
 </body>
 </html>

@@ -535,6 +535,9 @@
   const GUEST_FILTERS = ["all", "parents", "adult", "child", "sent", "unsent", "no_phone", "confirmed", "pending", "declined"];
   let guestFilter = "all";
   let guestQuery = "";
+  let selectedGuestIds = new Set();
+  let bulkInviteQueue = [];
+  let bulkInviteIndex = 0;
   let valuesHidden = false;
   let collapsedGuestGroups = new Set(loadGuestGroupsCollapsed());
 
@@ -1304,6 +1307,38 @@
     return [String(guest.relation || "").trim(), guest.name].filter(Boolean).join(" ");
   }
 
+  function guestMatchesActiveFilter(g) {
+    if (guestFilter === "parents" && !isHostGuest(g)) return false;
+    if (guestFilter === "adult" && (g.type !== "adult" || isHostGuest(g))) return false;
+    if (guestFilter === "child" && g.type !== "child") return false;
+    if (guestFilter === "sent" && (isHostGuest(g) || !phoneDigits(g.phone) || !g.inviteSentAt)) return false;
+    if (guestFilter === "unsent" && (isHostGuest(g) || !phoneDigits(g.phone) || g.inviteSentAt)) return false;
+    if (guestFilter === "no_phone" && (isHostGuest(g) || phoneDigits(g.phone))) return false;
+    if (!["all", "parents", "adult", "child", "sent", "unsent", "no_phone"].includes(guestFilter) && g.status !== guestFilter) return false;
+    const q = norm(guestQuery);
+    return !q || norm(displayGuestName(g)).includes(q);
+  }
+
+  function selectableGuest(g) {
+    return !isHostGuest(g) && !!phoneDigits(g.phone);
+  }
+
+  function renderGuestBulkBar(visible) {
+    const validIds = new Set(state.guests.filter(selectableGuest).map((g) => g.id));
+    selectedGuestIds = new Set([...selectedGuestIds].filter((id) => validIds.has(id)));
+    const count = selectedGuestIds.size;
+    const eligibleVisible = visible.filter(selectableGuest);
+    const selectedVisible = eligibleVisible.filter((g) => selectedGuestIds.has(g.id)).length;
+    $("#guestBulkCount").textContent = count + (count === 1 ? " selecionado" : " selecionados");
+    $("#guestBulkHint").textContent = count ? " Os envios serão abertos um por vez." : " Selecione convidados com telefone.";
+    $("#clearGuestSelectionBtn").disabled = !count;
+    $("#prepareGuestInvitesBtn").disabled = !count;
+    $("#selectVisibleGuestsBtn").disabled = !eligibleVisible.length;
+    $("#selectVisibleGuestsBtn").textContent = eligibleVisible.length && selectedVisible === eligibleVisible.length
+      ? "Desmarcar deste filtro"
+      : "Selecionar deste filtro";
+  }
+
   function guestRowHtml(g) {
     const guests = state.guests;
     const gs = GUEST_STATUS[g.status] || GUEST_STATUS.pending;
@@ -1349,6 +1384,10 @@
         '" aria-label="' + (sentLabel ? "Convite enviado para " : "Marcar convite como enviado para ") + esc(g.name) +
         '" title="' + (sentLabel ? "Convite enviado em " + esc(sentLabel) + " · clique para desmarcar" : "Convite ainda não enviado · clique para marcar") +
         '"><span aria-hidden="true">✉</span><b aria-hidden="true">✓</b></button>';
+    const selectBox = selectableGuest(g)
+      ? '<label class="guest-select" title="Selecionar ' + esc(g.name) + '"><input type="checkbox" data-guest-select="' + esc(g.id) + '"' +
+        (selectedGuestIds.has(g.id) ? " checked" : "") + ' aria-label="Selecionar ' + esc(g.name) + '"><span></span></label>'
+      : "";
 
     const guardians =
       g.type === "child"
@@ -1369,7 +1408,7 @@
       : "";
 
     return (
-      '<div class="guest-row">' +
+      '<div class="guest-row' + (selectedGuestIds.has(g.id) ? " is-selected" : "") + '">' + selectBox +
         '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
         '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + unlistedBadge + hostBadge + "</div>" +
           '<div class="guest-type">' + (isHostGuest(g) ? "Pais" : g.type === "child" ? "Criança" : "Adulto") +
@@ -1498,32 +1537,15 @@
 
     const list = $("#guestList");
     if (!allGuests.length) {
+      renderGuestBulkBar([]);
       list.innerHTML =
         '<div class="empty"><span class="emoji">🎟️</span><h3>Lista vazia</h3>' +
         "<p>Adicione os convidados para acompanhar as confirmações.</p></div>";
       return;
     }
 
-    const q = norm(guestQuery);
-    const visible = allGuests.filter((g) => {
-      if (guestFilter === "parents") {
-        if (!isHostGuest(g)) return false;
-      } else if (guestFilter === "adult") {
-        if (g.type !== "adult" || isHostGuest(g)) return false;
-      } else if (guestFilter === "child") {
-        if (g.type !== "child") return false;
-      } else if (guestFilter === "sent") {
-        if (isHostGuest(g) || !phoneDigits(g.phone) || !g.inviteSentAt) return false;
-      } else if (guestFilter === "unsent") {
-        if (isHostGuest(g) || !phoneDigits(g.phone) || g.inviteSentAt) return false;
-      } else if (guestFilter === "no_phone") {
-        if (isHostGuest(g) || phoneDigits(g.phone)) return false;
-      } else if (guestFilter !== "all") {
-        if (g.status !== guestFilter) return false;
-      }
-      if (q && !norm(displayGuestName(g)).includes(q)) return false;
-      return true;
-    });
+    const visible = allGuests.filter(guestMatchesActiveFilter);
+    renderGuestBulkBar(visible);
 
     if (!visible.length) {
       list.innerHTML =
@@ -1578,6 +1600,31 @@
         );
       })
       .join("");
+  }
+
+  function renderBulkInviteModal() {
+    const total = bulkInviteQueue.length;
+    const done = Math.min(bulkInviteIndex, total);
+    const current = bulkInviteQueue[bulkInviteIndex];
+    $("#bulkInviteProgress").innerHTML = '<strong>' + done + " de " + total + " preparados</strong>" +
+      '<div class="stat-progress"><span class="stat-progress-fill invite" style="width:' + (total ? Math.round(done / total * 100) : 0) + '%"></span></div>';
+    $("#bulkInviteCurrent").innerHTML = current
+      ? '<span>Próximo convite</span><strong>' + esc(displayGuestName(current)) + '</strong><small>' + esc(current.phone) + "</small>"
+      : '<strong>Todos os convites foram preparados.</strong><span>Confira as conversas abertas no WhatsApp.</span>';
+    $("#bulkInviteList").innerHTML = bulkInviteQueue.map((g, index) =>
+      '<div class="bulk-invite-item ' + (index < done ? "is-done" : index === done ? "is-current" : "") + '"><span>' +
+      (index < done ? "✓" : index + 1) + '</span><b>' + esc(displayGuestName(g)) + "</b></div>"
+    ).join("");
+    $("#openNextInviteBtn").disabled = !current;
+    $("#openNextInviteBtn").textContent = current ? "Abrir convite de " + current.name + " ↗" : "Envios preparados ✓";
+  }
+
+  function openBulkInviteModal() {
+    bulkInviteQueue = state.guests.filter((g) => selectedGuestIds.has(g.id) && selectableGuest(g));
+    bulkInviteIndex = 0;
+    if (!bulkInviteQueue.length) return;
+    renderBulkInviteModal();
+    openModal($("#bulkInviteModal"), $("#openNextInviteBtn"));
   }
 
   /* ---------- Render: nuvem ---------- */
@@ -3185,7 +3232,38 @@
 
     $("#addGuestBtn").addEventListener("click", () => openGuestModal());
 
+    $("#selectVisibleGuestsBtn").addEventListener("click", () => {
+      const visible = state.guests.filter(guestMatchesActiveFilter).filter(selectableGuest);
+      const allSelected = visible.length && visible.every((g) => selectedGuestIds.has(g.id));
+      visible.forEach((g) => allSelected ? selectedGuestIds.delete(g.id) : selectedGuestIds.add(g.id));
+      renderGuests();
+    });
+    $("#clearGuestSelectionBtn").addEventListener("click", () => {
+      selectedGuestIds.clear();
+      renderGuests();
+    });
+    $("#prepareGuestInvitesBtn").addEventListener("click", openBulkInviteModal);
+    $("#openNextInviteBtn").addEventListener("click", () => {
+      const guest = bulkInviteQueue[bulkInviteIndex];
+      if (!guest) return;
+      window.open(waInviteLink(guest), "_blank", "noopener,noreferrer");
+      guest.inviteSentAt = nowISO();
+      selectedGuestIds.delete(guest.id);
+      bulkInviteIndex += 1;
+      touch();
+      renderBulkInviteModal();
+      renderGuests();
+      renderCloudBar();
+    });
+
     $("#guestList").addEventListener("change", (event) => {
+      const check = event.target.closest("[data-guest-select]");
+      if (check) {
+        if (check.checked) selectedGuestIds.add(check.dataset.guestSelect);
+        else selectedGuestIds.delete(check.dataset.guestSelect);
+        renderGuests();
+        return;
+      }
       const select = event.target.closest("[data-guest-status]");
       if (!select) return;
       const guest = state.guests.find((g) => g.id === select.dataset.guestStatus);

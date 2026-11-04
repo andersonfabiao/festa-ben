@@ -1116,6 +1116,16 @@ body.hide-values .money-input:focus {
 }
 .guest-search-input::placeholder { color: #8a9bb2; font-weight: 600; }
 .guest-actions .btn { flex: none; }
+.guest-bulk-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; padding:11px 13px; border:1px solid #cfe1f2; border-radius:14px; background:#f4f9ff; }
+.guest-bulk-bar > div:first-child { display:flex; flex-direction:column; color:#31506f; font-size:.76rem; }
+.guest-bulk-bar strong { color:var(--navy); font-size:.86rem; }
+.guest-bulk-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px; }
+.guest-select { flex:none; display:grid; place-items:center; width:22px; height:22px; cursor:pointer; }
+.guest-select input { position:absolute; opacity:0; pointer-events:none; }
+.guest-select span { width:19px; height:19px; border:2px solid #9fb5c9; border-radius:6px; background:#fff; transition:.18s ease; }
+.guest-select input:checked + span { border-color:#2f80ed; background:#2f80ed; box-shadow:inset 0 0 0 3px #fff; }
+.guest-select input:focus-visible + span { outline:3px solid rgba(47,128,237,.25); outline-offset:2px; }
+.guest-row.is-selected { border-color:#83b9e9; background:#f1f8ff; }
 
 .guest-group { display: grid; gap: 10px; margin-bottom: 18px; }
 .guest-group:last-child { margin-bottom: 0; }
@@ -1208,6 +1218,18 @@ body.hide-values .money-input:focus {
 .guest-links { margin-top: 3px; font-size: 0.74rem; font-weight: 700; color: #5a7794; overflow-wrap: anywhere; }
 .guest-row .status-select { flex: none; }
 .guest-row .icon-btn:hover { color: var(--red); }
+.bulk-invite-card { max-width:560px; }
+.bulk-invite-body { padding:20px 22px 22px; }
+.bulk-invite-progress { display:grid; gap:8px; margin-bottom:16px; color:var(--navy); }
+.bulk-invite-current { display:flex; flex-direction:column; gap:2px; padding:15px; border-radius:15px; background:#eef7ff; color:#52627a; }
+.bulk-invite-current strong { color:var(--navy); font-size:1.05rem; }
+.bulk-invite-list { display:grid; gap:6px; max-height:220px; overflow:auto; margin:14px 0; }
+.bulk-invite-item { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:10px; color:#63738a; background:#f7f9fc; }
+.bulk-invite-item span { display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#e2eaf2; font-size:.7rem; font-weight:900; }
+.bulk-invite-item.is-current { color:#154f82; background:#e7f3ff; }
+.bulk-invite-item.is-current span { color:#fff; background:#2f80ed; }
+.bulk-invite-item.is-done { color:#26713b; }
+.bulk-invite-item.is-done span { color:#fff; background:#2fa84f; }
 
 /* Relações criança ↔ adultos */
 
@@ -1906,6 +1928,9 @@ body.no-scroll { overflow: hidden; }
   .bd-values { grid-row: 1; grid-column: 2; }
 
   .guest-actions .btn { flex: 1 1 100%; }
+  .guest-bulk-bar { align-items:stretch; flex-direction:column; }
+  .guest-bulk-actions { justify-content:stretch; }
+  .guest-bulk-actions .btn { flex:1 1 100%; }
   .stat-card.guest-stat { padding: 12px; }
   .stat-progress-row { gap: 5px; }
   .stat-progress-pct { min-width: 30px; font-size: 0.66rem; }
