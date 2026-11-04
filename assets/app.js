@@ -704,11 +704,39 @@
     const el = $("#activityLog");
     if (!el) return;
     const icons = { invite: "✉️", reminder: "🔔", rsvp: "✅", guest: "👤", cloud: "☁️", update: "✏️" };
-    const entries = (Array.isArray(state.activity) ? state.activity : []).slice(-30).reverse();
+    const allEntries = Array.isArray(state.activity) ? state.activity : [];
+    const entries = allEntries.slice(-30).reverse();
+    const today = new Date().toLocaleDateString("sv-SE");
+    const todayCount = allEntries.filter((entry) => new Date(entry.at).toLocaleDateString("sv-SE") === today).length;
+    const clearToday = $("#clearTodayActivityBtn");
+    const clearAll = $("#clearAllActivityBtn");
+    if (clearToday) clearToday.disabled = !todayCount;
+    if (clearAll) clearAll.disabled = !allEntries.length;
     el.innerHTML = entries.length
       ? entries.map((entry) => '<div class="activity-item"><span aria-hidden="true">' + (icons[entry.type] || icons.update) +
         '</span><div><strong>' + esc(entry.text) + '</strong><small>' + esc(timeAgo(entry.at)) + "</small></div></div>").join("")
       : '<div class="activity-empty">As próximas alterações importantes aparecerão aqui.</div>';
+  }
+
+  function clearActivity(scope) {
+    const activity = Array.isArray(state.activity) ? state.activity : [];
+    const today = new Date().toLocaleDateString("sv-SE");
+    const removeToday = scope === "today";
+    const count = removeToday
+      ? activity.filter((entry) => new Date(entry.at).toLocaleDateString("sv-SE") === today).length
+      : activity.length;
+    if (!count) return;
+    const message = removeToday
+      ? "Apagar as " + count + (count === 1 ? " atividade registrada hoje?" : " atividades registradas hoje?") + "\n\nOs registros anteriores serão mantidos."
+      : "Apagar todo o histórico de atividades?\n\nEsta ação removerá " + count + (count === 1 ? " registro." : " registros.");
+    if (!window.confirm(message)) return;
+    state.activity = removeToday
+      ? activity.filter((entry) => new Date(entry.at).toLocaleDateString("sv-SE") !== today)
+      : [];
+    touch();
+    renderActivity();
+    renderCloudBar();
+    toast(removeToday ? "Atividades de hoje apagadas." : "Histórico de atividades apagado.", "neutral");
   }
 
   function renderHero() {
@@ -3145,6 +3173,8 @@
     $$(".tab").forEach((tab) => {
       tab.addEventListener("click", () => showView(tab.dataset.view));
     });
+    $("#clearTodayActivityBtn").addEventListener("click", () => clearActivity("today"));
+    $("#clearAllActivityBtn").addEventListener("click", () => clearActivity("all"));
 
     $("#searchInput").addEventListener("input", renderChecklist);
     $("#stageFilter").addEventListener("change", renderChecklist);
