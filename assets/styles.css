@@ -913,6 +913,19 @@ textarea.input { resize: vertical; min-height: 78px; }
 .rsvp-deadline-status.is-urgent { border-color:#efb36c; background:#fff1da; }
 .rsvp-deadline-status.is-overdue { border-color:#efaaa7; color:#8c2824; background:#fff0ef; }
 .rsvp-deadline-status.is-overdue strong { color:#8c2824; }
+.guest-pending-panel { margin:0 0 14px; padding:14px; border:1px solid #d7e4f1; border-radius:16px; background:#fff; }
+.guest-pending-head { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.guest-pending-head span { color:#2f80ed; font-size:.68rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+.guest-pending-head h3 { margin:1px 0 0; color:var(--navy); font-size:1rem; }
+.guest-pending-head small { color:#718096; font-weight:700; }
+.guest-pending-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.guest-pending-card { display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:3px 8px; min-width:0; padding:10px; border:1px solid #dbe6f1; border-radius:13px; text-align:left; color:#52627a; background:#f8fbfe; cursor:pointer; font-family:inherit; }
+.guest-pending-card > span { grid-row:1/3; font-size:1.2rem; }
+.guest-pending-card > b { color:#d57916; font-size:1.15rem; line-height:1; }
+.guest-pending-card > strong { overflow:hidden; color:#324761; font-size:.76rem; text-overflow:ellipsis; white-space:nowrap; }
+.guest-pending-card > small { grid-column:2/4; font-size:.65rem; font-weight:700; }
+.guest-pending-card:hover { border-color:#9fc7e8; background:#eef7ff; }
+.guest-pending-card.is-clear > b { color:#2fa84f; }
 
 .card {
   background: #fff;
@@ -1084,6 +1097,7 @@ body.hide-values .money-input:focus {
   font-size: 0.73rem;
   font-weight: 800;
 }
+.guest-reminder-sent-note { margin-top:3px; color:#9a6200; font-size:.73rem; font-weight:800; }
 
 /* Busca e adicionar */
 
@@ -1213,6 +1227,7 @@ body.hide-values .money-input:focus {
 .guest-contact { margin-top: 3px; font-size: 0.75rem; font-weight: 700; color: #31506f; overflow-wrap: anywhere; }
 .guest-contact a { color: var(--blue); font-weight: 800; text-decoration: none; }
 .guest-contact a.guest-wa-invite { color: var(--green); }
+.guest-contact a.guest-wa-reminder { color:#b36b00; }
 .guest-contact a:hover { text-decoration: underline; }
 .guest-wa-chat { display:inline-grid; place-items:center; width:20px; height:20px; margin-left:3px; border-radius:50%; color:#fff !important; background:#25a95b; vertical-align:middle; box-shadow:0 1px 0 #16743b; }
 .guest-wa-chat svg { width:15px; height:15px; }
@@ -1939,6 +1954,8 @@ body.no-scroll { overflow: hidden; }
   .guest-bulk-bar { align-items:stretch; flex-direction:column; }
   .guest-bulk-actions { justify-content:stretch; }
   .guest-bulk-actions .btn { flex:1 1 100%; }
+  .guest-pending-head { align-items:start; flex-direction:column; }
+  .guest-pending-grid { grid-template-columns:1fr 1fr; }
   .stat-card.guest-stat { padding: 12px; }
   .stat-progress-row { gap: 5px; }
   .stat-progress-pct { min-width: 30px; font-size: 0.66rem; }

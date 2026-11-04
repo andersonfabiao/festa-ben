@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104p11" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104p12" />
 </head>
 <body>
   <header class="hero">
@@ -160,6 +160,13 @@
 
       <div id="guestStats" class="stat-grid small"></div>
       <div id="rsvpDeadlineStatus" class="rsvp-deadline-status" aria-live="polite"></div>
+      <section class="guest-pending-panel" aria-labelledby="guestPendingTitle">
+        <div class="guest-pending-head">
+          <div><span>Visão rápida</span><h3 id="guestPendingTitle">Pendências importantes</h3></div>
+          <small>Toque em um cartão para filtrar a lista.</small>
+        </div>
+        <div class="guest-pending-grid" id="guestPendingGrid"></div>
+      </section>
 
       <div class="guest-tools">
         <div class="guest-filters" role="group" aria-label="Filtrar convidados">
@@ -170,6 +177,7 @@
           <button class="filter-chip" type="button" data-guest-filter="sent">Enviados</button>
           <button class="filter-chip" type="button" data-guest-filter="unsent">Não enviados</button>
           <button class="filter-chip" type="button" data-guest-filter="no_phone">Sem telefone</button>
+          <button class="filter-chip" type="button" data-guest-filter="needs_reminder">Sem lembrete</button>
           <button class="filter-chip" type="button" data-guest-filter="confirmed">Confirmados</button>
           <button class="filter-chip" type="button" data-guest-filter="pending">Pendentes</button>
           <button class="filter-chip" type="button" data-guest-filter="declined">Não vão</button>
@@ -638,6 +646,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261104p13"></script>
+  <script src="assets/app.js?v=20261104p14"></script>
 </body>
 </html>

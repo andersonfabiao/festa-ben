@@ -316,6 +316,7 @@
       rsvpMessage: "",
       rsvpSource: "",
       inviteSentAt: "",
+      reminderSentAt: "",
     });
     return [
       g("Tia Ana", "adult", "confirmed"),
@@ -426,6 +427,10 @@
         typeof g.inviteSentAt === "string" && !isNaN(Date.parse(g.inviteSentAt))
           ? g.inviteSentAt
           : "",
+      reminderSentAt:
+        typeof g.reminderSentAt === "string" && !isNaN(Date.parse(g.reminderSentAt))
+          ? g.reminderSentAt
+          : "",
       rsvpSource:
         rsvpAt && (g.rsvpSource === "owner" || g.rsvpSource === "guest")
           ? g.rsvpSource
@@ -534,7 +539,7 @@
   const GUEST_VIEW_KEY = "ben-guest-view-v1";
   const GUEST_GROUPS_KEY = "ben-guest-groups-v2";
   const HIDE_VALUES_KEY = "ben-hide-values-v1";
-  const GUEST_FILTERS = ["all", "parents", "adult", "child", "sent", "unsent", "no_phone", "confirmed", "pending", "declined"];
+  const GUEST_FILTERS = ["all", "parents", "adult", "child", "sent", "unsent", "no_phone", "needs_reminder", "confirmed", "pending", "declined"];
   let guestFilter = "all";
   let guestQuery = "";
   let selectedGuestIds = new Set();
@@ -1318,7 +1323,8 @@
     if (guestFilter === "sent" && (isHostGuest(g) || !phoneDigits(g.phone) || !g.inviteSentAt)) return false;
     if (guestFilter === "unsent" && (isHostGuest(g) || !phoneDigits(g.phone) || g.inviteSentAt)) return false;
     if (guestFilter === "no_phone" && (isHostGuest(g) || phoneDigits(g.phone))) return false;
-    if (!["all", "parents", "adult", "child", "sent", "unsent", "no_phone"].includes(guestFilter) && g.status !== guestFilter) return false;
+    if (guestFilter === "needs_reminder" && (isHostGuest(g) || g.status !== "pending" || !phoneDigits(g.phone) || !g.inviteSentAt || g.reminderSentAt)) return false;
+    if (!["all", "parents", "adult", "child", "sent", "unsent", "no_phone", "needs_reminder"].includes(guestFilter) && (isHostGuest(g) || g.status !== guestFilter)) return false;
     const q = norm(guestQuery);
     return !q || norm(displayGuestName(g)).includes(q);
   }
@@ -1355,6 +1361,10 @@
     const rsvpMsg = g.rsvpMessage
       ? '<div class="guest-rsvp-msg">“' + esc(g.rsvpMessage) + "”</div>"
       : "";
+    const reminder = g.status === "pending" && waReminderLink(g)
+      ? ' · <a class="guest-wa-reminder" data-guest-reminder="' + esc(g.id) + '" href="' + esc(waReminderLink(g)) +
+        '" target="_blank" rel="noopener noreferrer">' + (g.reminderSentAt ? "Reenviar lembrete" : "Enviar lembrete") + " ↗</a>"
+      : "";
     const phone = g.phone
       ? '<div class="guest-contact">📱 ' + esc(g.phone) +
         (waLink(g.phone)
@@ -1366,6 +1376,7 @@
           ? ' · <a class="guest-wa-invite" data-guest-send="' + esc(g.id) + '" href="' + esc(waInviteLink(g)) +
             '" target="_blank" rel="noopener noreferrer">Enviar convite ↗</a>'
           : "") +
+        reminder +
         "</div>"
       : "";
     const notes = g.notes ? '<div class="guest-notes">' + esc(g.notes) + "</div>" : "";
@@ -1381,6 +1392,9 @@
       : "";
     const sentNote = sentLabel
       ? '<div class="guest-invite-sent-note">✉ Convite enviado ' + esc(timeAgo(g.inviteSentAt)) + "</div>"
+      : "";
+    const reminderNote = g.reminderSentAt
+      ? '<div class="guest-reminder-sent-note">🔔 Lembrete enviado ' + esc(timeAgo(g.reminderSentAt)) + "</div>"
       : "";
     const inviteSentButton =
       '<button class="icon-btn guest-invite-status' + (sentLabel ? " is-sent" : "") +
@@ -1416,7 +1430,7 @@
         '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
         '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + unlistedBadge + hostBadge + "</div>" +
           '<div class="guest-type">' + (isHostGuest(g) ? "Pais" : g.type === "child" ? "Criança" : "Adulto") +
-          " · " + gs.label + "</div>" + phone + sentNote + notes + guardianLine + kidsLine +
+          " · " + gs.label + "</div>" + phone + sentNote + reminderNote + notes + guardianLine + kidsLine +
           rsvpNote + rsvpMsg + "</div>" +
         '<select class="status-select" data-guest-status="' + esc(g.id) +
           '" style="--sc:' + gs.color + ";--sb:" + gs.bg + '" aria-label="Confirmação de ' +
@@ -1524,6 +1538,21 @@
         '</strong><small>' + esc(timing + " · " + pendingText) + "</small></div>";
     }
 
+    const noPhone = guests.filter((g) => !phoneDigits(g.phone)).length;
+    const notSent = guests.filter((g) => phoneDigits(g.phone) && !g.inviteSentAt).length;
+    const needsReminder = guests.filter((g) => g.status === "pending" && phoneDigits(g.phone) && g.inviteSentAt && !g.reminderSentAt).length;
+    const pendingGrid = $("#guestPendingGrid");
+    if (pendingGrid) {
+      pendingGrid.innerHTML = [
+        { filter: "no_phone", icon: "📵", value: noPhone, label: "Sem telefone", detail: "Complete o contato" },
+        { filter: "unsent", icon: "✉️", value: notSent, label: "Convite não enviado", detail: "Prepare o primeiro envio" },
+        { filter: "pending", icon: "⏳", value: pending, label: "Aguardando resposta", detail: "Ainda não confirmaram" },
+        { filter: "needs_reminder", icon: "🔔", value: needsReminder, label: "Sem lembrete", detail: "Já receberam o convite" },
+      ].map((card) => '<button class="guest-pending-card' + (card.value ? " has-items" : " is-clear") +
+        '" type="button" data-pending-filter="' + card.filter + '"><span aria-hidden="true">' + card.icon +
+        '</span><b>' + card.value + '</b><strong>' + card.label + '</strong><small>' + card.detail + "</small></button>").join("");
+    }
+
     const counts = {
       all: allGuests.length,
       parents: allGuests.filter(isHostGuest).length,
@@ -1532,9 +1561,10 @@
       sent: guests.filter((g) => phoneDigits(g.phone) && g.inviteSentAt).length,
       unsent: guests.filter((g) => phoneDigits(g.phone) && !g.inviteSentAt).length,
       no_phone: guests.filter((g) => !phoneDigits(g.phone)).length,
-      confirmed: allGuests.filter((g) => g.status === "confirmed").length,
-      pending: allGuests.filter((g) => g.status === "pending").length,
-      declined: allGuests.filter((g) => g.status === "declined").length,
+      needs_reminder: guests.filter((g) => g.status === "pending" && phoneDigits(g.phone) && g.inviteSentAt && !g.reminderSentAt).length,
+      confirmed: guests.filter((g) => g.status === "confirmed").length,
+      pending: guests.filter((g) => g.status === "pending").length,
+      declined: guests.filter((g) => g.status === "declined").length,
     };
     const labels = {
       all: "Todos",
@@ -1544,6 +1574,7 @@
       sent: "Enviados",
       unsent: "Não enviados",
       no_phone: "Sem telefone",
+      needs_reminder: "Sem lembrete",
       confirmed: "Confirmados",
       pending: "Pendentes",
       declined: "Não vão",
@@ -2672,6 +2703,18 @@
     return "https://wa.me/" + phone + "?text=" + encodeURIComponent(text);
   }
 
+  function waReminderLink(guest) {
+    const digits = phoneDigits(guest && guest.phone);
+    if (!digits) return "";
+    const phone = digits.length <= 11 ? "55" + digits : digits;
+    const firstName = String(guest && guest.name || "").trim().split(/\s+/)[0];
+    const text = "Oi" + (firstName ? ", " + firstName : "") +
+      "! Passando para lembrar do aniversário do " + (state.meta.name || "Ben") + " 🎉 " +
+      "Você consegue confirmar sua presença até " + fmtDate(state.meta.rsvpDeadline) + "? " +
+      guestAnimatedInviteUrl(guest);
+    return "https://wa.me/" + phone + "?text=" + encodeURIComponent(text);
+  }
+
   function mapsLink() {
     const custom = safeUrl(state.meta.mapsUrl);
     if (custom) return custom;
@@ -3168,6 +3211,15 @@
       });
     });
 
+    $("#guestPendingGrid").addEventListener("click", (event) => {
+      const card = event.target.closest("[data-pending-filter]");
+      if (!card) return;
+      guestFilter = GUEST_FILTERS.includes(card.dataset.pendingFilter) ? card.dataset.pendingFilter : "all";
+      saveGuestView();
+      renderGuests();
+      $("#guestList").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
     $("#saveCloudBtn").addEventListener("click", () => {
       if (!hasCloud()) openSettings();
       else saveCloud();
@@ -3355,6 +3407,18 @@
         const guest = state.guests.find((g) => g.id === sendInvite.dataset.guestSend);
         if (guest) {
           guest.inviteSentAt = nowISO();
+          touch();
+          renderCloudBar();
+          window.setTimeout(renderGuests, 0);
+        }
+        return;
+      }
+
+      const reminder = event.target.closest("[data-guest-reminder]");
+      if (reminder) {
+        const guest = state.guests.find((g) => g.id === reminder.dataset.guestReminder);
+        if (guest) {
+          guest.reminderSentAt = nowISO();
           touch();
           renderCloudBar();
           window.setTimeout(renderGuests, 0);
