@@ -530,7 +530,7 @@
   let activeView = "checklist";
 
   const GUEST_VIEW_KEY = "ben-guest-view-v1";
-  const GUEST_GROUPS_KEY = "ben-guest-groups-v1";
+  const GUEST_GROUPS_KEY = "ben-guest-groups-v2";
   const HIDE_VALUES_KEY = "ben-hide-values-v1";
   const GUEST_FILTERS = ["all", "parents", "adult", "child", "sent", "unsent", "no_phone", "confirmed", "pending", "declined"];
   let guestFilter = "all";
@@ -560,10 +560,12 @@
 
   function loadGuestGroupsCollapsed() {
     try {
-      const arr = JSON.parse(localStorage.getItem(GUEST_GROUPS_KEY) || "[]");
-      return Array.isArray(arr) ? arr.filter((id) => id === "adult" || id === "child") : [];
+      const saved = localStorage.getItem(GUEST_GROUPS_KEY);
+      if (!saved) return ["parents", "adult", "child"];
+      const arr = JSON.parse(saved);
+      return Array.isArray(arr) ? arr.filter((id) => id === "parents" || id === "adult" || id === "child") : ["parents", "adult", "child"];
     } catch (e) {
-      return [];
+      return ["parents", "adult", "child"];
     }
   }
 
