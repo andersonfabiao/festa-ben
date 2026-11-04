@@ -704,7 +704,7 @@
     const el = $("#activityLog");
     if (!el) return;
     const icons = { invite: "✉️", reminder: "🔔", rsvp: "✅", guest: "👤", cloud: "☁️", update: "✏️" };
-    const entries = (Array.isArray(state.activity) ? state.activity : []).slice(-8).reverse();
+    const entries = (Array.isArray(state.activity) ? state.activity : []).slice(-30).reverse();
     el.innerHTML = entries.length
       ? entries.map((entry) => '<div class="activity-item"><span aria-hidden="true">' + (icons[entry.type] || icons.update) +
         '</span><div><strong>' + esc(entry.text) + '</strong><small>' + esc(timeAgo(entry.at)) + "</small></div></div>").join("")
@@ -3107,6 +3107,7 @@
       budget: "#view-budget",
       guests: "#view-guests",
       invite: "#view-invite",
+      activity: "#view-activity",
     };
     if (!views[name]) name = "checklist";
     activeView = name;
@@ -3388,7 +3389,7 @@
         touch();
         renderGuests();
         renderCloudBar();
-        toast(guest.inviteSentAt ? "Convite marcado como enviado." : "Convite marcado como não enviado.", "ok");
+        toast(guest.inviteSentAt ? "Convite marcado como enviado." : "Convite marcado como não enviado.", guest.inviteSentAt ? "ok" : "neutral");
         return;
       }
 
@@ -3575,7 +3576,7 @@
     renderAll();
 
     const hash = (location.hash || "").replace("#", "");
-    showView(["budget", "guests", "invite"].includes(hash) ? hash : "checklist");
+    showView(["budget", "guests", "invite", "activity"].includes(hash) ? hash : "checklist");
 
     if (hasCloud() && !hadLocal) {
       pullCloud({ silent: true });

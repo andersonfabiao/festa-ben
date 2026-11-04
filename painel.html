@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104p14" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104p15" />
 </head>
 <body>
   <header class="hero">
@@ -54,6 +54,7 @@
         <button class="tab" data-view="budget" type="button">💰 Orçamento</button>
         <button class="tab" data-view="guests" type="button">🎟️ Convidados</button>
         <button class="tab" data-view="invite" type="button">💌 Convite</button>
+        <button class="tab" data-view="activity" type="button">🕘 Atividade</button>
       </nav>
     </div>
   </header>
@@ -88,10 +89,6 @@
       </div>
 
       <div id="checklist" class="checklist"></div>
-      <section class="card activity-card" aria-labelledby="activityTitle">
-        <div class="card-head"><div><h3 id="activityTitle">Atividade recente</h3><p class="muted">Alterações importantes feitas no painel.</p></div></div>
-        <div id="activityLog" class="activity-log"></div>
-      </section>
     </section>
 
     <section id="view-budget" class="view" aria-label="Orçamento" hidden>
@@ -208,6 +205,16 @@
       </div>
 
       <div id="guestList" class="guest-list"></div>
+    </section>
+
+    <section id="view-activity" class="view" aria-label="Atividade" hidden>
+      <div class="section-head">
+        <div><h2>Atividade recente</h2><p class="muted">Acompanhe as alterações importantes realizadas no painel.</p></div>
+      </div>
+      <section class="card activity-card" aria-labelledby="activityTitle">
+        <div class="card-head"><div><h3 id="activityTitle">Histórico do projeto</h3><p class="muted">Convites, lembretes, confirmações, convidados e carregamentos da nuvem.</p></div></div>
+        <div id="activityLog" class="activity-log"></div>
+      </section>
     </section>
 
     <section id="view-invite" class="view" aria-label="Convite" hidden>
@@ -647,6 +654,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261104p16"></script>
+  <script src="assets/app.js?v=20261104p17"></script>
 </body>
 </html>

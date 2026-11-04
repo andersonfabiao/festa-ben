@@ -1502,6 +1502,7 @@ body.no-scroll { overflow: hidden; }
 .toast.err { background: #a52822; }
 .toast.warn { background: #8a6400; }
 .toast.ok { background: #1d7c38; }
+.toast.neutral { background:#66788b; }
 
 /* ---------- Animations ---------- */
 
