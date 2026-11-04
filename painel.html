@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104p16" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104p17" />
 </head>
 <body>
   <header class="hero">
@@ -131,6 +131,8 @@
                 <th>Item</th>
                 <th class="hide-sm">Etapa</th>
                 <th>Status</th>
+                <th class="num hide-sm">Qtd.</th>
+                <th class="num hide-sm">Unitário</th>
                 <th class="num">Previsto</th>
                 <th class="num">Pago</th>
                 <th class="num">Falta</th>
@@ -348,10 +350,18 @@
             </select>
           </label>
         </div>
-        <div class="grid-3">
-          <label class="field-label">Valor previsto (R$)
-            <input id="itemCost" class="input" inputmode="decimal" placeholder="0,00" />
+        <div class="grid-3 item-price-grid">
+          <label class="field-label">Quantidade
+            <input id="itemQuantity" class="input" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="1" />
           </label>
+          <label class="field-label">Preço unitário (R$)
+            <input id="itemUnitPrice" class="input" inputmode="decimal" placeholder="0,00" />
+          </label>
+          <label class="field-label">Total previsto (R$)
+            <input id="itemCost" class="input calculated-input" inputmode="decimal" placeholder="0,00" readonly />
+          </label>
+        </div>
+        <div class="grid-2">
           <label class="field-label">Valor pago (R$)
             <input id="itemPaid" class="input" inputmode="decimal" placeholder="0,00" />
           </label>
@@ -658,6 +668,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261104p18"></script>
+  <script src="assets/app.js?v=20261104p20"></script>
 </body>
 </html>

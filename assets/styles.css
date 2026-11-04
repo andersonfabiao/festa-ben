@@ -670,6 +670,10 @@ textarea.input { resize: vertical; min-height: 78px; }
 .stage-group.is-collapsed .stage-body { display: none; }
 
 .stage-body { display: block; }
+.stage-add-row { display:flex; justify-content:flex-end; padding:9px 12px; border-top:1px solid #edf3fa; background:#fbfdff; }
+.stage-add-row .btn { color:var(--stage); border-color:color-mix(in srgb, var(--stage) 35%, #dbe7f3); background:#fff; }
+.stage-empty { padding:18px 16px; border-top:1px solid #edf3fa; color:#718096; text-align:center; font-size:.8rem; font-weight:700; }
+.calculated-input { color:#1d6e36; font-weight:900; background:#f3faf5; }
 
 .item {
   display: grid;
@@ -1943,6 +1947,7 @@ body.no-scroll { overflow: hidden; }
   .check-inline { margin-left: 2px; }
 
   .stage-head { padding: 11px 12px; gap: 9px; }
+  .stage-add-row .btn { width:100%; }
   .stage-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 1rem; }
   .stage-title h2 { font-size: 0.98rem; }
   .stage-progress { display: none; }

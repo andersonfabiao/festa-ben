@@ -499,6 +499,8 @@
         title: String(i.title || "Item sem título").slice(0, 200),
         stage: STAGES.some((s) => s.id === i.stage) ? i.stage : "planejamento",
         status: STATUS[i.status] ? i.status : "todo",
+        quantity: Math.max(0.01, Number(i.quantity) || 1),
+        unitPrice: parseMoney(i.unitPrice) || (parseMoney(i.cost) / Math.max(0.01, Number(i.quantity) || 1)),
         cost: parseMoney(i.cost),
         paid: parseMoney(i.paid),
         supplier: String(i.supplier || "").slice(0, 120),
@@ -885,6 +887,11 @@
 
     const metaBits = [];
     if (item.supplier) metaBits.push("<span>🏷️ " + esc(item.supplier) + "</span>");
+    const quantity = Math.max(0.01, Number(item.quantity) || 1);
+    const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
+    if (quantity !== 1 || unitPrice > 0) {
+      metaBits.push("<span>📦 " + esc(String(quantity).replace(".", ",")) + " × " + money(unitPrice) + "</span>");
+    }
     if (item.due) {
       metaBits.push(
         '<span class="' + (overdue ? "overdue" : "") + '">' +
@@ -945,15 +952,7 @@
     const f = getFilters();
     const filtered = state.items.filter((i) => itemMatches(i, f));
 
-    if (!state.items.length) {
-      wrap.innerHTML =
-        '<div class="empty"><span class="emoji">🤠</span><h3>Vamos começar a festa?</h3>' +
-        "<p>Adicione o primeiro item do checklist do " + esc(state.meta.name) + ".</p>" +
-        '<button class="btn btn-primary" type="button" data-add-first>＋ Criar primeiro item</button></div>';
-      return;
-    }
-
-    if (!filtered.length) {
+    if (!filtered.length && (f.q || f.status || f.pending)) {
       wrap.innerHTML =
         '<div class="empty"><span class="emoji">🔍</span><h3>Nada por aqui</h3>' +
         "<p>Nenhum item combina com os filtros escolhidos.</p>" +
@@ -963,7 +962,8 @@
 
     const html = stageList().map((stage) => {
       const items = filtered.filter((i) => i.stage === stage.id);
-      if (!items.length) return "";
+      const showEmptyStage = !f.q && !f.status && !f.pending && (!f.stage || f.stage === stage.id);
+      if (!items.length && !showEmptyStage) return "";
       const sorted = sortItems(items);
       const total = items.length;
       const done = items.filter((i) => i.status === "done").length;
@@ -985,7 +985,8 @@
             '<span class="stage-progress"><div style="width:' + pct + "%;background:" + stage.color + '"></div></span>' +
             '<span class="stage-chevron">⌄</span>' +
           "</button>" +
-          '<div class="stage-body">' + sorted.map(itemHTML).join("") + "</div>" +
+          '<div class="stage-body"><div class="stage-add-row"><button class="btn btn-ghost btn-sm" type="button" data-add-stage="' + stage.id + '">＋ Adicionar em ' + esc(stage.name) + "</button></div>" +
+            (sorted.length ? sorted.map(itemHTML).join("") : '<div class="stage-empty">Nenhum item nesta etapa.</div>') + "</div>" +
         "</section>"
       );
     }).join("");
@@ -1091,11 +1092,13 @@
           const stage = stageById(item.stage);
           const status = STATUS[item.status] || STATUS.todo;
           const due = item.due ? longDate(item.due) : "—";
+          const quantity = Math.max(0.01, Number(item.quantity) || 1);
+          const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
           return '<tr><td>' + esc(item.title) + '</td><td>' + esc(stage.name) +
-            '</td><td>' + esc(status.label) + '</td><td>' + money(item.cost) +
+            '</td><td>' + esc(status.label) + '</td><td>' + esc(String(quantity).replace(".", ",")) + '</td><td>' + money(unitPrice) + '</td><td>' + money(item.cost) +
             '</td><td>' + money(item.paid) + '</td><td>' + due + '</td></tr>';
         }).join("")
-      : '<tr><td colspan="6">Nenhum item no checklist.</td></tr>';
+      : '<tr><td colspan="8">Nenhum item no checklist.</td></tr>';
 
     const breakdownRows = stageList().map((stage) => {
       const stageItems = state.items.filter((item) => item.stage === stage.id);
@@ -1130,7 +1133,7 @@
       '</b></div><div class="metric">Contratado<b>' + money(s.contratado) + '</b></div><div class="metric">Pago<b>' + money(s.pago) +
       '</b></div><div class="metric">A pagar<b>' + money(s.aPagar) + '</b></div><div class="metric">Saldo<b>' + money(s.saldo) + '</b></div></div></section>' +
       '<h2>Gastos por etapa</h2><table><thead><tr><th>Etapa</th><th>Previsto</th><th>Pago</th></tr></thead><tbody>' + breakdownRows + '</tbody></table>' +
-      '<h2>Checklist e orçamento</h2><table><thead><tr><th>Item</th><th>Etapa</th><th>Status</th><th>Previsto</th><th>Pago</th><th>Vencimento</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
+      '<h2>Checklist e orçamento</h2><table><thead><tr><th>Item</th><th>Etapa</th><th>Status</th><th>Qtd.</th><th>Unitário</th><th>Previsto</th><th>Pago</th><th>Vencimento</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
       '<h2>Convidados (' + guests.length + ')</h2><p class="muted">' + confirmed + ' confirmados · ' + pending + ' pendentes · ' + declined + ' não vão</p>' +
       '<div class="guest-grid"><section><h3>Adultos (' + adultGuests.length + ')</h3><table><thead><tr><th>Nome</th><th>Status</th></tr></thead><tbody>' + guestRows(adultGuests) + '</tbody></table></section>' +
       '<section><h3>Crianças (' + childGuests.length + ')</h3><table><thead><tr><th>Nome</th><th>Status</th></tr></thead><tbody>' + guestRows(childGuests) + '</tbody></table></section></div>' +
@@ -1269,7 +1272,7 @@
 
     if (!items.length) {
       body.innerHTML =
-        '<tr><td colspan="6" class="muted" style="text-align:center;padding:26px">' +
+        '<tr><td colspan="8" class="muted" style="text-align:center;padding:26px">' +
         "Nenhum item cadastrado ainda.</td></tr>";
       return;
     }
@@ -1288,6 +1291,8 @@
               stage.icon + " " + esc(stage.name) + "</span></td>" +
             '<td><span class="status-cell"><span class="status-dot" style="background:' + st.color +
               '"></span>' + st.label + "</span></td>" +
+            '<td class="num hide-sm">' + esc(String(Math.max(0.01, Number(item.quantity) || 1)).replace(".", ",")) + '</td>' +
+            '<td class="num hide-sm money">' + money(num(item.unitPrice) || (num(item.cost) / Math.max(0.01, Number(item.quantity) || 1))) + '</td>' +
             '<td class="num' + (num(item.cost) ? " money" : "") + '">' + (num(item.cost) ? money(item.cost) : "—") + "</td>" +
             '<td class="num' + (num(item.paid) ? " paid money" : "") + '">' +
               (num(item.paid) ? money(item.paid) : "—") + "</td>" +
@@ -2173,7 +2178,14 @@
 
   /* ---------- Item: abrir / salvar / excluir ---------- */
 
-  function openItemModal(id) {
+  function updateItemCalculatedTotal() {
+    const quantity = Math.max(0, Number(String($("#itemQuantity").value || "").replace(",", ".")) || 0);
+    const unitPrice = parseMoney($("#itemUnitPrice").value);
+    const total = Math.round(quantity * unitPrice * 100) / 100;
+    $("#itemCost").value = total ? total.toFixed(2).replace(".", ",") : "";
+  }
+
+  function openItemModal(id, preferredStage) {
     const form = $("#itemForm");
     form.reset();
     $("#itemId").value = "";
@@ -2187,7 +2199,11 @@
       $("#itemTitle").value = item.title;
       $("#itemStage").value = item.stage;
       $("#itemStatus").value = item.status;
-      $("#itemCost").value = item.cost ? String(item.cost).replace(".", ",") : "";
+      const quantity = Math.max(0.01, Number(item.quantity) || 1);
+      const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
+      $("#itemQuantity").value = String(quantity);
+      $("#itemUnitPrice").value = unitPrice ? String(unitPrice).replace(".", ",") : "";
+      updateItemCalculatedTotal();
       $("#itemPaid").value = item.paid ? String(item.paid).replace(".", ",") : "";
       $("#itemDue").value = item.due || "";
       $("#itemSupplier").value = item.supplier || "";
@@ -2198,8 +2214,15 @@
     } else {
       $("#itemStatus").value = "todo";
       const filterStage = $("#stageFilter").value;
-      $("#itemStage").value = filterStage || "planejamento";
+      $("#itemStage").value = preferredStage || filterStage || "planejamento";
+      $("#itemQuantity").value = "1";
+      $("#itemUnitPrice").value = "";
+      updateItemCalculatedTotal();
       $("#itemDue").value = "";
+      if (preferredStage) {
+        collapsed.delete(preferredStage);
+        saveCollapsed();
+      }
     }
 
     openModal($("#itemModal"));
@@ -2213,11 +2236,15 @@
       return;
     }
 
+    const quantity = Math.max(0.01, Number(String($("#itemQuantity").value || "1").replace(",", ".")) || 1);
+    const unitPrice = parseMoney($("#itemUnitPrice").value);
     const data = {
       title,
       stage: $("#itemStage").value,
       status: $("#itemStatus").value,
-      cost: parseMoney($("#itemCost").value),
+      quantity,
+      unitPrice,
+      cost: Math.round(quantity * unitPrice * 100) / 100,
       paid: parseMoney($("#itemPaid").value),
       supplier: $("#itemSupplier").value.trim(),
       due: $("#itemDue").value,
@@ -2235,7 +2262,7 @@
       toast("Item adicionado ao checklist.", "ok");
     }
 
-    addActivity("guest", displayGuestName(guest) + (isNew ? " foi adicionado à lista" : " teve os dados atualizados"));
+    addActivity("update", (id ? "Item atualizado: " : "Item adicionado: ") + title);
     touch();
     closeModal($("#itemModal"));
     renderAll();
@@ -2248,6 +2275,7 @@
     if (!item) return;
     if (!window.confirm('Excluir o item "' + item.title + '"?')) return;
     state.items = state.items.filter((i) => i.id !== id);
+    addActivity("update", "Item excluído: " + item.title);
     touch();
     closeModal($("#itemModal"));
     renderAll();
@@ -3181,6 +3209,8 @@
     $("#statusFilter").addEventListener("change", renderChecklist);
     $("#pendingOnly").addEventListener("change", renderChecklist);
     $("#addItemBtn").addEventListener("click", () => openItemModal());
+    $("#itemQuantity").addEventListener("input", updateItemCalculatedTotal);
+    $("#itemUnitPrice").addEventListener("input", updateItemCalculatedTotal);
     $("#editStageNamesBtn").addEventListener("click", () => openSettings(true));
     // Não repasse o evento de clique/toque para openSettings. Em celulares, o
     // evento era interpretado como `focusStageNames = true`, deslocando o modal
@@ -3275,6 +3305,7 @@
         const item = state.items.find((i) => i.id === select.dataset.status);
         if (!item) return;
         item.status = select.value;
+        addActivity("update", "Status atualizado: " + item.title + " — " + (STATUS[item.status] || STATUS.todo).label);
         touch();
         renderAll();
       }
@@ -3294,6 +3325,12 @@
       const edit = event.target.closest("[data-edit]");
       if (edit) {
         openItemModal(edit.dataset.edit);
+        return;
+      }
+
+      const addStage = event.target.closest("[data-add-stage]");
+      if (addStage) {
+        openItemModal(null, addStage.dataset.addStage);
         return;
       }
 
