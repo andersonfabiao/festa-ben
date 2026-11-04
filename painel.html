@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104p12" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104p13" />
 </head>
 <body>
   <header class="hero">
@@ -49,29 +49,26 @@
           <button class="btn btn-sm btn-cloud" id="saveCloudBtn" type="button">☁️ Salvar na nuvem</button>
         </div>
       </div>
-
-      <div class="hero-progress">
-        <div class="progress-head">
-          <span id="progressLabel">0 de 0 itens concluídos</span>
-          <strong id="progressPct">0%</strong>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-      </div>
-
-      <div class="hero-stats" id="heroStats"></div>
+      <nav class="tabs" aria-label="Seções">
+        <button class="tab is-active" data-view="checklist" type="button">✅ Checklist</button>
+        <button class="tab" data-view="budget" type="button">💰 Orçamento</button>
+        <button class="tab" data-view="guests" type="button">🎟️ Convidados</button>
+        <button class="tab" data-view="invite" type="button">💌 Convite</button>
+      </nav>
     </div>
   </header>
 
   <div class="shell">
-    <nav class="tabs" aria-label="Seções">
-      <button class="tab is-active" data-view="checklist" type="button">✅ Checklist</button>
-      <button class="tab" data-view="budget" type="button">💰 Orçamento</button>
-      <button class="tab" data-view="guests" type="button">🎟️ Convidados</button>
-      <button class="tab" data-view="invite" type="button">💌 Convite</button>
-    </nav>
-
     <main>
     <section id="view-checklist" class="view" aria-label="Checklist">
+      <div class="section-head">
+        <div><h2>Checklist</h2><p class="muted">Acompanhe o andamento de cada etapa da festa.</p></div>
+      </div>
+      <div id="checklistStats" class="stat-grid small"></div>
+      <div class="checklist-progress-card">
+        <div class="progress-head"><span id="progressLabel">0 de 0 itens concluídos</span><strong id="progressPct">0%</strong></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
       <div class="toolbar">
         <div class="search-field">
           <span aria-hidden="true">🔎</span>
@@ -646,6 +643,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261104p14"></script>
+  <script src="assets/app.js?v=20261104p15"></script>
 </body>
 </html>

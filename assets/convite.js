@@ -19,7 +19,7 @@
     name: "Ben",
     age: 5,
     date: "2027-01-09",
-    rsvpDeadline: "2026-12-20",
+    rsvpDeadline: "2026-12-29",
     time: "18:00",
     location: "Enjoy Kids, Liv Mall Shopping — Av. Gov. Flávio Ribeiro Coutinho, 500 - Jardim Oceania, João Pessoa - PB, 58037-005",
     theme: "Toy Story",

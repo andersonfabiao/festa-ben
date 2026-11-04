@@ -331,7 +331,7 @@
       name: "Ben",
       age: 5,
       date: "2027-01-09",
-      rsvpDeadline: "2026-12-20",
+      rsvpDeadline: "2026-12-29",
       time: "18:00",
       location: PARTY_LOCATION,
       budget: 7000,
@@ -720,68 +720,20 @@
       s.done + " de " + s.total + " itens concluídos";
     $("#progressPct").textContent = s.pct + "%";
     $("#progressFill").style.width = s.pct + "%";
-
-    if (activeView === "invite") {
-      const guests = countableGuests(state.guests);
-      const confirmed = guests.filter((g) => g.status === "confirmed").length;
-      const pending = guests.filter((g) => g.status === "pending").length;
-      const declined = guests.filter((g) => g.status === "declined").length;
-      const stats = [
-        { label: "Na lista", value: guests.length, cls: "" },
-        { label: "Confirmados", value: confirmed, cls: "good" },
-        { label: "Pendentes", value: pending, cls: "" },
-        { label: "Não vão", value: declined, cls: "" },
-      ];
-      $("#heroStats").innerHTML = stats
-        .map(
-          (st) =>
-            '<div class="hero-stat ' + st.cls + '"><span class="label">' +
-            st.label + '</span><span class="value">' + st.value + "</span></div>"
-        )
-        .join("");
-      return;
-    }
-
-    if (activeView === "guests") {
-      const guests = countableGuests(state.guests);
-      const confirmed = guests.filter((g) => g.status === "confirmed").length;
-      const children = guests.filter((g) => g.type === "child").length;
-      const adults = guests.filter((g) => g.type === "adult").length;
-      const stats = [
-        { label: "Na lista", value: guests.length, cls: "" },
-        { label: "Confirmados", value: confirmed, cls: "good" },
-        { label: "Crianças", value: children, cls: "" },
-        { label: "Adultos", value: adults, cls: "" },
-      ];
-      $("#heroStats").innerHTML = stats
-        .map(
-          (st) =>
-            '<div class="hero-stat ' + st.cls + '"><span class="label">' +
-            st.label + '</span><span class="value">' + st.value + "</span></div>"
-        )
-        .join("");
-      return;
-    }
-
-    const stats = [
-      { label: "Concluídos", value: s.done + "/" + s.total, cls: "" },
-      { label: "Orçamento", value: money(s.budget), cls: "accent", money: true },
-      { label: "Já pago", value: money(s.pago), cls: "good", money: true },
-      {
-        label: "A pagar",
-        value: money(s.aPagar),
-        cls: s.aPagar > 0 ? "" : "good",
-        money: true,
-      },
+    const checklistStats = [
+      { label: "Concluídos", value: s.done, count: s.done, cls: "good" },
+      { label: "Em andamento", value: state.items.filter((item) => item.status === "doing").length, count: state.items.filter((item) => item.status === "doing").length, cls: "" },
+      { label: "Contratados", value: state.items.filter((item) => item.status === "contracted").length, count: state.items.filter((item) => item.status === "contracted").length, cls: "" },
+      { label: "A fazer", value: state.items.filter((item) => item.status === "todo").length, count: state.items.filter((item) => item.status === "todo").length, cls: "" },
     ];
-    $("#heroStats").innerHTML = stats
-      .map(
-        (st) =>
-          '<div class="hero-stat ' + st.cls + '"><span class="label">' +
-          st.label + '</span><span class="value' + (st.money ? " money" : "") + '">' +
-          st.value + "</span></div>"
-      )
-      .join("");
+    $("#checklistStats").innerHTML = checklistStats.map((st) => {
+      const pct = s.total ? Math.round(st.count / s.total * 100) : 0;
+      return '<div class="stat-card guest-stat ' + st.cls + '"><span class="label">' + st.label +
+        '</span><span class="value">' + st.value + '</span><span class="note">de ' + s.total + ' itens</span>' +
+        '<div class="stat-progress-row"><div class="stat-progress" role="progressbar" aria-label="' + esc(st.label) +
+        '" aria-valuemin="0" aria-valuemax="' + Math.max(1, s.total) + '" aria-valuenow="' + st.count + '"><span class="stat-progress-fill checklist" style="width:' + pct +
+        '%"></span></div><span class="stat-progress-pct">' + pct + "%</span></div></div>";
+    }).join("");
   }
 
   function partyTarget() {
@@ -3398,7 +3350,7 @@
         touch();
         renderGuests();
         renderCloudBar();
-        toast(guest.inviteSentAt ? "Convite marcado como enviado." : "Marcação de envio removida.", "ok");
+        toast(guest.inviteSentAt ? "Convite marcado como enviado." : "Convite marcado como não enviado.", "ok");
         return;
       }
 
