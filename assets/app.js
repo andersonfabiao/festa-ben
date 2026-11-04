@@ -532,7 +532,7 @@
   const GUEST_VIEW_KEY = "ben-guest-view-v1";
   const GUEST_GROUPS_KEY = "ben-guest-groups-v1";
   const HIDE_VALUES_KEY = "ben-hide-values-v1";
-  const GUEST_FILTERS = ["all", "parents", "adult", "child", "confirmed", "pending", "declined"];
+  const GUEST_FILTERS = ["all", "parents", "adult", "child", "sent", "unsent", "no_phone", "confirmed", "pending", "declined"];
   let guestFilter = "all";
   let guestQuery = "";
   let valuesHidden = false;
@@ -1340,6 +1340,9 @@
     const sentLabel = sentAt && !isNaN(sentAt.getTime())
       ? sentAt.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
       : "";
+    const sentNote = sentLabel
+      ? '<div class="guest-invite-sent-note">✉ Convite enviado ' + esc(timeAgo(g.inviteSentAt)) + "</div>"
+      : "";
     const inviteSentButton =
       '<button class="icon-btn guest-invite-status' + (sentLabel ? " is-sent" : "") +
         '" type="button" data-guest-invite-toggle="' + esc(g.id) +
@@ -1370,7 +1373,7 @@
         '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
         '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + unlistedBadge + hostBadge + "</div>" +
           '<div class="guest-type">' + (isHostGuest(g) ? "Pais" : g.type === "child" ? "Criança" : "Adulto") +
-          " · " + gs.label + "</div>" + phone + notes + guardianLine + kidsLine +
+          " · " + gs.label + "</div>" + phone + sentNote + notes + guardianLine + kidsLine +
           rsvpNote + rsvpMsg + "</div>" +
         '<select class="status-select" data-guest-status="' + esc(g.id) +
           '" style="--sc:' + gs.color + ";--sb:" + gs.bg + '" aria-label="Confirmação de ' +
@@ -1395,6 +1398,8 @@
     const declined = guests.filter((g) => g.status === "declined").length;
     const children = guests.filter((g) => g.type === "child").length;
     const adults = guests.filter((g) => g.type === "adult").length;
+    const inviteTargets = guests.filter((g) => phoneDigits(g.phone));
+    const invitesSent = inviteTargets.filter((g) => g.inviteSentAt).length;
     const meta = state.meta;
 
     const progressCard = (count, max, kind) => {
@@ -1402,14 +1407,18 @@
       const width = Math.max(0, Math.min(100, pct));
       const safeMax = Math.max(1, max);
       const now = Math.max(0, Math.min(count, safeMax));
-      const label = kind === "confirmed" ? "Percentual de confirmações" : "Ocupação do limite";
+      const label = kind === "confirmed"
+        ? "Percentual de confirmações"
+        : kind === "invite"
+          ? "Progresso de envio dos convites"
+          : "Ocupação do limite";
       const tone = pct > 95 ? "high" : pct >= 76 ? "mid" : "low";
       return (
         '<div class="stat-progress-row"><div class="stat-progress" role="progressbar" aria-label="' + label +
           '" aria-valuemin="0" aria-valuemax="' + safeMax + '" aria-valuenow="' + now + '" aria-valuetext="' + pct + '%">' +
           '<span class="stat-progress-fill ' + kind + (kind === "limit" ? " " + tone : "") + '" style="width:' + width + '%"></span>' +
         "</div>" +
-        '<span class="stat-progress-pct' + (kind === "confirmed" ? " positive" : " limit-" + tone) + '">' +
+        '<span class="stat-progress-pct' + (kind === "confirmed" || kind === "invite" ? " positive" : " limit-" + tone) + '">' +
           pct + "%" +
         "</span></div>"
       );
@@ -1417,6 +1426,13 @@
 
     $("#guestStats").innerHTML = [
       { label: "Na lista", value: guests.length, note: "convidados", cls: "" },
+      {
+        label: "Convites enviados",
+        value: invitesSent,
+        note: "de " + inviteTargets.length + " com telefone",
+        cls: invitesSent && invitesSent === inviteTargets.length ? "good" : "",
+        progress: progressCard(invitesSent, inviteTargets.length, "invite"),
+      },
       {
         label: "Confirmados",
         value: confirmed,
@@ -1452,6 +1468,9 @@
       parents: allGuests.filter(isHostGuest).length,
       adult: allGuests.filter((g) => g.type === "adult" && !isHostGuest(g)).length,
       child: allGuests.filter((g) => g.type === "child").length,
+      sent: guests.filter((g) => phoneDigits(g.phone) && g.inviteSentAt).length,
+      unsent: guests.filter((g) => phoneDigits(g.phone) && !g.inviteSentAt).length,
+      no_phone: guests.filter((g) => !phoneDigits(g.phone)).length,
       confirmed: allGuests.filter((g) => g.status === "confirmed").length,
       pending: allGuests.filter((g) => g.status === "pending").length,
       declined: allGuests.filter((g) => g.status === "declined").length,
@@ -1461,6 +1480,9 @@
       parents: "Pais",
       adult: "Adultos",
       child: "Crianças",
+      sent: "Enviados",
+      unsent: "Não enviados",
+      no_phone: "Sem telefone",
       confirmed: "Confirmados",
       pending: "Pendentes",
       declined: "Não vão",
@@ -1490,6 +1512,12 @@
         if (g.type !== "adult" || isHostGuest(g)) return false;
       } else if (guestFilter === "child") {
         if (g.type !== "child") return false;
+      } else if (guestFilter === "sent") {
+        if (isHostGuest(g) || !phoneDigits(g.phone) || !g.inviteSentAt) return false;
+      } else if (guestFilter === "unsent") {
+        if (isHostGuest(g) || !phoneDigits(g.phone) || g.inviteSentAt) return false;
+      } else if (guestFilter === "no_phone") {
+        if (isHostGuest(g) || phoneDigits(g.phone)) return false;
       } else if (guestFilter !== "all") {
         if (g.status !== guestFilter) return false;
       }

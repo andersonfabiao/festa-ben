@@ -898,6 +898,7 @@ textarea.input { resize: vertical; min-height: 78px; }
 .stat-progress-fill.limit.mid { background: #e9a400; }
 .stat-progress-fill.limit.high { background: #e8453c; }
 .stat-progress-fill.confirmed { background: #2fa84f; }
+.stat-progress-fill.invite { background: #2f80ed; }
 .stat-progress-pct { flex: none; min-width: 34px; text-align: right; color: #5a7794; font-size: 0.72rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .stat-progress-pct.positive { color: var(--green); }
 .stat-progress-pct.limit-reached { color: var(--red); }
@@ -1069,6 +1070,12 @@ body.hide-values .money-input:focus {
   padding: 1px 7px;
 }
 .filter-chip.is-active .filter-count { background: rgba(255, 255, 255, 0.22); }
+.guest-invite-sent-note {
+  margin-top: 4px;
+  color: #23823b;
+  font-size: 0.73rem;
+  font-weight: 800;
+}
 
 /* Busca e adicionar */
 
