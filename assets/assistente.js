@@ -188,7 +188,7 @@
       const avatar = document.createElement("span");
       avatar.className = "buzz-msg-avatar";
       avatar.setAttribute("aria-hidden", "true");
-      avatar.textContent = "🤠";
+      avatar.textContent = "🚀";
       wrap.appendChild(avatar);
     }
 
@@ -259,7 +259,7 @@
     const avatar = document.createElement("span");
     avatar.className = "buzz-msg-avatar";
     avatar.setAttribute("aria-hidden", "true");
-    avatar.textContent = "🤠";
+    avatar.textContent = "🚀";
     const bubble = document.createElement("div");
     bubble.className = "buzz-bubble";
     bubble.innerHTML = "<span></span><span></span><span></span>";
@@ -278,9 +278,9 @@
     if (!welcomed) {
       welcomed = true;
       bot(
-        "Oi! Eu sou o Buzz, assistente do Ben. 🤠\n\n" +
+        "Oi! Eu sou o Buzz, assistente do Ben. 🚀\n\n" +
           "Posso consultar convidados, orçamento e checklist — e também adicionar convidados, criar itens e marcar tarefas. " +
-          "Tudo fica somente neste dispositivo.\n\nO que você precisa?"
+          "Nossa conversa fica neste dispositivo. As alterações feitas por mim seguem a mesma sincronização do painel.\n\nO que você precisa?"
       );
       setSuggestions([
         "Quantos confirmados?",
@@ -423,7 +423,6 @@
     const top = matches[0];
     const next = matches[1];
     if (
-      matches.length === 1 ||
       top.score >= 85 ||
       (top.score >= 60 && (!next || top.score - next.score >= 15))
     ) {
@@ -444,7 +443,6 @@
     const top = matches[0];
     const next = matches[1];
     if (
-      matches.length === 1 ||
       top.score >= 85 ||
       (top.score >= 60 && (!next || top.score - next.score >= 15))
     ) {
@@ -489,7 +487,6 @@
     const top = matches[0];
     const next = matches[1];
     if (
-      matches.length === 1 ||
       top.score >= 85 ||
       (top.score >= 60 && (!next || top.score - next.score >= 15))
     ) {
@@ -766,9 +763,9 @@
 
   function welcome() {
     bot(
-      "Oi! Eu sou o Buzz. 🤠\n\n" +
+      "Oi! Eu sou o Buzz. 🚀\n\n" +
         "Posso responder sobre convidados, orçamento e checklist, além de adicionar convidados, criar itens e marcar tarefas. " +
-        "Nada sai deste dispositivo."
+        "A conversa é local; qualquer alteração segue a sincronização configurada no painel."
     );
     setSuggestions([
       "Quantos confirmados?",
@@ -868,7 +865,7 @@
       if (matches.length) {
         const top = matches[0];
         const next = matches[1];
-        if (matches.length === 1 || top.score >= 85 || (top.score >= 60 && (!next || top.score - next.score >= 15))) {
+        if (top.score >= 85 || (top.score >= 60 && (!next || top.score - next.score >= 15))) {
           createGuest({ ...parsed, name, guardians: [top.guest.id], relation: "" });
           return;
         }
@@ -1096,12 +1093,18 @@
 
     const budgetValue = parseBudgetSet(raw);
     if (budgetValue !== null) {
-      const result = api.setBudget(budgetValue);
-      if (!result.ok) {
-        bot(result.error || "Não consegui alterar o orçamento.");
-        return;
-      }
-      finishAction("Orçamento total atualizado para " + money(result.budget) + ".");
+      const currentBudget = api.stats().budget.budget;
+      askConfirm(
+        "Alterar o orçamento total de " + money(currentBudget) + " para " + money(budgetValue) + "?",
+        () => {
+          const result = api.setBudget(budgetValue);
+          if (!result.ok) {
+            bot(result.error || "Não consegui alterar o orçamento.");
+            return;
+          }
+          finishAction("Orçamento total atualizado para " + money(result.budget) + ".");
+        }
+      );
       return;
     }
 

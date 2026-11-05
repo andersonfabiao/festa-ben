@@ -3220,6 +3220,7 @@ body.no-scroll { overflow: hidden; }
 .buzz-head-text { flex: 1; min-width: 0; }
 .buzz-head-text h2 {
   margin: 0;
+  color: #fff;
   font-family: "Baloo 2", "Nunito", sans-serif;
   font-size: 1.18rem;
   line-height: 1.1;
