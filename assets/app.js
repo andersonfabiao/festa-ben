@@ -1197,6 +1197,69 @@
     report.focus();
   }
 
+  function exportChecklistPdf() {
+    const report = window.open("", "_blank");
+    if (!report) {
+      toast("O navegador bloqueou a janela do relatório. Permita pop-ups e tente novamente.", "warn");
+      return;
+    }
+
+    const meta = state.meta;
+    const s = summary();
+    const generatedAt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeStyle: "short" }).format(new Date());
+    const stageSections = stageList().map((stage) => {
+      const items = state.items.filter((item) => item.stage === stage.id).sort((a, b) => {
+        if (a.status === "done" && b.status !== "done") return 1;
+        if (a.status !== "done" && b.status === "done") return -1;
+        if (a.due && b.due && a.due !== b.due) return a.due.localeCompare(b.due);
+        if (a.due && !b.due) return -1;
+        if (!a.due && b.due) return 1;
+        return a.title.localeCompare(b.title, "pt-BR");
+      });
+      if (!items.length) return "";
+      const planned = items.reduce((sum, item) => sum + num(item.cost), 0);
+      const paid = items.reduce((sum, item) => sum + num(item.paid), 0);
+      const rows = items.map((item) => {
+        const status = STATUS[item.status] || STATUS.todo;
+        const quantity = Math.max(0.01, Number(item.quantity) || 1);
+        const detail = [
+          item.supplier ? "Fornecedor: " + item.supplier : "",
+          item.notes || "",
+        ].filter(Boolean).join(" · ");
+        return '<tr class="' + (item.status === "done" ? "done" : "") + '">' +
+          '<td class="check">' + (item.status === "done" ? "✓" : "□") + '</td>' +
+          '<td><strong>' + esc(item.title) + '</strong>' + (detail ? '<small>' + esc(detail) + '</small>' : "") + '</td>' +
+          '<td>' + esc(status.label) + '</td>' +
+          '<td>' + esc(String(quantity).replace(".", ",") + " " + (item.unit || "un.")) + '</td>' +
+          '<td>' + (item.due ? esc(fmtDate(item.due)) : "—") + '</td>' +
+          '<td class="num">' + (num(item.cost) ? money(item.cost) : "—") + '</td>' +
+          '<td class="num">' + (num(item.paid) ? money(item.paid) : "—") + '</td></tr>';
+      }).join("");
+      return '<section><div class="stage-head"><h2>' + stage.icon + " " + esc(stage.name) + '</h2><span>' +
+        items.filter((item) => item.status === "done").length + "/" + items.length + " concluídos · " + money(planned) + " previsto · " + money(paid) +
+        '</span></div><table><thead><tr><th></th><th>Item</th><th>Status</th><th>Qtd.</th><th>Prazo</th><th class="num">Previsto</th><th class="num">Pago</th></tr></thead><tbody>' + rows + "</tbody></table></section>";
+    }).join("");
+
+    const html = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<title>Checklist da festa · ' + esc(meta.name) + '</title><style>' +
+      '*,*::before,*::after{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#20304b;max-width:1050px;margin:28px auto;padding:0 22px;line-height:1.4}' +
+      'header{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;padding-bottom:13px;border-bottom:3px solid #ffd447}h1{margin:0;color:#123a66;font-size:27px}header p{margin:3px 0 0;color:#68788e}.totals{text-align:right;font-size:11px}.totals b{display:block;color:#123a66;font-size:15px}' +
+      'section{margin-top:20px;break-inside:avoid-page}.stage-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid #d8e7f3}.stage-head h2{margin:0 0 5px;color:#123a66;font-size:17px}.stage-head span{color:#68788e;font-size:10px;font-weight:bold}' +
+      'table{width:100%;border-collapse:collapse}th,td{padding:6px 7px;border-bottom:1px solid #dfe7ef;text-align:left;vertical-align:top}th{color:#52627a;background:#f1f6fa;font-size:9px;text-transform:uppercase;letter-spacing:.05em}td.check{width:25px;color:#188647;font-size:16px;font-weight:bold}td.num,th.num{text-align:right;white-space:nowrap}td small{display:block;margin-top:2px;color:#68788e;font-size:9px}.done td strong{text-decoration:line-through;color:#637287}' +
+      '.note{margin-top:20px;color:#68788e;font-size:10px}.no-print{margin-top:20px;padding:10px;border-radius:8px;background:#eef6fd;color:#315a7e}' +
+      '@media print{body{max-width:none;margin:0;padding:0}.no-print{display:none}section{break-inside:auto}.stage-head{break-after:avoid}thead{display:table-header-group}tr{break-inside:avoid}}@page{size:A4 landscape;margin:10mm}' +
+      '</style></head><body><header><div><h1>Checklist da festa do ' + esc(meta.name) + '</h1><p>' + esc(longDate(meta.date)) + (meta.time ? " · " + esc(meta.time.replace(":", "h")) : "") + " · " + esc(meta.location || "Local a definir") +
+      '</p><p>Gerado em ' + esc(generatedAt) + '</p></div><div class="totals"><b>' + s.done + "/" + s.total + " concluídos</b><span>Previsto: " + money(s.previsto) + " · Pago: " + money(s.pago) +
+      '</span></div></header>' + stageSections + '<p class="note">□ Use os quadrados para conferência manual durante a organização e no dia da festa.</p>' +
+      '<p class="no-print">Na janela de impressão, escolha “Salvar como PDF” ou selecione sua impressora.</p>' +
+      '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},250)})<\/script></body></html>';
+
+    report.document.open();
+    report.document.write(html);
+    report.document.close();
+    report.focus();
+  }
+
   function exportConfirmedPdf() {
     const report = window.open("", "_blank");
     if (!report) {
@@ -3615,6 +3678,7 @@
       renderCloudBar();
     });
     $("#exportPartyPdfBtn").addEventListener("click", exportPartyPdf);
+    $("#exportChecklistPdfBtn").addEventListener("click", exportChecklistPdf);
     $("#exportConfirmedPdfBtn").addEventListener("click", exportConfirmedPdf);
 
     /* Checklist */
