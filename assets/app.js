@@ -4295,6 +4295,21 @@
       .map((entry) => ({ item: assistantClone(entry.item), score: entry.score }));
   }
 
+  function assistantRevealGuest(id) {
+    const guest = guestById(id);
+    if (!guest) return { ok: false, error: "Convidado não encontrado." };
+    guestFilter = "all";
+    guestQuery = "";
+    saveGuestView();
+    const group = isHostGuest(guest) ? "parents" : guest.type === "child" ? "child" : "adult";
+    collapsedGuestGroups.delete(group);
+    saveGuestGroupsCollapsed();
+    const search = $("#guestSearch");
+    if (search) search.value = "";
+    showView("guests");
+    return { ok: true };
+  }
+
   function assistantAddGuest(raw) {
     const input = raw && typeof raw === "object" ? raw : {};
     const name = cleanGuestName(input.name || "");
@@ -4548,6 +4563,7 @@
     stats: assistantStats,
     findGuests: assistantFindGuests,
     findItems: assistantFindItems,
+    revealGuest: assistantRevealGuest,
     stages: () => stageList().map((stage) => ({ id: stage.id, name: stage.name, icon: stage.icon })),
     addGuest: assistantAddGuest,
     setGuestStatus: assistantSetGuestStatus,

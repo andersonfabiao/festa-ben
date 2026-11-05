@@ -552,7 +552,7 @@
     if (/^(convidado|convidada|adulto|adulta|crianca|menino|menina|pessoa)$/.test(norm(rest))) {
       rest = "";
     }
-    return { name: rest, type: type || "adult", guardianName, phone };
+    return { name: rest, type, guardianName, phone };
   }
 
   function parseItemAdd(raw) {
@@ -849,12 +849,17 @@
   function addGuestAction(parsed) {
     const name = String(parsed.name || "").trim();
     if (!name) {
-      awaiting = { kind: "guest-name", type: parsed.type || "adult" };
+      awaiting = { kind: "guest-name", parsed: { ...parsed } };
       bot(
-        "Qual é o nome do " +
-          (parsed.type === "child" ? "criança" : "convidado") +
+        "Qual é o nome " +
+          (parsed.type === "child" ? "da criança" : parsed.type === "adult" ? "do adulto" : "do convidado") +
           "?\n\nVocê pode responder só o nome."
       );
+      return;
+    }
+
+    if (!parsed.type) {
+      askGuestType({ ...parsed, name });
       return;
     }
 
@@ -886,6 +891,20 @@
     createGuest({ ...parsed, name, guardians: [], relation: "" });
   }
 
+  function askGuestType(parsed) {
+    bot("“" + parsed.name + "” é adulto ou criança?", [
+      {
+        label: "🧑 Adulto",
+        primary: true,
+        onClick: () => addGuestAction({ ...parsed, type: "adult" }),
+      },
+      {
+        label: "🧒 Criança",
+        onClick: () => addGuestAction({ ...parsed, type: "child" }),
+      },
+    ]);
+  }
+
   function createGuest(parsed) {
     const result = api.addGuest({
       name: parsed.name,
@@ -898,12 +917,13 @@
       bot(result.error || "Não consegui adicionar este convidado.");
       return;
     }
+    api.revealGuest(result.guest.id);
     finishAction(
       "Adicionei " +
         displayName(result.guest) +
         " como " +
         guestType(result.guest) +
-        "." +
+        ". A aba Convidados foi aberta e o grupo correto está expandido." +
         (result.guest.type === "child" && !(result.guest.guardians || []).length
           ? "\nSem responsável vinculado; você pode ajustar em Convidados."
           : "")
@@ -932,7 +952,13 @@
     if (!current) return;
     if (current.kind === "guest-name") {
       const parsed = parseGuestAdd(raw);
-      createGuest({ ...parsed, type: current.type || parsed.type, guardians: [] });
+      addGuestAction({
+        ...(current.parsed || {}),
+        ...parsed,
+        name: parsed.name,
+        type: parsed.type || (current.parsed && current.parsed.type) || null,
+        guardians: [],
+      });
       return;
     }
     if (current.kind === "item-title") {
