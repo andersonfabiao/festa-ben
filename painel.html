@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261104p19" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261104p20" />
 </head>
 <body>
   <header class="hero">
@@ -64,7 +64,6 @@
     <section id="view-checklist" class="view" aria-label="Checklist">
       <div class="section-head">
         <div><h2>Checklist</h2><p class="muted">Acompanhe o andamento de cada etapa da festa.</p></div>
-        <div class="head-actions"><button class="btn btn-ghost" id="exportChecklistPdfBtn" type="button">📄 PDF do checklist</button></div>
       </div>
       <div id="checklistStats" class="stat-grid small"></div>
       <div class="checklist-progress-card">
@@ -95,6 +94,7 @@
         <button class="btn btn-ghost btn-sm" id="expandStagesBtn" type="button">Expandir todas</button>
         <button class="btn btn-ghost btn-sm" id="collapseStagesBtn" type="button">Recolher todas</button>
         <button class="btn btn-ghost" id="editStageNamesBtn" type="button">✏️ Editar nomes das etapas</button>
+        <button class="btn btn-cloud" id="exportChecklistPdfBtn" type="button">📄 Exportar checklist em PDF</button>
         <button class="btn btn-ghost" id="importChecklistBtn" type="button">📥 Importar CSV</button>
         <button class="btn btn-primary" id="addItemBtn" type="button">＋ Novo item</button>
       </div>
@@ -408,6 +408,10 @@
         <label class="field-label">Observações
           <textarea id="itemNotes" class="input" rows="3" maxlength="500" placeholder="Detalhes, medidas, combinados…"></textarea>
         </label>
+        <section class="subtask-editor" aria-labelledby="subtasksTitle">
+          <div class="payment-editor-head"><div><h3 id="subtasksTitle">Subitens</h3><p class="hint">Use para etapas menores que também precisam ser conferidas.</p></div><button class="btn btn-ghost btn-sm" id="addSubtaskBtn" type="button">＋ Adicionar subitem</button></div>
+          <div id="subtaskRows" class="subtask-editor-rows"></div>
+        </section>
         <div class="modal-actions">
           <button type="button" class="btn btn-danger-ghost" id="deleteItemBtn" hidden>Excluir</button>
           <span class="spacer"></span>
@@ -628,8 +632,8 @@
         <section class="import-guide" aria-labelledby="checklistCsvGuideTitle">
           <h3 id="checklistCsvGuideTitle">Padrão do arquivo CSV</h3>
           <p>Use ponto e vírgula entre as colunas. A primeira linha deve conter:</p>
-          <code>etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;link;observacoes</code>
-          <p class="hint"><b>status:</b> a_fazer, em_andamento, contratado ou concluido · <b>vencimento:</b> AAAA-MM-DD. Apenas <b>item</b> é obrigatório.</p>
+          <code>etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;link;observacoes;subitens</code>
+          <p class="hint"><b>status:</b> a_fazer, em_andamento, contratado ou concluido · <b>vencimento:</b> AAAA-MM-DD · separe os <b>subitens</b> com |. Apenas <b>item</b> é obrigatório.</p>
           <div class="import-guide-actions">
             <button class="btn btn-ghost btn-sm" type="button" id="downloadChecklistCsvBtn">⬇️ Baixar modelo CSV</button>
             <button class="btn btn-cloud btn-sm" type="button" id="chooseChecklistCsvBtn">📂 Escolher arquivo CSV</button>
@@ -746,6 +750,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261104p23"></script>
+  <script src="assets/app.js?v=20261104p24"></script>
 </body>
 </html>

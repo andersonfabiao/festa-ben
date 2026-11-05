@@ -690,6 +690,15 @@ textarea.input { resize: vertical; min-height: 78px; }
 .payment-row .field-label { min-width:0; font-size:.7rem; }
 .payment-row .input { min-width:0; padding:9px 10px; }
 .payment-empty { padding:10px; border:1px dashed #cbdced; border-radius:12px; color:var(--muted); text-align:center; font-size:.78rem; font-weight:700; }
+.subtask-editor { margin:14px 0; padding:14px; border:1px solid #d8e5f1; border-radius:16px; background:#fbfdff; }
+.subtask-editor-rows { display:grid; gap:8px; }
+.subtask-editor-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; }
+.subtask-editor-row input[type="checkbox"] { width:19px; height:19px; accent-color:var(--green); }
+.item-subtasks { display:grid; gap:5px; margin:8px 0 0; padding:8px 10px; border-radius:11px; background:#f4f8fc; }
+.item-subtask { display:flex; align-items:flex-start; gap:7px; color:#3e5873; font-size:.77rem; font-weight:700; }
+.item-subtask input { flex:none; width:16px; height:16px; margin-top:1px; accent-color:var(--green); }
+.item-subtask.is-done span { color:#75869a; text-decoration:line-through; }
+.subtask-progress { color:#39709d; font-size:.7rem; font-weight:900; }
 
 .item {
   display: grid;
@@ -1990,6 +1999,7 @@ body.no-scroll { overflow: hidden; }
   .payment-row { grid-template-columns:1fr 1fr; padding:10px; border:1px solid #dce8f3; border-radius:12px; background:#fff; }
   .payment-row .field-label:nth-child(4) { grid-column:1 / -1; }
   .payment-row .icon-btn { justify-self:end; }
+  .subtask-editor-row { grid-template-columns:auto minmax(0,1fr) auto; }
 
   .section-head h2 { font-size: 1.4rem; }
   .head-actions { width: 100%; }

@@ -517,6 +517,9 @@
         due: /^\d{4}-\d{2}-\d{2}$/.test(i.due) ? i.due : "",
         link: String(i.link || ""),
         notes: String(i.notes || "").slice(0, 1000),
+        subtasks: (Array.isArray(i.subtasks) ? i.subtasks : [])
+          .filter((subtask) => subtask && typeof subtask === "object" && String(subtask.title || "").trim())
+          .map((subtask) => ({ id: String(subtask.id || uid()), title: String(subtask.title).trim().slice(0, 160), done: subtask.done === true })),
         createdAt: i.createdAt || nowISO(),
       }))
       .map((item) => {
@@ -572,6 +575,7 @@
   let guestQuery = "";
   let selectedGuestIds = new Set();
   let editingPayments = [];
+  let editingSubtasks = [];
   let checklistAlertFilter = "";
   let bulkInviteQueue = [];
   let bulkInviteIndex = 0;
@@ -911,6 +915,14 @@
     const overdue = item.due && item.due < todayISO() && !isDone;
     const fullyPaid = num(item.cost) > 0 && num(item.paid) >= num(item.cost);
     const link = safeUrl(item.link);
+    const subtasks = Array.isArray(item.subtasks) ? item.subtasks : [];
+    const completedSubtasks = subtasks.filter((subtask) => subtask.done).length;
+    const subtaskHtml = subtasks.length
+      ? '<div class="item-subtasks"><span class="subtask-progress">' + completedSubtasks + "/" + subtasks.length + ' subitens concluídos</span>' +
+        subtasks.map((subtask) => '<label class="item-subtask' + (subtask.done ? " is-done" : "") + '">' +
+          '<input type="checkbox" data-subtask-check="' + esc(item.id) + '" data-subtask-id="' + esc(subtask.id) + '"' + (subtask.done ? " checked" : "") +
+          ' aria-label="Marcar subitem ' + esc(subtask.title) + '"><span>' + esc(subtask.title) + "</span></label>").join("") + "</div>"
+      : "";
 
     const metaBits = [];
     if (item.supplier) metaBits.push("<span>🏷️ " + esc(item.supplier) + "</span>");
@@ -942,6 +954,7 @@
           "</div>" +
           (metaBits.length ? '<div class="item-meta">' + metaBits.join("") + "</div>" : "") +
           (item.notes ? '<p class="item-notes">' + esc(item.notes) + "</p>" : "") +
+          subtaskHtml +
         "</div>" +
         '<div class="item-side">' +
           '<div class="item-money">' +
@@ -1145,7 +1158,10 @@
           const due = item.due ? longDate(item.due) : "—";
           const quantity = Math.max(0.01, Number(item.quantity) || 1);
           const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
-          return '<tr><td>' + esc(item.title) + '</td><td>' + esc(stage.name) +
+          const subtasks = Array.isArray(item.subtasks) && item.subtasks.length
+            ? '<small>' + item.subtasks.map((subtask) => (subtask.done ? "✓ " : "□ ") + esc(subtask.title)).join("<br>") + "</small>"
+            : "";
+          return '<tr><td>' + esc(item.title) + subtasks + '</td><td>' + esc(stage.name) +
             '</td><td>' + esc(status.label) + '</td><td>' + esc(String(quantity).replace(".", ",") + " " + (item.unit || "un.")) + '</td><td>' + money(unitPrice) + '</td><td>' + money(item.cost) +
             '</td><td>' + money(item.paid) + '</td><td>' + due + '</td></tr>';
         }).join("")
@@ -1226,9 +1242,12 @@
           item.supplier ? "Fornecedor: " + item.supplier : "",
           item.notes || "",
         ].filter(Boolean).join(" · ");
+        const subtasks = Array.isArray(item.subtasks) && item.subtasks.length
+          ? '<ul class="subtasks">' + item.subtasks.map((subtask) => '<li>' + (subtask.done ? "☑" : "☐") + " " + esc(subtask.title) + "</li>").join("") + "</ul>"
+          : "";
         return '<tr class="' + (item.status === "done" ? "done" : "") + '">' +
           '<td class="check">' + (item.status === "done" ? "✓" : "□") + '</td>' +
-          '<td><strong>' + esc(item.title) + '</strong>' + (detail ? '<small>' + esc(detail) + '</small>' : "") + '</td>' +
+          '<td><strong>' + esc(item.title) + '</strong>' + (detail ? '<small>' + esc(detail) + '</small>' : "") + subtasks + '</td>' +
           '<td>' + esc(status.label) + '</td>' +
           '<td>' + esc(String(quantity).replace(".", ",") + " " + (item.unit || "un.")) + '</td>' +
           '<td>' + (item.due ? esc(fmtDate(item.due)) : "—") + '</td>' +
@@ -1245,7 +1264,7 @@
       '*,*::before,*::after{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#20304b;max-width:1050px;margin:28px auto;padding:0 22px;line-height:1.4}' +
       'header{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;padding-bottom:13px;border-bottom:3px solid #ffd447}h1{margin:0;color:#123a66;font-size:27px}header p{margin:3px 0 0;color:#68788e}.totals{text-align:right;font-size:11px}.totals b{display:block;color:#123a66;font-size:15px}' +
       'section{margin-top:20px;break-inside:avoid-page}.stage-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid #d8e7f3}.stage-head h2{margin:0 0 5px;color:#123a66;font-size:17px}.stage-head span{color:#68788e;font-size:10px;font-weight:bold}' +
-      'table{width:100%;border-collapse:collapse}th,td{padding:6px 7px;border-bottom:1px solid #dfe7ef;text-align:left;vertical-align:top}th{color:#52627a;background:#f1f6fa;font-size:9px;text-transform:uppercase;letter-spacing:.05em}td.check{width:25px;color:#188647;font-size:16px;font-weight:bold}td.num,th.num{text-align:right;white-space:nowrap}td small{display:block;margin-top:2px;color:#68788e;font-size:9px}.done td strong{text-decoration:line-through;color:#637287}' +
+      'table{width:100%;border-collapse:collapse}th,td{padding:6px 7px;border-bottom:1px solid #dfe7ef;text-align:left;vertical-align:top}th{color:#52627a;background:#f1f6fa;font-size:9px;text-transform:uppercase;letter-spacing:.05em}td.check{width:25px;color:#188647;font-size:16px;font-weight:bold}td.num,th.num{text-align:right;white-space:nowrap}td small{display:block;margin-top:2px;color:#68788e;font-size:9px}.subtasks{display:grid;gap:2px;margin:5px 0 0;padding:5px 8px;list-style:none;border-left:2px solid #b8cee2;color:#38536f;font-size:9px}.done td strong{text-decoration:line-through;color:#637287}' +
       '.note{margin-top:20px;color:#68788e;font-size:10px}.no-print{margin-top:20px;padding:10px;border-radius:8px;background:#eef6fd;color:#315a7e}' +
       '@media print{body{max-width:none;margin:0;padding:0}.no-print{display:none}section{break-inside:auto}.stage-head{break-after:avoid}thead{display:table-header-group}tr{break-inside:avoid}}@page{size:A4 landscape;margin:10mm}' +
       '</style></head><body><header><div><h1>Checklist da festa do ' + esc(meta.name) + '</h1><p>' + esc(longDate(meta.date)) + (meta.time ? " · " + esc(meta.time.replace(":", "h")) : "") + " · " + esc(meta.location || "Local a definir") +
@@ -2349,6 +2368,36 @@
     if (last) last.querySelector('[data-payment-field="amount"]').focus();
   }
 
+  function renderSubtaskRows() {
+    const wrap = $("#subtaskRows");
+    if (!wrap) return;
+    wrap.innerHTML = editingSubtasks.length
+      ? editingSubtasks.map((subtask) => '<div class="subtask-editor-row" data-subtask-row="' + esc(subtask.id) + '">' +
+          '<input type="checkbox" data-subtask-field="done"' + (subtask.done ? " checked" : "") + ' aria-label="Subitem concluído">' +
+          '<input class="input" maxlength="160" data-subtask-field="title" value="' + esc(subtask.title) + '" placeholder="Ex.: Separar 10 caixas">' +
+          '<button class="icon-btn" type="button" data-subtask-remove="' + esc(subtask.id) + '" aria-label="Remover subitem">🗑</button>' +
+        "</div>").join("")
+      : '<div class="payment-empty">Nenhum subitem. Adicione apenas quando a tarefa tiver etapas menores.</div>';
+  }
+
+  function collectSubtasksFromRows() {
+    editingSubtasks = $$("#subtaskRows [data-subtask-row]").map((row) => ({
+      id: row.dataset.subtaskRow,
+      title: row.querySelector('[data-subtask-field="title"]').value.trim().slice(0, 160),
+      done: row.querySelector('[data-subtask-field="done"]').checked,
+    })).filter((subtask) => subtask.title);
+    return editingSubtasks;
+  }
+
+  function addSubtaskRow() {
+    collectSubtasksFromRows();
+    editingSubtasks.push({ id: uid(), title: "", done: false });
+    renderSubtaskRows();
+    const rows = $$("#subtaskRows [data-subtask-row]");
+    const last = rows[rows.length - 1];
+    if (last) last.querySelector('[data-subtask-field="title"]').focus();
+  }
+
   function openItemModal(id, preferredStage) {
     const form = $("#itemForm");
     form.reset();
@@ -2376,6 +2425,8 @@
       $("#itemSupplier").value = item.supplier || "";
       $("#itemLink").value = item.link || "";
       $("#itemNotes").value = item.notes || "";
+      editingSubtasks = (Array.isArray(item.subtasks) ? item.subtasks : []).map((subtask) => Object.assign({}, subtask));
+      renderSubtaskRows();
       $("#itemModalTitle").textContent = "Editar item";
       $("#deleteItemBtn").hidden = false;
     } else {
@@ -2389,6 +2440,8 @@
       $("#itemDue").value = "";
       editingPayments = [];
       renderPaymentRows();
+      editingSubtasks = [];
+      renderSubtaskRows();
       if (preferredStage) {
         collapsed.delete(preferredStage);
         saveCollapsed();
@@ -2423,6 +2476,7 @@
       due: $("#itemDue").value,
       link: $("#itemLink").value.trim(),
       notes: $("#itemNotes").value.trim(),
+      subtasks: collectSubtasksFromRows(),
     };
 
     const id = $("#itemId").value;
@@ -3455,6 +3509,7 @@
         payments: paid ? [{ id: uid(), amount: paid, date: "", method: "", note: "Valor importado do CSV" }] : [],
         supplier: String(row.fornecedor || row.loja || "").trim().slice(0, 120), due,
         link: safeUrl(row.link || row.url || ""), notes: String(row.observacoes || row.observacao || row.notes || "").trim().slice(0, 1000),
+        subtasks: String(row.subitens || row.subtarefas || "").split("|").map((title) => title.trim()).filter(Boolean).map((title) => ({ id: uid(), title: title.slice(0, 160), done: false })),
         createdAt: nowISO(),
       });
     });
@@ -3607,6 +3662,14 @@
       editingPayments = editingPayments.filter((payment) => payment.id !== remove.dataset.paymentRemove);
       renderPaymentRows();
     });
+    $("#addSubtaskBtn").addEventListener("click", addSubtaskRow);
+    $("#subtaskRows").addEventListener("click", (event) => {
+      const remove = event.target.closest("[data-subtask-remove]");
+      if (!remove) return;
+      collectSubtasksFromRows();
+      editingSubtasks = editingSubtasks.filter((subtask) => subtask.id !== remove.dataset.subtaskRemove);
+      renderSubtaskRows();
+    });
     $("#editStageNamesBtn").addEventListener("click", () => openSettings(true));
     // Não repasse o evento de clique/toque para openSettings. Em celulares, o
     // evento era interpretado como `focusStageNames = true`, deslocando o modal
@@ -3683,6 +3746,19 @@
 
     /* Checklist */
     $("#checklist").addEventListener("change", (event) => {
+      const subtaskCheck = event.target.closest("[data-subtask-check]");
+      if (subtaskCheck) {
+        const item = state.items.find((candidate) => candidate.id === subtaskCheck.dataset.subtaskCheck);
+        const subtask = item && Array.isArray(item.subtasks)
+          ? item.subtasks.find((candidate) => candidate.id === subtaskCheck.dataset.subtaskId)
+          : null;
+        if (!subtask) return;
+        subtask.done = subtaskCheck.checked;
+        addActivity("update", (subtask.done ? "Subitem concluído: " : "Subitem reaberto: ") + subtask.title);
+        touch();
+        renderAll();
+        return;
+      }
       const check = event.target.closest("[data-check]");
       if (check) {
         const item = state.items.find((i) => i.id === check.dataset.check);
@@ -3735,6 +3811,7 @@
         copy.status = "todo";
         copy.paid = 0;
         copy.payments = [];
+        copy.subtasks = (copy.subtasks || []).map((subtask) => Object.assign({}, subtask, { id: uid(), done: false }));
         copy.createdAt = nowISO();
         state.items.push(copy);
         addActivity("update", "Item duplicado: " + original.title);
@@ -3965,9 +4042,9 @@
     $("#downloadChecklistCsvBtn").addEventListener("click", () => downloadCsvTemplate(
       "modelo-checklist-ben.csv",
       [
-        "etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;link;observacoes",
-        "Lembrancinhas;Sacolinhas Toy Story;a_fazer;25;unidade;12,50;100,00;2026-12-15;Loja Exemplo;;Confirmar cores",
-        "Comida & Bolo;Bolo principal;contratado;1;unidade;450,00;200,00;2027-01-05;Confeitaria Exemplo;;",
+        "etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;link;observacoes;subitens",
+        "Lembrancinhas;Sacolinhas Toy Story;a_fazer;25;unidade;12,50;100,00;2026-12-15;Loja Exemplo;;Confirmar cores;Comprar sacolas|Separar brindes|Montar kits",
+        "Comida & Bolo;Bolo principal;contratado;1;unidade;450,00;200,00;2027-01-05;Confeitaria Exemplo;;;Confirmar sabor|Confirmar entrega",
       ]
     ));
     $("#checklistImportFile").addEventListener("change", (event) => {
