@@ -797,15 +797,15 @@
   }
 
   function showGuestInfo(guest, includePhone) {
+    const allGuests = api.snapshot().guests;
     const guardians = (guest.guardians || [])
       .map((id) => {
-        const match = api.findGuests(id).find((entry) => entry.guest.id === id);
-        return match ? displayName(match.guest) : "";
+        const match = allGuests.find((candidate) => candidate.id === id);
+        return match ? displayName(match) : "";
       })
       .filter(Boolean);
-    const children = api
-      .snapshot()
-      .guests.filter((candidate) => (candidate.guardians || []).includes(guest.id))
+    const children = allGuests
+      .filter((candidate) => (candidate.guardians || []).includes(guest.id))
       .map((candidate) => candidate.name);
     const lines = [
       displayName(guest) + (isHost(guest) ? " (anfitrião)" : ""),
@@ -1311,10 +1311,11 @@
         .trim();
       if (query) {
         resolveGuest(query, (guest) => {
+          const allGuests = api.snapshot().guests;
           const guardians = (guest.guardians || [])
-            .map((id) => api.findGuests(id).find((entry) => entry.guest.id === id))
+            .map((id) => allGuests.find((candidate) => candidate.id === id))
             .filter(Boolean)
-            .map((entry) => displayName(entry.guest));
+            .map(displayName);
           bot(
             guardians.length
               ? "Responsável por " + guest.name + ": " + guardians.join(", ") + "."
