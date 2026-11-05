@@ -4351,7 +4351,29 @@
     ).join("");
   }
 
+  async function checkForAppUpdate() {
+    if (!/^https?:$/.test(location.protocol) || /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return;
+    const current = document.querySelector('meta[name="app-version"]');
+    if (!current || !current.content) return;
+    try {
+      const checkUrl = new URL("painel.html", location.href);
+      checkUrl.searchParams.set("_check", Date.now().toString());
+      const response = await fetch(checkUrl.href, { cache: "no-store" });
+      if (!response.ok) return;
+      const html = await response.text();
+      const documentCopy = new DOMParser().parseFromString(html, "text/html");
+      const remote = documentCopy.querySelector('meta[name="app-version"]');
+      if (!remote || !remote.content || remote.content === current.content) return;
+      const nextUrl = new URL(location.href);
+      nextUrl.searchParams.set("versao", remote.content);
+      location.replace(nextUrl.href);
+    } catch (e) {
+      /* A checagem é auxiliar; o painel continua funcionando mesmo sem rede. */
+    }
+  }
+
   function init() {
+    checkForAppUpdate();
     if (cloud.pending) dirty = true;
     loadGuestView();
     loadHiddenValues();
