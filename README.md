@@ -23,8 +23,23 @@ Projeto com duas áreas: convite público para os convidados e painel de organiz
 - **Sincronização com repositório GitHub privado separado** para abrir o painel em qualquer aparelho sem publicar dados pessoais.
 - **Status da sincronização** — aparece em destaque logo abaixo da contagem regressiva, com ações para carregar e salvar na nuvem.
 - **Exportar/importar JSON** para backup e **impressão** (útil para gerar um PDF).
+- **Buzz, assistente do Ben** — botão de chat no painel para perguntar e pedir ações em português, sem custo e sem enviar dados para fora do aparelho.
 
 Uma primeira abertura sem configuração começa vazia, evitando que dados demonstrativos sejam confundidos com informações reais.
+
+## Assistente Buzz (local)
+
+O botão **Buzz** aparece no canto inferior direito apenas do painel (`painel.html`), nunca no convite público. Ele conversa em português, consulta os dados reais do painel e executa ações simples usando as mesmas regras e validações da interface. Não usa chave de API nem serviços externos: todo o processamento acontece no navegador.
+
+Exemplos do que ele entende:
+
+- **Consultas:** “quantos confirmados?”, “quem ainda não confirmou?”, “qual o saldo?”, “o que falta no checklist?”, “quais os subitens do bolo?”, “quando é a festa?”
+- **Convidados:** “adicionar convidado João”, “adicionar criança Lia, filha de João”, “marcar João como confirmado”, “marcar Lia como não vai”.
+- **Checklist:** “criar item bolo na etapa comida”, “adicionar subitem separar caixas em bolo”, “marcar bolo como feito”, “marcar subitem separar caixas como feito”.
+- **Orçamento:** “mudar orçamento para 8.000”, “quanto já pagamos?”, “maiores gastos”.
+- **Navegação e nuvem:** “abrir convidados”, “salvar na nuvem”, “baixar da nuvem”, “atualizar respostas”.
+
+Ações destrutivas (excluir convidados ou itens) pedem confirmação antes de executar. As demais alterações mostram **Desfazer**, que reverte a última ação do Buzz. O assistente não lê nem altera nada fora deste navegador; quando a nuvem está configurada, as mudanças entram no próximo salvamento como qualquer outra edição do painel.
 
 ## Usar agora
 
@@ -36,7 +51,7 @@ Uma primeira abertura sem configuração começa vazia, evitando que dados demon
 1. Crie um repositório no GitHub, por exemplo `festa-ben` (pode ser público).
 2. Envie estes arquivos para a branch `main`:
    - `index.html`, `painel.html`, `convite.html`, `convite-animado.html`, `event.json`
-   - `assets/styles.css`, `assets/app.js`, `assets/convite.js`, `assets/convite-dados.js`, `assets/convite-animado.css`, `assets/convite-animado.js`, `assets/guest-id.js`
+   - `assets/styles.css`, `assets/app.js`, `assets/assistente.js`, `assets/convite.js`, `assets/convite-dados.js`, `assets/convite-animado.css`, `assets/convite-animado.js`, `assets/guest-id.js`
    - `README.md`, `.nojekyll`
 3. No repositório, abra **Settings → Pages**.
 4. Em **Build and deployment**, escolha **Deploy from a branch**.

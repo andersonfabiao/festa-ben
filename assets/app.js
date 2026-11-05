@@ -4200,6 +4200,382 @@
     });
   }
 
+  /* ---------- API do assistente local (Buzz) ---------- */
+  /* O assistente conversa apenas neste navegador. Ele usa as mesmas regras
+     de dados do painel e nunca envia nada para fora. */
+
+  let assistantUndo = null;
+
+  function assistantClone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function assistantScore(value, query) {
+    const text = norm(value);
+    const q = norm(query);
+    if (!text || !q) return 0;
+    if (text === q) return 100;
+    if (text.startsWith(q)) return 80 + Math.min(10, q.length);
+    if (text.includes(q)) return 60 + Math.min(10, q.length);
+    const tokens = q.split(/\s+/).filter((token) => token.length > 1);
+    if (!tokens.length) return 0;
+    const hits = tokens.filter((token) => text.includes(token)).length;
+    return hits ? 20 + Math.round((40 * hits) / tokens.length) : 0;
+  }
+
+  function assistantSnapshot() {
+    return {
+      meta: assistantClone(state.meta),
+      guests: state.guests.map((guest) => assistantClone(guest)),
+      items: state.items.map((item) => assistantClone(item)),
+    };
+  }
+
+  function assistantStats() {
+    const countable = countableGuests(state.guests);
+    const s = summary();
+    const today = todayISO();
+    return {
+      guests: {
+        total: countable.length,
+        adults: countable.filter((guest) => guest.type === "adult").length,
+        children: countable.filter((guest) => guest.type === "child").length,
+        confirmed: countable.filter((guest) => guest.status === "confirmed").length,
+        pending: countable.filter((guest) => guest.status === "pending").length,
+        declined: countable.filter((guest) => guest.status === "declined").length,
+        parents: state.guests.filter(isHostGuest).length,
+        withPhone: countable.filter((guest) => phoneDigits(guest.phone)).length,
+        invitesSent: countable.filter((guest) => guest.inviteSentAt).length,
+      },
+      checklist: {
+        total: s.total,
+        done: s.done,
+        pct: s.pct,
+        doing: state.items.filter((item) => item.status === "doing").length,
+        contracted: state.items.filter((item) => item.status === "contracted").length,
+        todo: state.items.filter((item) => item.status === "todo").length,
+        overdue: state.items.filter(
+          (item) => item.status !== "done" && item.due && item.due < today
+        ).length,
+      },
+      budget: {
+        budget: s.budget,
+        previsto: s.previsto,
+        pago: s.pago,
+        contratado: s.contratado,
+        aPagar: s.aPagar,
+        saldo: s.saldo,
+        saldoPrevisto: s.saldoPrevisto,
+      },
+    };
+  }
+
+  function assistantFindGuests(query) {
+    return state.guests
+      .map((guest) => ({
+        guest,
+        score: Math.max(
+          assistantScore(guest.name, query),
+          assistantScore(displayGuestName(guest), query),
+          assistantScore(guest.relation, query)
+        ),
+      }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score || a.guest.name.localeCompare(b.guest.name, "pt-BR"))
+      .slice(0, 8)
+      .map((entry) => ({ guest: assistantClone(entry.guest), score: entry.score }));
+  }
+
+  function assistantFindItems(query) {
+    return state.items
+      .map((item) => ({ item, score: assistantScore(item.title, query) }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title, "pt-BR"))
+      .slice(0, 8)
+      .map((entry) => ({ item: assistantClone(entry.item), score: entry.score }));
+  }
+
+  function assistantAddGuest(raw) {
+    const input = raw && typeof raw === "object" ? raw : {};
+    const name = cleanGuestName(input.name || "");
+    if (!name) return { ok: false, error: "Qual é o nome do convidado?" };
+    const type = input.type === "child" ? "child" : "adult";
+    const duplicate = state.guests.find(
+      (guest) => norm(guest.name) === norm(name) && guest.type === type
+    );
+    if (duplicate) {
+      return {
+        ok: false,
+        error:
+          '"' +
+          duplicate.name +
+          '" já está na lista como ' +
+          (type === "child" ? "criança" : "adulto") +
+          ".",
+        guest: assistantClone(duplicate),
+      };
+    }
+
+    const guardianIds = (Array.isArray(input.guardians) ? input.guardians : [])
+      .map(String)
+      .filter((id) => state.guests.some((guest) => guest.id === id && guest.type === "adult"));
+    const usedIds = new Set(state.guests.map((guest) => guest.id));
+    const record = makeGuestRecord(
+      {
+        name,
+        type,
+        status: GUEST_STATUS[input.status] ? input.status : "pending",
+        relation: input.relation || "",
+        phone: input.phone || "",
+        notes: input.notes || "",
+        guardians: guardianIds,
+      },
+      usedIds
+    );
+    if (!record) return { ok: false, error: "Não consegui criar este convidado." };
+
+    const before = JSON.stringify(state);
+    reviveGuest(record.id);
+    state.guests.push(record);
+    state.guests = normalizeGuestList(state.guests);
+    const saved = state.guests.find((guest) => guest.id === record.id) || record;
+    addActivity("guest", "Convidado adicionado: " + displayGuestName(saved));
+    touch();
+    renderAll();
+    assistantUndo = before;
+    return { ok: true, guest: assistantClone(saved) };
+  }
+
+  function assistantSetGuestStatus(id, status) {
+    const guest = guestById(id);
+    if (!guest) return { ok: false, error: "Convidado não encontrado." };
+    if (!GUEST_STATUS[status]) return { ok: false, error: "Status de convidado inválido." };
+
+    const before = JSON.stringify(state);
+    guest.status = status;
+    guest.rsvpAt = nowISO();
+    guest.rsvpSource = "owner";
+    addActivity(
+      "rsvp",
+      displayGuestName(guest) + ": " + (GUEST_STATUS[status] || GUEST_STATUS.pending).label
+    );
+    touch();
+    renderAll();
+    assistantUndo = before;
+    return { ok: true, guest: assistantClone(guest) };
+  }
+
+  function assistantRemoveGuest(id) {
+    const guest = guestById(id);
+    if (!guest) return { ok: false, error: "Convidado não encontrado." };
+
+    const before = JSON.stringify(state);
+    const name = displayGuestName(guest);
+    state.guests = state.guests.filter((candidate) => candidate.id !== guest.id);
+    state.guests.forEach((candidate) => {
+      if (candidate.type === "child" && Array.isArray(candidate.guardians)) {
+        candidate.guardians = candidate.guardians.filter((guardianId) => guardianId !== guest.id);
+      }
+    });
+    markGuestDeleted(guest.id);
+    addActivity("guest", "Convidado removido: " + name);
+    touch();
+    renderAll();
+    assistantUndo = before;
+    return { ok: true, guest: assistantClone(guest) };
+  }
+
+  function assistantAddItem(raw) {
+    const input = raw && typeof raw === "object" ? raw : {};
+    const title = String(input.title || "").replace(/\s+/g, " ").trim().slice(0, 140);
+    if (!title) return { ok: false, error: "Qual é o nome do item?" };
+
+    const stage = STAGES.some((candidate) => candidate.id === input.stage)
+      ? input.stage
+      : "planejamento";
+    const status = STATUS[input.status] ? input.status : "todo";
+    const quantity = Math.max(0.01, Number(input.quantity) || 1);
+    let unitPrice = parseMoney(input.unitPrice);
+    let cost = parseMoney(input.cost);
+    if (!cost && unitPrice) cost = Math.round(quantity * unitPrice * 100) / 100;
+    if (cost && !unitPrice) unitPrice = Math.round((cost / quantity) * 100) / 100;
+    const unit = ["un.", "pacote", "caixa", "cento", "pessoa", "kg", "litro"].includes(input.unit)
+      ? input.unit
+      : "un.";
+    const subtasks = (Array.isArray(input.subtasks) ? input.subtasks : [])
+      .map((subtask) =>
+        typeof subtask === "string"
+          ? { id: uid(), title: subtask.trim().slice(0, 160), done: false }
+          : subtask
+      )
+      .filter((subtask) => subtask && String(subtask.title || "").trim())
+      .map((subtask) => ({
+        id: String(subtask.id || uid()),
+        title: String(subtask.title).trim().slice(0, 160),
+        done: subtask.done === true,
+      }));
+
+    const before = JSON.stringify(state);
+    const item = {
+      id: uid(),
+      title,
+      stage,
+      status,
+      quantity,
+      unit,
+      unitPrice,
+      cost,
+      paid: 0,
+      payments: [],
+      supplier: String(input.supplier || "").trim().slice(0, 120),
+      due: /^\d{4}-\d{2}-\d{2}$/.test(input.due) ? input.due : "",
+      link: "",
+      notes: String(input.notes || "").slice(0, 1000),
+      subtasks,
+      createdAt: nowISO(),
+    };
+    state.items.push(item);
+    addActivity("update", "Item adicionado: " + title);
+    touch();
+    renderAll();
+    assistantUndo = before;
+    return { ok: true, item: assistantClone(item) };
+  }
+
+  function assistantSetItemStatus(id, status) {
+    const item = state.items.find((candidate) => candidate.id === id);
+    if (!item) return { ok: false, error: "Item não encontrado." };
+    if (!STATUS[status]) return { ok: false, error: "Status de item inválido." };
+
+    const before = JSON.stringify(state);
+    item.status = status;
+    addActivity(
+      "update",
+      (status === "done" ? "Item concluído: " : "Status atualizado: ") +
+        item.title +
+        " — " +
+        STATUS[status].label
+    );
+    touch();
+    renderAll();
+    assistantUndo = before;
+    return { ok: true, item: assistantClone(item) };
+  }
+
+  function assistantAddSubtask(itemId, title) {
+    const item = state.items.find((candidate) => candidate.id === itemId);
+    if (!item) return { ok: false, error: "Item não encontrado." };
+    const cleanTitle = String(title || "").replace(/\s+/g, " ").trim().slice(0, 160);
+    if (!cleanTitle) return { ok: false, error: "Qual é o nome do subitem?" };
+    if (!Array.isArray(item.subtasks)) item.subtasks = [];
+
+    const before = JSON.stringify(state);
+    const subtask = { id: uid(), title: cleanTitle, done: false };
+    item.subtasks.push(subtask);
+    addActivity("update", "Subitem adicionado em " + item.title + ": " + cleanTitle);
+    touch();
+    renderAll();
+    assistantUndo = before;
+    return { ok: true, item: assistantClone(item), subtask: assistantClone(subtask) };
+  }
+
+  function assistantSetSubtaskStatus(itemId, subtaskId, done) {
+    const item = state.items.find((candidate) => candidate.id === itemId);
+    const subtask =
+      item && Array.isArray(item.subtasks)
+        ? item.subtasks.find((candidate) => candidate.id === subtaskId)
+        : null;
+    if (!item || !subtask) return { ok: false, error: "Subitem não encontrado." };
+
+    const before = JSON.stringify(state);
+    subtask.done = done === true;
+    addActivity(
+      "update",
+      (subtask.done ? "Subitem concluído: " : "Subitem reaberto: ") +
+        subtask.title +
+        " (" +
+        item.title +
+        ")"
+    );
+    touch();
+    renderAll();
+    assistantUndo = before;
+    return { ok: true, item: assistantClone(item), subtask: assistantClone(subtask) };
+  }
+
+  function assistantRemoveItem(id) {
+    const item = state.items.find((candidate) => candidate.id === id);
+    if (!item) return { ok: false, error: "Item não encontrado." };
+
+    const before = JSON.stringify(state);
+    state.items = state.items.filter((candidate) => candidate.id !== id);
+    addActivity("update", "Item excluído: " + item.title);
+    touch();
+    renderAll();
+    assistantUndo = before;
+    return { ok: true, item: assistantClone(item) };
+  }
+
+  function assistantSetBudget(value) {
+    const before = JSON.stringify(state);
+    state.meta.budget = parseMoney(value);
+    addActivity("update", "Orçamento atualizado: " + money(state.meta.budget));
+    touch();
+    renderAll();
+    assistantUndo = before;
+    return { ok: true, budget: state.meta.budget };
+  }
+
+  function assistantRestoreUndo() {
+    if (!assistantUndo) return { ok: false, error: "Não há nenhuma alteração do Buzz para desfazer." };
+    let restored;
+    try {
+      restored = normalizeState(JSON.parse(assistantUndo));
+    } catch (e) {
+      restored = null;
+    }
+    if (!restored) return { ok: false, error: "Não consegui desfazer esta alteração." };
+    state = restored;
+    assistantUndo = null;
+    touch();
+    renderAll();
+    return { ok: true };
+  }
+
+  window.BenApp = {
+    version: "1.0",
+    snapshot: assistantSnapshot,
+    stats: assistantStats,
+    findGuests: assistantFindGuests,
+    findItems: assistantFindItems,
+    stages: () => stageList().map((stage) => ({ id: stage.id, name: stage.name, icon: stage.icon })),
+    addGuest: assistantAddGuest,
+    setGuestStatus: assistantSetGuestStatus,
+    removeGuest: assistantRemoveGuest,
+    addItem: assistantAddItem,
+    setItemStatus: assistantSetItemStatus,
+    addSubtask: assistantAddSubtask,
+    setSubtaskStatus: assistantSetSubtaskStatus,
+    removeItem: assistantRemoveItem,
+    setBudget: assistantSetBudget,
+    showView: (name) => {
+      showView(name);
+      return { ok: true };
+    },
+    canUndo: () => !!assistantUndo,
+    undo: assistantRestoreUndo,
+    cloudStatus: () => ({
+      configured: hasCloud(),
+      phase: cloudPhase,
+      error: cloudError,
+      pending: !!cloud.pending,
+      lastSync: cloud.lastSync || "",
+    }),
+    saveCloud: () => saveCloud(),
+    pullCloud: () => pullCloud(),
+    refreshResponses: () => refreshGuestResponses({ manual: true }),
+  };
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
