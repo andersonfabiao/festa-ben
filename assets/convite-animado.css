@@ -751,6 +751,37 @@ button { color: inherit; }
 .smoke-transition span:nth-child(9) { right: 12%; top: -9%; }
 .smoke-transition span:nth-child(10) { right: -12%; top: 18%; }
 
+.ben-voice-cue {
+  position: fixed;
+  z-index: 18;
+  left: 50%;
+  top: max(72px, calc(env(safe-area-inset-top) + 58px));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 205px;
+  padding: 9px 15px;
+  border: 2px solid rgba(255,255,255,.9);
+  border-radius: 999px;
+  color: #123f69;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 10px 28px rgba(20,72,108,.22);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -14px) scale(.94);
+  transition: opacity .35s ease, transform .45s cubic-bezier(.2,.8,.2,1), visibility .35s;
+}
+.ben-voice-cue > span:first-child { font-size: 1.35rem; }
+.ben-voice-cue > span:last-child { display: grid; line-height: 1.05; }
+.ben-voice-cue strong { font-family: "Baloo 2", sans-serif; font-size: .95rem; }
+.ben-voice-cue small { margin-top: 3px; color: #5d7890; font-size: .68rem; font-weight: 700; }
+.ben-voice-cue.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0) scale(1);
+}
+
 /* Queda do Buzz → carta de abertura. A fumaça começa concentrada na base,
    alcança o branco total e desaparece já sobre a próxima cena. */
 .is-prelude-transition .smoke-transition {
@@ -976,4 +1007,5 @@ button { color: inherit; }
   .is-final .gift-guide,
   .is-final .confirm-button,
   .is-final .confirm-note { opacity: 1; transform: none; translate: none; scale: 1; }
+  .ben-voice-cue { transition: none; }
 }

@@ -12,6 +12,8 @@
   const finalInvite = document.querySelector("#finalInvite");
   const revealVideo = document.querySelector("#revealVideo");
   const audio = document.querySelector("#themeAudio");
+  const benVoice = document.querySelector("#benVoiceAudio");
+  const benVoiceCue = document.querySelector("#benVoiceCue");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const audioStateKey = "ben-invite-audio";
 
@@ -29,6 +31,9 @@
   let navigatingToRsvp = false;
   let preludeFinishing = false;
   let startOpeningTheme = () => {};
+  let voiceTimer = 0;
+  let volumeFrame = 0;
+  const themeVolume = 0.62;
 
   const finishPrelude = () => {
     if (preludeFinishing || experience.classList.contains("is-prelude-complete")) return;
@@ -116,6 +121,53 @@
     timers = [];
   };
 
+  const setVoiceCue = (visible) => {
+    if (!benVoiceCue) return;
+    benVoiceCue.classList.toggle("is-visible", visible);
+    benVoiceCue.setAttribute("aria-hidden", String(!visible));
+  };
+
+  const fadeThemeTo = (target, duration = 650) => {
+    if (!audio) return;
+    cancelAnimationFrame(volumeFrame);
+    const initial = audio.volume;
+    const startedAt = performance.now();
+    const fade = (now) => {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      audio.volume = initial + ((target - initial) * progress);
+      if (progress < 1) volumeFrame = requestAnimationFrame(fade);
+    };
+    volumeFrame = requestAnimationFrame(fade);
+  };
+
+  const stopBenVoice = ({ restoreTheme = true } = {}) => {
+    window.clearTimeout(voiceTimer);
+    if (benVoice && !benVoice.paused) benVoice.pause();
+    if (benVoice) benVoice.currentTime = 0;
+    setVoiceCue(false);
+    if (restoreTheme && soundEnabled && !audio.paused) fadeThemeTo(themeVolume, 700);
+  };
+
+  const playBenVoice = async () => {
+    if (!soundEnabled || !benVoice || experience.classList.contains("is-departing")) return;
+    setVoiceCue(true);
+    fadeThemeTo(0.11, 700);
+    benVoice.currentTime = 0;
+    benVoice.volume = 0.96;
+    benVoice.muted = false;
+    try {
+      await benVoice.play();
+    } catch {
+      setVoiceCue(false);
+      fadeThemeTo(themeVolume, 550);
+    }
+  };
+
+  const scheduleBenVoice = (delay = 1250) => {
+    window.clearTimeout(voiceTimer);
+    voiceTimer = window.setTimeout(playBenVoice, delay);
+  };
+
   const later = (callback, delay) => {
     timers.push(window.setTimeout(callback, delay));
   };
@@ -179,17 +231,20 @@
 
   const showFinal = () => {
     clearTimers();
+    stopBenVoice({ restoreTheme: true });
     experience.classList.remove("is-between-scenes");
     setScene("final");
   };
 
   const runAnimation = ({ restartAudio = false } = {}) => {
     clearTimers();
+    stopBenVoice({ restoreTheme: false });
     experience.classList.add("is-started");
 
     if (reduceMotion.matches) {
       setScene("final");
       playAudio(restartAudio);
+      scheduleBenVoice(900);
       return;
     }
 
@@ -200,7 +255,10 @@
     }
     playAudio(restartAudio);
     later(() => experience.classList.add("is-between-scenes"), 6000);
-    later(() => setScene("final"), 6550);
+    later(() => {
+      setScene("final");
+      scheduleBenVoice();
+    }, 6550);
     later(() => experience.classList.remove("is-between-scenes"), 7400);
   };
 
@@ -211,6 +269,8 @@
   soundButton.addEventListener("click", () => {
     soundEnabled = !soundEnabled;
     audio.muted = !soundEnabled;
+    if (benVoice) benVoice.muted = !soundEnabled;
+    if (!soundEnabled) stopBenVoice({ restoreTheme: false });
     updateSoundButton();
     if (soundEnabled && audio.paused) playAudio(false);
     saveAudioState();
@@ -220,6 +280,7 @@
     event.preventDefault();
     if (navigatingToRsvp) return;
     navigatingToRsvp = true;
+    stopBenVoice({ restoreTheme: false });
     saveAudioState();
     const destination = confirmButton.href;
     if (reduceMotion.matches) {
@@ -237,6 +298,13 @@
     soundEnabled = false;
     updateSoundButton();
   });
+
+  if (benVoice) {
+    benVoice.addEventListener("ended", () => {
+      setVoiceCue(false);
+      if (soundEnabled && !audio.paused) fadeThemeTo(themeVolume, 900);
+    });
+  }
 
   reduceMotion.addEventListener?.("change", (event) => {
     if (event.matches && experience.classList.contains("is-started")) showFinal();
