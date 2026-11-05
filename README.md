@@ -23,6 +23,7 @@ Projeto com duas áreas: convite público para os convidados e painel de organiz
 - **Sincronização com repositório GitHub privado separado** para abrir o painel em qualquer aparelho sem publicar dados pessoais.
 - **Status da sincronização** — aparece em destaque logo abaixo da contagem regressiva, com ações para carregar e salvar na nuvem.
 - **Proteção e recuperação** — backup JSON completo acessível no topo, importação para outro aparelho, verificação de integridade e até 3 cópias locais automáticas antes de carregar, importar ou apagar dados.
+- **Modo dia da festa** — visão simplificada para celular com prioridades, confirmações, tarefas marcáveis, contatos dos pais, mapa e saldos de fornecedores.
 - **Buzz, assistente do Ben** — botão de chat no painel para perguntar e pedir ações em português, sem custo e sem enviar dados para fora do aparelho.
 
 Uma primeira abertura sem configuração começa vazia, evitando que dados demonstrativos sejam confundidos com informações reais.

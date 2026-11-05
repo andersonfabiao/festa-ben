@@ -37,6 +37,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.skip-link {
+  position:fixed; left:12px; top:10px; z-index:9999; padding:9px 13px; border-radius:10px;
+  background:var(--navy); color:#fff; font-weight:800; transform:translateY(-150%);
+}
+.skip-link:focus { transform:translateY(0); }
+
 h1, h2, h3, .display {
   font-family: "Baloo 2", "Nunito", ui-sans-serif, system-ui, sans-serif;
   color: var(--navy);
@@ -3121,6 +3127,49 @@ body.no-scroll { overflow: hidden; }
   .rsvp-cloud { translate: none; }
   .rsvp-art,
   .rsvp-art > img { animation: none; }
+}
+
+/* ============================================================
+   Modo dia da festa
+   ============================================================ */
+
+.day-layout { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:18px; }
+.day-card { min-width:0; padding:20px; }
+.day-alerts, .day-tasks, .day-contacts, .day-suppliers { display:grid; gap:10px; }
+.day-alert, .day-contact, .day-supplier, .day-task {
+  display:flex; align-items:center; gap:12px; width:100%; min-height:58px; padding:11px 13px;
+  border:1px solid #dce8f4; border-radius:14px; background:#f8fbff; color:var(--navy); text-align:left;
+}
+button.day-alert, button.day-supplier { font:inherit; cursor:pointer; }
+.day-alert > span:first-child, .day-contact > span:first-child { font-size:1.25rem; }
+.day-alert > span:nth-child(2), .day-contact > span:nth-child(2), .day-supplier > span, .day-task label span { display:grid; gap:2px; min-width:0; flex:1; }
+.day-alert strong, .day-contact strong, .day-supplier strong, .day-task strong { font-size:.88rem; }
+.day-alert small, .day-contact small, .day-supplier small, .day-task small { color:var(--muted); font-size:.74rem; overflow-wrap:anywhere; }
+.day-alert > b, .day-contact > b { margin-left:auto; }
+.day-alert.is-danger { border-color:#ffc9c5; background:#fff1ef; }
+.day-alert.is-warn { border-color:#f3df9e; background:#fff9e5; }
+.day-alert:hover, .day-contact:hover, .day-supplier:hover { border-color:#a9c8e8; transform:translateY(-1px); }
+.day-contact { text-decoration:none; }
+.day-task { justify-content:space-between; }
+.day-task label { display:flex; align-items:center; gap:11px; flex:1; cursor:pointer; }
+.day-task input { width:20px; height:20px; accent-color:var(--green); }
+.day-task.is-done strong { text-decoration:line-through; color:var(--muted); }
+.day-supplier { justify-content:space-between; }
+.day-supplier > b { flex:0 0 auto; color:#b25700; }
+.day-empty { display:grid; justify-items:center; gap:4px; padding:24px 14px; color:var(--muted); text-align:center; }
+.day-empty > span { font-size:1.6rem; }
+.day-empty strong { color:var(--navy); }
+.day-empty small { font-size:.76rem; }
+
+@media (max-width: 760px) {
+  .day-layout { grid-template-columns:1fr; gap:12px; }
+  .day-card { padding:15px; }
+  #view-day .section-head { align-items:stretch; }
+  #view-day .head-actions .btn { width:100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-alert, .day-contact, .day-supplier { transition:none; }
 }
 
 /* ============================================================

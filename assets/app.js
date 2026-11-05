@@ -836,6 +836,65 @@
       : '<div class="activity-empty">As próximas alterações importantes aparecerão aqui.</div>';
   }
 
+  function renderDayMode() {
+    const statsEl = $("#dayStats");
+    if (!statsEl) return;
+    const guests = countableGuests(state.guests);
+    const confirmed = guests.filter((guest) => guest.status === "confirmed").length;
+    const pendingGuests = guests.filter((guest) => guest.status === "pending").length;
+    const dayItems = state.items.filter((item) => item.stage === "dia");
+    const pendingDayItems = dayItems.filter((item) => item.status !== "done");
+    const committed = state.items.filter((item) => item.status === "contracted" || item.status === "done");
+    const outstanding = committed.reduce((sum, item) => sum + Math.max(num(item.cost) - num(item.paid), 0), 0);
+    const s = summary();
+
+    statsEl.innerHTML = [
+      { label: "Confirmados", value: confirmed, note: "de " + guests.length + " convidados", cls: "good" },
+      { label: "Tarefas do dia", value: pendingDayItems.length, note: "pendentes de " + dayItems.length, cls: pendingDayItems.length ? "" : "good" },
+      { label: "A pagar", value: money(outstanding), note: "em itens contratados", cls: outstanding ? "" : "good" },
+      { label: "Respostas", value: pendingGuests, note: "ainda pendentes", cls: pendingGuests ? "" : "good" },
+    ].map((card) => '<div class="stat-card ' + card.cls + '"><span class="label">' + card.label +
+      '</span><span class="value">' + card.value + '</span><span class="note">' + card.note + '</span></div>').join("");
+
+    const today = todayISO();
+    const overdue = state.items.filter((item) => item.status !== "done" && item.due && item.due < today).length;
+    const alerts = [];
+    if (overdue) alerts.push({ icon: "⚠️", title: overdue + (overdue === 1 ? " item atrasado" : " itens atrasados"), detail: "Revise os prazos do checklist.", view: "checklist", tone: "danger" });
+    if (pendingGuests) alerts.push({ icon: "⏳", title: pendingGuests + (pendingGuests === 1 ? " confirmação pendente" : " confirmações pendentes"), detail: "Confira quem ainda não respondeu.", view: "guests", tone: "warn" });
+    if (s.saldoPrevisto < 0) alerts.push({ icon: "💸", title: "Previsão acima do orçamento", detail: "Excesso estimado de " + money(Math.abs(s.saldoPrevisto)) + ".", view: "budget", tone: "danger" });
+    if (outstanding) alerts.push({ icon: "💳", title: money(outstanding) + " ainda a pagar", detail: "Veja fornecedores e pagamentos pendentes.", view: "budget", tone: "warn" });
+    $("#dayAlerts").innerHTML = alerts.length
+      ? alerts.map((alert) => '<button class="day-alert is-' + alert.tone + '" type="button" data-day-view="' + alert.view + '"><span aria-hidden="true">' + alert.icon +
+        '</span><span><strong>' + esc(alert.title) + '</strong><small>' + esc(alert.detail) + '</small></span><b aria-hidden="true">→</b></button>').join("")
+      : '<div class="day-empty"><span aria-hidden="true">✅</span><strong>Nenhuma urgência agora</strong><small>O planejamento está em dia.</small></div>';
+
+    $("#dayTasks").innerHTML = dayItems.length
+      ? dayItems.slice().sort((a, b) => Number(a.status === "done") - Number(b.status === "done") || a.title.localeCompare(b.title, "pt-BR")).map((item) =>
+        '<div class="day-task' + (item.status === "done" ? " is-done" : "") + '"><label><input type="checkbox" data-day-item-status="' + esc(item.id) + '"' +
+        (item.status === "done" ? " checked" : "") + '><span><strong>' + esc(item.title) + '</strong><small>' +
+        esc([item.due ? fmtDate(item.due) : "", item.notes || ""].filter(Boolean).join(" · ") || "Tarefa do dia") +
+        '</small></span></label><button class="icon-btn" type="button" data-day-item-edit="' + esc(item.id) + '" aria-label="Editar ' + esc(item.title) + '">✏️</button></div>'
+      ).join("")
+      : '<div class="day-empty"><span aria-hidden="true">⭐</span><strong>Nenhuma tarefa do dia cadastrada</strong><small>Use “Tarefa do dia” para montar esta lista.</small></div>';
+
+    const contacts = [];
+    if (state.meta.fatherPhone) contacts.push({ icon: "👨", label: "Papai", href: waLink(state.meta.fatherPhone), detail: formatPhoneBR(state.meta.fatherPhone) });
+    if (state.meta.motherPhone) contacts.push({ icon: "👩", label: "Mamãe", href: waLink(state.meta.motherPhone), detail: formatPhoneBR(state.meta.motherPhone) });
+    const map = mapsLink();
+    if (map) contacts.push({ icon: "📍", label: "Abrir localização", href: map, detail: state.meta.location || "Local da festa" });
+    $("#dayContacts").innerHTML = contacts.length
+      ? contacts.map((contact) => '<a class="day-contact" href="' + esc(contact.href) + '" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">' + contact.icon +
+        '</span><span><strong>' + esc(contact.label) + '</strong><small>' + esc(contact.detail) + '</small></span><b aria-hidden="true">↗</b></a>').join("")
+      : '<div class="day-empty"><span aria-hidden="true">📇</span><strong>Contatos ainda não configurados</strong><small>Preencha os telefones e o mapa em Editar festa.</small></div>';
+
+    const suppliers = committed.filter((item) => item.supplier && num(item.cost) > num(item.paid));
+    $("#daySuppliers").innerHTML = suppliers.length
+      ? suppliers.sort((a, b) => (num(b.cost) - num(b.paid)) - (num(a.cost) - num(a.paid))).map((item) =>
+        '<button class="day-supplier" type="button" data-day-item-edit="' + esc(item.id) + '"><span><strong>' + esc(item.supplier) + '</strong><small>' + esc(item.title) +
+        '</small></span><b>' + money(Math.max(num(item.cost) - num(item.paid), 0)) + '</b></button>').join("")
+      : '<div class="day-empty"><span aria-hidden="true">🤝</span><strong>Nenhum saldo de fornecedor</strong><small>Os contratados estão pagos ou ainda não foram informados.</small></div>';
+  }
+
   function clearActivity(scope) {
     const activity = Array.isArray(state.activity) ? state.activity : [];
     const today = new Date().toLocaleDateString("sv-SE");
@@ -1992,6 +2051,7 @@
     renderChecklist();
     renderBudget();
     renderGuests();
+    renderDayMode();
     renderCloudBar();
     if (activeView === "invite") renderInviteView();
   }
@@ -3694,6 +3754,7 @@
       budget: "#view-budget",
       guests: "#view-guests",
       invite: "#view-invite",
+      day: "#view-day",
       activity: "#view-activity",
     };
     if (!views[name]) name = "checklist";
@@ -3716,6 +3777,7 @@
       refreshGuestResponses();
     }
     if (name === "invite") renderInviteView();
+    if (name === "day") renderDayMode();
     renderHero();
 
     try {
@@ -3731,6 +3793,27 @@
   function bindEvents() {
     $$(".tab").forEach((tab) => {
       tab.addEventListener("click", () => showView(tab.dataset.view));
+    });
+    $("#addDayTaskBtn").addEventListener("click", () => openItemModal(null, "dia"));
+    $("#view-day").addEventListener("click", (event) => {
+      const view = event.target.closest("[data-day-view]");
+      if (view) {
+        showView(view.dataset.dayView);
+        return;
+      }
+      const edit = event.target.closest("[data-day-item-edit]");
+      if (edit) openItemModal(edit.dataset.dayItemEdit);
+    });
+    $("#dayTasks").addEventListener("change", (event) => {
+      const input = event.target.closest("[data-day-item-status]");
+      if (!input) return;
+      const item = state.items.find((candidate) => candidate.id === input.dataset.dayItemStatus);
+      if (!item) return;
+      item.status = input.checked ? "done" : "todo";
+      addActivity("update", (input.checked ? "Item concluído: " : "Item reaberto: ") + item.title);
+      touch();
+      renderAll();
+      toast(input.checked ? "Tarefa concluída." : "Tarefa reaberta.", "ok");
     });
     $("#clearTodayActivityBtn").addEventListener("click", () => clearActivity("today"));
     $("#clearAllActivityBtn").addEventListener("click", () => clearActivity("all"));
@@ -4278,7 +4361,7 @@
     renderAll();
 
     const hash = (location.hash || "").replace("#", "");
-    showView(["budget", "guests", "invite", "activity"].includes(hash) ? hash : "checklist");
+    showView(["budget", "guests", "invite", "day", "activity"].includes(hash) ? hash : "checklist");
 
     if (hasCloud() && !hadLocal) {
       pullCloud({ silent: true });

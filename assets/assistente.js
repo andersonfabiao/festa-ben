@@ -755,7 +755,7 @@
   function isNavigation(text) {
     return (
       /^(abrir|ir|mostrar|ver|navegar|entrar)\b/.test(text) &&
-      /\b(checklist|orcamento|convidados|convite|atividade|painel|inicio)\b/.test(text)
+      /\b(checklist|orcamento|convidados|convite|atividade|painel|inicio|dia da festa)\b/.test(text)
     );
   }
 
@@ -1109,11 +1109,13 @@
             ? "guests"
             : /\bconvite\b/.test(text)
               ? "invite"
-              : /\batividade\b/.test(text)
-                ? "activity"
-                : "checklist";
+              : /\bdia da festa\b/.test(text)
+                ? "day"
+                : /\batividade\b/.test(text)
+                  ? "activity"
+                  : "checklist";
       api.showView(view);
-      bot("Abri a aba " + (view === "budget" ? "Orçamento" : view === "guests" ? "Convidados" : view === "invite" ? "Convite" : view === "activity" ? "Atividade" : "Checklist") + ".");
+      bot("Abri a aba " + (view === "budget" ? "Orçamento" : view === "guests" ? "Convidados" : view === "invite" ? "Convite" : view === "day" ? "Dia da festa" : view === "activity" ? "Atividade" : "Checklist") + ".");
       return;
     }
 

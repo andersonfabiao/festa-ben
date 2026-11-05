@@ -12,9 +12,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261105p2" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261105p3" />
 </head>
 <body>
+  <a class="skip-link" href="#mainContent">Ir para o conteúdo principal</a>
   <header class="hero">
     <div class="clouds" aria-hidden="true">
       <span class="cloud c1"></span>
@@ -43,7 +44,7 @@
       <div class="countdown" id="countdown" aria-live="polite"></div>
 
       <div class="cloud-bar" aria-label="Sincronização dos dados">
-        <div class="cloud-status"><span class="dot" id="cloudDot"></span><span id="cloudText">Salvo neste dispositivo</span></div>
+        <div class="cloud-status" role="status" aria-live="polite"><span class="dot" id="cloudDot"></span><span id="cloudText">Salvo neste dispositivo</span></div>
         <div class="cloud-actions">
           <button class="btn btn-sm btn-ghost" id="quickBackupBtn" type="button">🛡️ Backup</button>
           <button class="btn btn-sm btn-ghost" id="pullBtn" type="button">⬇️ Carregar da nuvem</button>
@@ -55,13 +56,14 @@
         <button class="tab" data-view="budget" type="button">💰 Orçamento</button>
         <button class="tab" data-view="guests" type="button">🎟️ Convidados</button>
         <button class="tab" data-view="invite" type="button">💌 Convite</button>
+        <button class="tab" data-view="day" type="button">⭐ Dia da festa</button>
         <button class="tab" data-view="activity" type="button">🕘 Atividade</button>
       </nav>
     </div>
   </header>
 
   <div class="shell">
-    <main>
+    <main id="mainContent" tabindex="-1">
     <section id="view-checklist" class="view" aria-label="Checklist">
       <div class="section-head">
         <div><h2>Checklist</h2><p class="muted">Acompanhe o andamento de cada etapa da festa.</p></div>
@@ -219,6 +221,32 @@
       </div>
 
       <div id="guestList" class="guest-list"></div>
+    </section>
+
+    <section id="view-day" class="view" aria-label="Modo dia da festa" hidden>
+      <div class="section-head">
+        <div><h2>Dia da festa</h2><p class="muted">Uma visão rápida para usar no celular quando chegar a hora.</p></div>
+        <div class="head-actions"><button class="btn btn-primary" id="addDayTaskBtn" type="button">＋ Tarefa do dia</button></div>
+      </div>
+      <div id="dayStats" class="stat-grid small"></div>
+      <div class="day-layout">
+        <section class="card day-card" aria-labelledby="dayAlertsTitle">
+          <div class="card-head"><div><h3 id="dayAlertsTitle">Prioridades agora</h3><p class="muted">Somente o que ainda pede atenção.</p></div></div>
+          <div id="dayAlerts" class="day-alerts" aria-live="polite"></div>
+        </section>
+        <section class="card day-card" aria-labelledby="dayTasksTitle">
+          <div class="card-head"><div><h3 id="dayTasksTitle">Tarefas do dia</h3><p class="muted">Marque conforme concluir.</p></div></div>
+          <div id="dayTasks" class="day-tasks"></div>
+        </section>
+        <section class="card day-card" aria-labelledby="dayContactsTitle">
+          <div class="card-head"><div><h3 id="dayContactsTitle">Contatos e localização</h3><p class="muted">Atalhos essenciais.</p></div></div>
+          <div id="dayContacts" class="day-contacts"></div>
+        </section>
+        <section class="card day-card" aria-labelledby="daySuppliersTitle">
+          <div class="card-head"><div><h3 id="daySuppliersTitle">Fornecedores e saldos</h3><p class="muted">Contratados que ainda têm valor a pagar.</p></div></div>
+          <div id="daySuppliers" class="day-suppliers"></div>
+        </section>
+      </div>
     </section>
 
     <section id="view-activity" class="view" aria-label="Atividade" hidden>
@@ -778,7 +806,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261105p28"></script>
-  <script src="assets/assistente.js?v=20261105p10"></script>
+  <script src="assets/app.js?v=20261105p29"></script>
+  <script src="assets/assistente.js?v=20261105p11"></script>
 </body>
 </html>
