@@ -11,6 +11,7 @@
   const STORAGE_KEY = "ben-toy-story-checklist-v1";
   const CLOUD_KEY = "ben-toy-story-cloud-v1";
   const COLLAPSE_KEY = "ben-toy-story-collapsed-v2";
+  const BACKUP_KEY = "ben-toy-story-backups-v1";
 
   const STAGES = [
     { id: "planejamento", name: "Planejamento", icon: "📋", color: "#2f80ed" },
@@ -652,6 +653,99 @@
       console.warn("Não foi possível salvar localmente.", e);
       toast("Não foi possível salvar neste navegador.", "err");
     }
+  }
+
+  function loadAutomaticBackups() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(BACKUP_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed.filter((entry) => entry && entry.state).slice(0, 3) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function createAutomaticBackup(reason) {
+    if (!state || (!state.items.length && !state.guests.length)) return null;
+    const entry = {
+      id: uid(),
+      at: nowISO(),
+      reason: String(reason || "alteração importante").slice(0, 80),
+      state: JSON.parse(JSON.stringify(state)),
+    };
+    try {
+      const backups = [entry, ...loadAutomaticBackups()].slice(0, 3);
+      localStorage.setItem(BACKUP_KEY, JSON.stringify(backups));
+      renderBackupState();
+      return entry;
+    } catch (e) {
+      console.warn("Não foi possível criar a cópia automática.", e);
+      return null;
+    }
+  }
+
+  function renderBackupState(message) {
+    const el = $("#backupState");
+    if (!el) return;
+    const latest = loadAutomaticBackups()[0];
+    const restore = $("#restoreAutoBackupBtn");
+    if (restore) {
+      restore.disabled = !latest;
+      restore.title = latest ? "Restaurar a cópia mais recente deste navegador" : "Nenhuma cópia automática disponível";
+    }
+    if (message) {
+      el.textContent = message;
+      return;
+    }
+    if (!latest) {
+      el.textContent = "Nenhuma cópia automática ainda. Ela será criada antes de carregar, importar ou apagar dados.";
+      return;
+    }
+    const date = new Date(latest.at);
+    const when = isNaN(date.getTime())
+      ? "data desconhecida"
+      : date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+    el.textContent = "Última cópia automática: " + when + " · " + latest.reason + ". Até 3 versões ficam neste navegador.";
+  }
+
+  function verifyRecovery() {
+    try {
+      const copy = normalizeState(JSON.parse(JSON.stringify(state)));
+      if (!copy) throw new Error("estrutura inválida");
+      if (copy.items.length !== state.items.length || copy.guests.length !== state.guests.length) {
+        throw new Error("a contagem dos dados não corresponde");
+      }
+      const subitems = copy.items.reduce((sum, item) => sum + (item.subtasks || []).length, 0);
+      const message =
+        "Recuperação verificada: " + copy.items.length + " itens, " + subitems +
+        " subitens e " + copy.guests.length + " convidados íntegros.";
+      renderBackupState(message);
+      toast("Backup validado com sucesso.", "ok");
+    } catch (e) {
+      renderBackupState("Falha na verificação: " + e.message + ". Baixe um backup e tente novamente.");
+      toast("Não foi possível validar a recuperação.", "err");
+    }
+  }
+
+  function restoreLatestAutomaticBackup() {
+    const latest = loadAutomaticBackups()[0];
+    if (!latest) {
+      toast("Ainda não existe cópia automática neste navegador.", "warn");
+      renderBackupState();
+      return;
+    }
+    const next = normalizeState(latest.state);
+    if (!next) {
+      toast("A cópia automática está inválida.", "err");
+      return;
+    }
+    if (!window.confirm("Restaurar a última cópia automática?\n\nO estado atual será preservado em uma nova cópia antes da restauração.")) return;
+    createAutomaticBackup("antes de restaurar uma cópia automática");
+    state = next;
+    addActivity("update", "Cópia automática restaurada neste dispositivo");
+    touch({ cloud: false });
+    closeAllModals();
+    renderAll();
+    toast("Cópia restaurada localmente. Revise e salve na nuvem quando estiver pronto.", "ok");
   }
 
   function loadCloudCfg() {
@@ -2070,6 +2164,7 @@
         }
       }
 
+      createAutomaticBackup("antes de carregar dados da nuvem");
       state = next;
       addActivity("cloud", "Dados carregados da nuvem neste dispositivo");
       cloud.sha = data.sha;
@@ -2788,6 +2883,7 @@
     }
 
     $("#cloudConfigState").textContent = "";
+    renderBackupState();
     openModal($("#settingsModal"));
     if (focusStageNames) {
       requestAnimationFrame(() => {
@@ -2924,6 +3020,7 @@
           "Importar este arquivo?\n\nOs dados atuais deste dispositivo serão substituídos."
         );
         if (!ok) return;
+        createAutomaticBackup("antes de importar um arquivo JSON");
         state = next;
         touch();
         closeAllModals();
@@ -3745,6 +3842,7 @@
       else saveCloud();
     });
     $("#pullBtn").addEventListener("click", () => pullCloud());
+    $("#quickBackupBtn").addEventListener("click", exportData);
 
     $("#budgetInput").addEventListener("change", (e) => {
       state.meta.budget = parseMoney(e.target.value);
@@ -4094,6 +4192,8 @@
 
     $("#exportBtn").addEventListener("click", exportData);
     $("#importBtn").addEventListener("click", () => $("#importFile").click());
+    $("#restoreAutoBackupBtn").addEventListener("click", restoreLatestAutomaticBackup);
+    $("#verifyBackupBtn").addEventListener("click", verifyRecovery);
     $("#importFile").addEventListener("change", (event) => {
       const file = event.target.files && event.target.files[0];
       if (file) importData(file);
@@ -4102,6 +4202,7 @@
 
     $("#resetBtn").addEventListener("click", () => {
       if (!window.confirm("Restaurar o checklist de exemplo?\n\nOs itens atuais serão substituídos.")) return;
+      createAutomaticBackup("antes de restaurar o checklist de exemplo");
       state = defaultState();
       touch();
       closeAllModals();
@@ -4111,6 +4212,7 @@
 
     $("#clearBtn").addEventListener("click", () => {
       if (!window.confirm("Apagar todos os itens e convidados?\n\nOs dados da festa serão mantidos.")) return;
+      createAutomaticBackup("antes de apagar itens e convidados");
       state.items = [];
       state.guests = [];
       touch();

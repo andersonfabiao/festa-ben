@@ -45,6 +45,7 @@
       <div class="cloud-bar" aria-label="Sincronização dos dados">
         <div class="cloud-status"><span class="dot" id="cloudDot"></span><span id="cloudText">Salvo neste dispositivo</span></div>
         <div class="cloud-actions">
+          <button class="btn btn-sm btn-ghost" id="quickBackupBtn" type="button">🛡️ Backup</button>
           <button class="btn btn-sm btn-ghost" id="pullBtn" type="button">⬇️ Carregar da nuvem</button>
           <button class="btn btn-sm btn-cloud" id="saveCloudBtn" type="button">☁️ Salvar na nuvem</button>
         </div>
@@ -557,15 +558,17 @@
           No modo somente link, o convite pede o link individual — útil para não expor nenhum nome.
         </p>
 
-        <h3 class="form-section">Dados</h3>
+        <h3 class="form-section">Segurança dos dados</h3>
         <div class="data-actions">
-          <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">⬇️ Exportar JSON</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="importBtn">⬆️ Importar JSON</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">⬇️ Baixar backup completo</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="importBtn">⬆️ Restaurar arquivo JSON</button>
           <input type="file" id="importFile" accept="application/json,.json" hidden />
+          <button type="button" class="btn btn-ghost btn-sm" id="restoreAutoBackupBtn">↩️ Restaurar cópia automática</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="verifyBackupBtn">✓ Verificar recuperação</button>
           <button type="button" class="btn btn-ghost btn-sm" id="resetBtn">↺ Restaurar exemplo</button>
           <button type="button" class="btn btn-danger-ghost btn-sm" id="clearBtn">🗑 Apagar itens</button>
         </div>
-        <p class="hint">Seus dados ficam neste navegador (localStorage) e, se configurado, no arquivo do repositório. Faça exportações de vez em quando como backup.</p>
+        <p class="hint" id="backupState">São mantidas até 3 cópias automáticas neste navegador antes de carregar, importar ou apagar dados. O backup baixado permite restaurar tudo em outro aparelho.</p>
 
         <div class="modal-actions">
           <span class="spacer"></span>
@@ -775,7 +778,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261105p27"></script>
+  <script src="assets/app.js?v=20261105p28"></script>
   <script src="assets/assistente.js?v=20261105p10"></script>
 </body>
 </html>
