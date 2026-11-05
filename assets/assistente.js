@@ -285,7 +285,7 @@
       setSuggestions([
         "Quantos confirmados?",
         "O que falta no checklist?",
-        "Qual o saldo?",
+        "Ver o convite?",
         "Adicionar convidado",
       ]);
     }
@@ -769,9 +769,9 @@
     );
     setSuggestions([
       "Quantos confirmados?",
-      "Quem ainda não confirmou?",
       "O que falta no checklist?",
-      "Qual o saldo?",
+      "Ver o convite?",
+      "Adicionar convidado",
     ]);
   }
 
@@ -790,7 +790,7 @@
         "• abrir convidados\n\n" +
         "Ações que apagam dados sempre pedem confirmação, e as outras podem ser desfeitas."
     );
-    setSuggestions(["Quantos confirmados?", "O que falta?", "Adicionar convidado", "Abrir orçamento"]);
+    setSuggestions(["Quantos confirmados?", "O que falta no checklist?", "Ver o convite?", "Adicionar convidado"]);
   }
 
   function showGuestInfo(guest, includePhone) {
@@ -1680,7 +1680,7 @@
     setSuggestions([
       "Quantos confirmados?",
       "O que falta no checklist?",
-      "Qual o saldo?",
+      "Ver o convite?",
       "Adicionar convidado",
     ]);
   }
