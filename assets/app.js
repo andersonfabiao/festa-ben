@@ -2209,6 +2209,28 @@
       await verifyPrivateRepo();
       const head = await gh("GET");
       let sha = head.notFound ? null : head.sha;
+
+      if (!head.notFound) {
+        let remoteState = null;
+        try {
+          remoteState = normalizeState(JSON.parse(b64decode(head.content)));
+        } catch (e) {
+          throw new Error("A versão da nuvem não pôde ser comparada com este dispositivo.");
+        }
+        const cloudChangedSinceSync = !cloud.sha || cloud.sha !== head.sha;
+        if (cloudChangedSinceSync) {
+          cloud.pending = true;
+          dirty = true;
+          saveCloudCfg();
+          const conflictMessage =
+            "A nuvem possui uma versão mais recente. Para não perder itens, carregue a nuvem antes de salvar.";
+          setCloudPhase("error", conflictMessage);
+          if (opts.fromSettings) setConfigState(conflictMessage);
+          if (!opts.silent) toast(conflictMessage, "warn");
+          return;
+        }
+      }
+
       const content = b64encode(JSON.stringify(uploadState, null, 2));
 
       const body = {
@@ -2224,19 +2246,10 @@
       try {
         result = await gh("PUT", body);
       } catch (writeError) {
-        // Se outro aparelho gravou entre o GET e o PUT, atualiza somente o SHA
-        // e repete exatamente o mesmo snapshot local. Nenhum dado remoto é
-        // baixado ou mesclado durante um comando de salvar.
         if (writeError.status !== 409 && writeError.status !== 422) throw writeError;
-        const latest = await gh("GET");
-        if (latest.notFound) {
-          delete body.sha;
-          sha = null;
-        } else {
-          sha = latest.sha;
-          body.sha = sha;
-        }
-        result = await gh("PUT", body);
+        const conflict = new Error("Outra versão foi salva enquanto este dispositivo enviava os dados. Carregue a nuvem antes de tentar novamente.");
+        conflict.status = 409;
+        throw conflict;
       }
       if (result && result.content && result.content.sha) {
         cloud.sha = result.content.sha;
@@ -2268,7 +2281,7 @@
       if (e.status === 403) msg = "o token não tem permissão de escrita neste repositório.";
       if (e.status === 404) msg = "repositório, branch ou token sem acesso a este repositório.";
       if (e.status === 409 || e.status === 422) {
-        msg = "outra versão foi salva ao mesmo tempo. Tente salvar novamente.";
+        msg = "outra versão foi salva ao mesmo tempo. Carregue a nuvem antes de tentar novamente.";
       }
       setCloudPhase("error", msg);
       if (opts.fromSettings) setConfigState("Não foi possível enviar: " + msg);
