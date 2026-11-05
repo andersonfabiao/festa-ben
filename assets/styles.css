@@ -3180,28 +3180,32 @@ button.day-alert, button.day-supplier { font:inherit; cursor:pointer; }
 
 .buzz-toggle {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
+  right: 16px;
+  bottom: 16px;
   z-index: 90;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 10px 18px 10px 12px;
-  border: 2px solid rgba(23, 38, 74, 0.12);
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 12px 6px 7px;
+  border: 1px solid rgba(23, 38, 74, 0.13);
   border-radius: 999px;
-  background: linear-gradient(135deg, #ffe07a, var(--yellow) 58%, var(--yellow-deep));
+  background: linear-gradient(135deg, rgba(255, 240, 174, 0.74), rgba(255, 201, 60, 0.7));
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  backdrop-filter: blur(8px) saturate(1.1);
   color: var(--navy);
   font: inherit;
   font-weight: 800;
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 12px 30px rgba(23, 38, 74, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  transition: transform 0.2s var(--motion-ios), box-shadow 0.2s, opacity 0.2s;
+  box-shadow: 0 6px 16px rgba(23, 38, 74, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.62);
+  transition: transform 0.2s var(--motion-ios), box-shadow 0.2s, background 0.2s;
 }
 .buzz-toggle:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 18px 38px rgba(23, 38, 74, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: linear-gradient(135deg, rgba(255, 240, 174, 0.94), rgba(255, 201, 60, 0.9));
+  box-shadow: 0 10px 22px rgba(23, 38, 74, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 .buzz-toggle:active { transform: translateY(0) scale(0.98); }
 .buzz-toggle:focus-visible {
@@ -3211,11 +3215,11 @@ button.day-alert, button.day-supplier { font:inherit; cursor:pointer; }
 .buzz-toggle-icon {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
-  font-size: 1.15rem;
+  font-size: 1rem;
   line-height: 1;
 }
 .buzz.is-open .buzz-toggle {
@@ -3487,12 +3491,14 @@ button.day-alert, button.day-supplier { font:inherit; cursor:pointer; }
 
 @media (max-width: 600px) {
   .buzz-toggle {
-    right: 14px;
-    bottom: 14px;
-    padding: 8px 15px 8px 9px;
-    font-size: 0.86rem;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    gap: 5px;
+    min-height: 42px;
+    padding: 5px 10px 5px 6px;
+    font-size: 0.76rem;
   }
-  .buzz-toggle-icon { width: 29px; height: 29px; font-size: 1.05rem; }
+  .buzz-toggle-icon { width: 26px; height: 26px; font-size: 0.92rem; }
   .buzz-panel {
     right: 0;
     bottom: 0;
