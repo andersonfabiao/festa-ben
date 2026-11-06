@@ -783,6 +783,14 @@ button { color: inherit; }
   visibility: visible;
   transform: translate(-50%, 0) scale(1);
 }
+/* Enquanto o Buzz está na tela, o recado do Ben não aparece. */
+.experience.is-buzz-playing .ben-voice-cue,
+.experience:not(.is-prelude-complete) .ben-voice-cue {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -14px) scale(.94);
+}
 .ben-voice-cue.needs-tap {
   pointer-events: auto;
   cursor: pointer;

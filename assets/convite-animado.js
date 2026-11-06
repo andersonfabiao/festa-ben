@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261106p33";
+  const inviteRelease = "20261106p34";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -41,7 +41,8 @@
   let voicePrimed = false;
   // Compensa a masterização: a música fica bem abaixo da voz do Ben.
   const themeVolume = 0.085;
-  const duckedThemeVolume = 0.02;
+  // Durante o recado a trilha desce quase ao silêncio; fora dele volta ao normal.
+  const duckedThemeVolume = 0.006;
 
   const finishPrelude = () => {
     if (preludeFinishing || experience.classList.contains("is-prelude-complete")) return;
@@ -173,18 +174,27 @@
 
   const primeBenVoice = () => {
     if (!benVoice || voicePrimed || !soundEnabled) return;
+    // O recado só pode ser preparado depois que o Buzz sai da tela. Antes disso
+    // o áudio é apenas liberado, sem tocar nenhum trecho da fala.
+    if (experience.classList.contains("is-buzz-playing") ||
+        !experience.classList.contains("is-prelude-complete")) return;
     const previousVolume = benVoice.volume;
-    benVoice.muted = false;
-    benVoice.volume = 0.001;
+    // O priming é mudo para não vazar áudio (no iPhone o volume é ignorado).
+    benVoice.muted = true;
     benVoice.currentTime = 0;
     const attempt = benVoice.play();
-    if (!attempt) return;
+    if (!attempt) {
+      benVoice.muted = false;
+      return;
+    }
     attempt.then(() => {
       benVoice.pause();
       benVoice.currentTime = 0;
+      benVoice.muted = false;
       benVoice.volume = previousVolume || 0.96;
       voicePrimed = true;
     }).catch(() => {
+      benVoice.muted = false;
       benVoice.volume = previousVolume || 0.96;
     });
   };
@@ -212,6 +222,9 @@
 
   const playBenVoice = async () => {
     if (!soundEnabled || !benVoice || experience.classList.contains("is-departing")) return;
+    // Enquanto o Buzz está na tela o recado não aparece nem toca.
+    if (experience.classList.contains("is-buzz-playing") ||
+        !experience.classList.contains("is-prelude-complete")) return;
     setVoiceCue(true);
     // A trilha fica apenas como um fundo quase imperceptível durante a fala.
     // A descida curta evita encobrir as primeiras palavras do Ben.
@@ -420,7 +433,8 @@
         buzzPreludeVideo.muted && !buzzPreludeVideo.ended) {
       enableBuzzSound();
     }
-    primeBenVoice();
+    // Só prepara a voz do Ben depois que a abertura do Buzz termina.
+    if (experience.classList.contains("is-prelude-complete")) primeBenVoice();
   };
   document.addEventListener("pointerdown", unlockOnFirstGesture, { once: true, passive: true });
   document.addEventListener("keydown", unlockOnFirstGesture, { once: true });

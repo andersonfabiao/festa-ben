@@ -1640,7 +1640,10 @@ body.no-scroll { overflow: hidden; }
 .invite-link-actions .btn { flex: 1 1 auto; }
 .invite-link-actions .btn-primary { flex: 1.4 1 auto; }
 
-.invite-editor .card-head { margin-bottom: 16px; }
+.invite-summary .card-head { margin-bottom: 12px; align-items: flex-start; }
+.invite-summary .card-head p { margin: 2px 0 0; font-size: .8rem; }
+.invite-summary .invite-preview { margin: 0; }
+.invite-summary .hint { margin: 12px 0 0; }
 
 .invite-preview {
   margin: 6px 0 16px;
@@ -1685,14 +1688,6 @@ body.no-scroll { overflow: hidden; }
   font-weight: 700;
   color: #3f5674;
   text-decoration: none;
-}
-
-.invite-form-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
 }
 
 .invite-copy-details {

@@ -3364,13 +3364,6 @@
     toast(ok ? message : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
   }
 
-  async function copyInviteMessage() {
-    const text = animatedInviteUrl();
-
-    const ok = await copyText(text);
-    toast(ok ? "Link do convite copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
-  }
-
   function renderInvitePreview() {
     const el = $("#invitePreview");
     if (!el) return;
@@ -3504,7 +3497,11 @@
     touch();
     renderAll();
     renderInviteView();
-    toast("Dados do convite salvos.", "ok");
+    closeModal($("#inviteSettingsModal"));
+    toast("Configurações do convite salvas.", "ok");
+    if (publicRepoInfo() && publicPublishToken()) {
+      publishInvite();
+    }
   }
 
   /* ---------- Publicação do convite público ---------- */
@@ -3626,27 +3623,17 @@
   }
 
   async function publishInvite() {
-    if (!collectInviteMeta()) return;
     const status = $("#publishInviteState");
-    if (!publicRepoInfo()) {
-      const message = "Não consegui detectar o repositório público. Abra o site pelo GitHub Pages ou informe usuário/repositório em Editar festa.";
-      if (status) status.textContent = message;
-      toast(message, "warn");
-      openSettings();
-      return;
-    }
-    if (!publicPublishToken()) {
-      const message = "Configure o token de publicação em Editar festa para enviar o convite ao site.";
-      if (status) status.textContent = message;
-      toast(message, "warn");
-      openSettings();
-      return;
+    const setStatus = (text) => {
+      if (status) status.textContent = text;
+    };
+
+    if (!publicRepoInfo() || !publicPublishToken()) {
+      setStatus("Salvo neste aparelho. Para atualizar o convite no site, configure repositório e token em Editar festa.");
+      return false;
     }
 
-    touch();
-    renderAll();
-    renderInviteView();
-    if (status) status.textContent = "Publicando o convite no site…";
+    setStatus("Publicando o convite no site…");
 
     try {
       await verifyPublicRepo();
@@ -3665,9 +3652,9 @@
           await ghPublic("PUT", body);
           cloud.lastPublish = nowISO();
           saveCloudCfg();
-          if (status) status.textContent = "Convite publicado! O GitHub Pages atualiza em alguns minutos.";
+          setStatus("Convite publicado! O GitHub Pages atualiza em alguns minutos.");
           toast("Convite publicado no site 🚀", "ok");
-          return;
+          return true;
         } catch (error) {
           if (attempt === 0 && (error.status === 409 || error.status === 422)) continue;
           throw error;
@@ -3681,8 +3668,9 @@
       if (error.status === 409 || error.status === 422) {
         message = "outra publicação aconteceu ao mesmo tempo. Tente de novo.";
       }
-      if (status) status.textContent = "Não foi possível publicar: " + message;
+      setStatus("Não foi possível publicar: " + message);
       toast("Não foi possível publicar o convite: " + message, "err");
+      return false;
     }
   }
 
@@ -4193,14 +4181,13 @@
     $("#copyConfirmInviteBtn").addEventListener("click", () =>
       copyLinkWithToast(invitePageUrl(), "Link da confirmação copiado.")
     );
-    $("#copyInviteMessageBtn").addEventListener("click", copyInviteMessage);
     $("#saveInviteCloudBtn").addEventListener("click", () => {
       if (!hasCloud()) openSettings();
       else saveCloud();
     });
-    const publishButtons = [$("#publishInviteBtn"), $("#publishInviteBtnBottom")];
-    publishButtons.forEach((button) => {
-      if (button) button.addEventListener("click", publishInvite);
+    $("#openInviteSettingsBtn").addEventListener("click", () => {
+      renderInviteView();
+      openModal($("#inviteSettingsModal"));
     });
 
     $("#toggleValuesBtn").addEventListener("click", () => {

@@ -7,13 +7,13 @@
   <title>Ben faz 5! · Checklist Toy Story</title>
   <meta name="description" content="Checklist, orçamento e convidados do aniversário de 5 anos do Ben — tema Toy Story." />
   <meta name="theme-color" content="#8fd3ff" />
-  <meta name="app-version" content="20261106p32" />
+  <meta name="app-version" content="20261106p34" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 61,38 96,38 68,59 79,93 50,72 21,93 32,59 4,38 39,38' fill='%23ffc93c' stroke='%23e8453c' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261106p33" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261106p34" />
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Ir para o conteúdo principal</a>
@@ -272,7 +272,7 @@
         </div>
         <div class="head-actions">
           <button class="btn btn-cloud" id="saveInviteCloudBtn" type="button">☁️ Salvar na nuvem</button>
-          <button class="btn btn-primary" id="publishInviteBtn" type="button">🚀 Publicar convite</button>
+          <button class="btn btn-primary" id="openInviteSettingsBtn" type="button">⚙️ Configurações do convite</button>
         </div>
       </div>
 
@@ -304,180 +304,15 @@
         </article>
       </div>
 
-      <div class="card invite-editor">
+      <div class="card invite-summary">
         <div class="card-head">
-          <h3>Dados do convite</h3>
-          <span class="muted">Aparecem no topo desta página, no convite animado e na confirmação</span>
+          <div>
+            <h3>Prévia do convite</h3>
+            <p class="muted">Atualiza enquanto você edita as configurações.</p>
+          </div>
         </div>
-
-        <form id="inviteForm">
-          <div class="grid-2">
-            <label class="field-label">Nome do aniversariante
-              <input id="invName" class="input" maxlength="40" required autocomplete="off" />
-            </label>
-            <label class="field-label">Idade
-              <input id="invAge" class="input" type="number" min="1" max="99" inputmode="numeric" />
-            </label>
-          </div>
-          <div class="grid-2">
-            <label class="field-label">Data
-              <input id="invDate" class="input" type="date" />
-            </label>
-            <label class="field-label">Horário
-              <input id="invTime" class="input" type="time" />
-            </label>
-          </div>
-          <label class="field-label">Prazo para confirmação
-            <input id="invRsvpDeadline" class="input" type="date" />
-          </label>
-          <label class="field-label">Local
-            <input id="invLocation" class="input" maxlength="120" placeholder="Ex.: Enjoy Kids — Liv Mall Shopping" />
-          </label>
-          <label class="field-label">Link do Google Maps (opcional)
-            <input id="invMapsUrl" class="input" type="url" placeholder="https://maps.app.goo.gl/…" autocomplete="off" />
-          </label>
-          <p class="hint">Se ficar vazio, o convite cria sozinho um link de busca no Google Maps com o local acima.</p>
-
-          <div class="grid-2">
-            <label class="field-label">URL do Google Apps Script (recebe as respostas)
-              <input id="invRsvpUrl" class="input" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" />
-            </label>
-            <label class="field-label">Como o convidado encontra o nome
-              <select id="invMode" class="input">
-                <option value="search">Buscar pelo nome (mostra só depois de 3 letras)</option>
-                <option value="links">Somente link individual (sem busca)</option>
-              </select>
-            </label>
-          </div>
-          <p class="hint">Sem a URL do Apps Script, os botões de resposta ficam desativados no convite. As alterações valem para os convidados depois de salvar na nuvem e publicar o convite.</p>
-
-          <details class="invite-copy-details" open>
-            <summary>🎬 Textos do convite animado</summary>
-            <div class="grid-2">
-              <label class="field-label">Frase acima do título
-                <input id="invOpeningEyebrow" class="input" maxlength="120" />
-              </label>
-              <label class="field-label">Primeira linha do título
-                <input id="invOpeningTitle" class="input" maxlength="80" />
-              </label>
-            </div>
-            <div class="grid-2">
-              <label class="field-label">Destaque do título
-                <input id="invOpeningHighlight" class="input" maxlength="80" />
-              </label>
-              <label class="field-label">Texto do botão de abrir
-                <input id="invStartLabel" class="input" maxlength="40" />
-              </label>
-            </div>
-            <label class="field-label">Dica de som na abertura
-              <input id="invOpeningSoundHint" class="input" maxlength="120" />
-            </label>
-            <label class="field-label">Dica de som no vídeo do Buzz
-              <input id="invBuzzSoundHint" class="input" maxlength="120" />
-            </label>
-            <label class="field-label">Frase da missão
-              <input id="invMissionText" class="input" maxlength="120" />
-            </label>
-            <label class="field-label">Mensagem principal do convite
-              <textarea id="invMessage" class="input" rows="2" maxlength="300"></textarea>
-            </label>
-            <div class="grid-2">
-              <label class="field-label">Legenda da data
-                <input id="invCalendarHint" class="input" maxlength="60" />
-              </label>
-              <label class="field-label">Legenda do horário
-                <input id="invTimeLabel" class="input" maxlength="60" />
-              </label>
-            </div>
-            <label class="field-label">Legenda do mapa
-              <input id="invMapHint" class="input" maxlength="60" />
-            </label>
-            <div class="grid-2">
-              <label class="field-label">Título da dica de presente
-                <input id="invGiftTitle" class="input" maxlength="80" />
-              </label>
-              <label class="field-label">Rótulo "Ele vai amar"
-                <input id="invGiftLoveLabel" class="input" maxlength="60" />
-              </label>
-            </div>
-            <label class="field-label">Sugestões curtas (uma por linha, no formato "Roupa: 6 anos")
-              <textarea id="invGiftSuggestions" class="input" rows="3" maxlength="600"></textarea>
-            </label>
-            <label class="field-label">Texto "Ele vai amar"
-              <textarea id="invGiftLoveValue" class="input" rows="2" maxlength="240"></textarea>
-            </label>
-            <div class="grid-2">
-              <label class="field-label">Início do prazo de confirmação
-                <input id="invDeadlinePrefix" class="input" maxlength="80" />
-              </label>
-              <label class="field-label">Fim do prazo de confirmação
-                <input id="invDeadlineSuffix" class="input" maxlength="30" />
-              </label>
-            </div>
-            <div class="grid-2">
-              <label class="field-label">Texto do botão de confirmar
-                <input id="invConfirmLabel" class="input" maxlength="60" />
-              </label>
-              <label class="field-label">Nota abaixo do botão
-                <input id="invConfirmNote" class="input" maxlength="160" />
-              </label>
-            </div>
-          </details>
-
-          <details class="invite-copy-details">
-            <summary>🎙️ Recado do Ben</summary>
-            <div class="grid-2">
-              <label class="field-label">Título do aviso
-                <input id="invVoiceCueTitle" class="input" maxlength="80" />
-              </label>
-              <label class="field-label">Dica normal
-                <input id="invVoiceCueHint" class="input" maxlength="120" />
-              </label>
-            </div>
-            <label class="field-label">Dica quando o navegador bloquear o áudio
-              <input id="invVoiceCueTapHint" class="input" maxlength="120" />
-            </label>
-          </details>
-
-          <details class="invite-copy-details">
-            <summary>✅ Textos da página de confirmação</summary>
-            <div class="grid-2">
-              <label class="field-label">Frase acima do título
-                <input id="invRsvpEyebrow" class="input" maxlength="80" />
-              </label>
-              <label class="field-label">Título do painel
-                <input id="invRsvpTitle" class="input" maxlength="80" />
-              </label>
-            </div>
-            <label class="field-label">Introdução do painel
-              <input id="invRsvpIntro" class="input" maxlength="160" />
-            </label>
-            <label class="field-label">Subtítulo inicial
-              <input id="invRsvpSubtitle" class="input" maxlength="160" />
-            </label>
-            <label class="field-label">Instrução para buscar o nome
-              <input id="invRsvpPickerSubtitle" class="input" maxlength="160" />
-            </label>
-            <label class="field-label">Saudação depois de encontrar o nome
-              <input id="invRsvpGreeting" class="input" maxlength="160" />
-            </label>
-            <label class="field-label">Mensagem do modo somente link
-              <input id="invRsvpLinksMessage" class="input" maxlength="160" />
-            </label>
-            <label class="field-label">Início do prazo
-              <input id="invRsvpDeadlinePrefix" class="input" maxlength="60" />
-            </label>
-          </details>
-
-          <div class="invite-preview" id="invitePreview" aria-live="polite"></div>
-
-          <div class="invite-form-actions">
-            <button class="btn btn-primary" type="submit">Salvar dados do convite</button>
-            <button class="btn btn-cloud" id="publishInviteBtnBottom" type="button">🚀 Publicar convite</button>
-            <button class="btn btn-ghost" id="copyInviteMessageBtn" type="button">📋 Copiar link do convite animado</button>
-          </div>
-          <p class="invite-publish-state" id="publishInviteState" role="status"></p>
-        </form>
+        <div class="invite-preview" id="invitePreview" aria-live="polite"></div>
+        <p class="hint">Os dados da festa, os textos do convite animado, o recado do Ben, os presentes e a página de confirmação ficam em <strong>⚙️ Configurações do convite</strong>.</p>
       </div>
     </section>
     </main>
@@ -684,7 +519,7 @@
         </div>
 
         <h3 class="form-section">Publicação do convite no site</h3>
-        <p class="hint">O botão <strong>🚀 Publicar convite</strong> grava o <code>event.json</code> no repositório público do GitHub Pages. Use um token com <strong>Contents: read &amp; write</strong> nesse repositório. Se o token abaixo ficar vazio, o painel usa o mesmo token da nuvem.</p>
+        <p class="hint">Ao salvar as <strong>Configurações do convite</strong>, o painel grava o <code>event.json</code> no repositório público do GitHub Pages automaticamente. Use um token com <strong>Contents: read &amp; write</strong> nesse repositório. Se o token abaixo ficar vazio, o painel usa o mesmo token da nuvem.</p>
         <div class="grid-2">
           <label class="field-label">Repositório público (usuário/repositório)
             <input id="setPublicRepo" class="input" placeholder="detectado automaticamente" autocomplete="off" />
@@ -738,6 +573,184 @@
           <span class="spacer"></span>
           <button type="button" class="btn btn-ghost" data-close>Fechar</button>
           <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de configurações do convite -->
+  <div class="modal" id="inviteSettingsModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="inviteSettingsTitle">
+      <div class="modal-head">
+        <h2 id="inviteSettingsTitle">⚙️ Configurações do convite</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <form id="inviteForm">
+        <h3 class="form-section">Dados da festa</h3>
+        <div class="grid-2">
+          <label class="field-label">Nome do aniversariante
+            <input id="invName" class="input" maxlength="40" required autocomplete="off" />
+          </label>
+          <label class="field-label">Idade
+            <input id="invAge" class="input" type="number" min="1" max="99" inputmode="numeric" />
+          </label>
+        </div>
+        <div class="grid-2">
+          <label class="field-label">Data
+            <input id="invDate" class="input" type="date" />
+          </label>
+          <label class="field-label">Horário
+            <input id="invTime" class="input" type="time" />
+          </label>
+        </div>
+        <label class="field-label">Prazo para confirmação
+          <input id="invRsvpDeadline" class="input" type="date" />
+        </label>
+        <label class="field-label">Local
+          <input id="invLocation" class="input" maxlength="120" placeholder="Ex.: Enjoy Kids — Liv Mall Shopping" />
+        </label>
+        <label class="field-label">Link do Google Maps (opcional)
+          <input id="invMapsUrl" class="input" type="url" placeholder="https://maps.app.goo.gl/…" autocomplete="off" />
+        </label>
+        <p class="hint">Se ficar vazio, o convite cria sozinho um link de busca no Google Maps com o local acima.</p>
+
+        <div class="grid-2">
+          <label class="field-label">URL do Google Apps Script (recebe as respostas)
+            <input id="invRsvpUrl" class="input" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" />
+          </label>
+          <label class="field-label">Como o convidado encontra o nome
+            <select id="invMode" class="input">
+              <option value="search">Buscar pelo nome (mostra só depois de 3 letras)</option>
+              <option value="links">Somente link individual (sem busca)</option>
+            </select>
+          </label>
+        </div>
+        <p class="hint">Sem a URL do Apps Script, os botões de resposta ficam desativados no convite. Ao salvar, o painel atualiza o site sozinho quando a publicação estiver configurada em <strong>Editar festa</strong>.</p>
+
+        <details class="invite-copy-details">
+          <summary>🎬 Textos do convite animado</summary>
+          <div class="grid-2">
+            <label class="field-label">Frase acima do título
+              <input id="invOpeningEyebrow" class="input" maxlength="120" />
+            </label>
+            <label class="field-label">Primeira linha do título
+              <input id="invOpeningTitle" class="input" maxlength="80" />
+            </label>
+          </div>
+          <div class="grid-2">
+            <label class="field-label">Destaque do título
+              <input id="invOpeningHighlight" class="input" maxlength="80" />
+            </label>
+            <label class="field-label">Texto do botão de abrir
+              <input id="invStartLabel" class="input" maxlength="40" />
+            </label>
+          </div>
+          <label class="field-label">Dica de som na abertura
+            <input id="invOpeningSoundHint" class="input" maxlength="120" />
+          </label>
+          <label class="field-label">Dica de som no vídeo do Buzz
+            <input id="invBuzzSoundHint" class="input" maxlength="120" />
+          </label>
+          <label class="field-label">Frase da missão
+            <input id="invMissionText" class="input" maxlength="120" />
+          </label>
+          <label class="field-label">Mensagem principal do convite
+            <textarea id="invMessage" class="input" rows="2" maxlength="300"></textarea>
+          </label>
+          <div class="grid-2">
+            <label class="field-label">Legenda da data
+              <input id="invCalendarHint" class="input" maxlength="60" />
+            </label>
+            <label class="field-label">Legenda do horário
+              <input id="invTimeLabel" class="input" maxlength="60" />
+            </label>
+          </div>
+          <label class="field-label">Legenda do mapa
+            <input id="invMapHint" class="input" maxlength="60" />
+          </label>
+          <div class="grid-2">
+            <label class="field-label">Título da dica de presente
+              <input id="invGiftTitle" class="input" maxlength="80" />
+            </label>
+            <label class="field-label">Rótulo "Ele vai amar"
+              <input id="invGiftLoveLabel" class="input" maxlength="60" />
+            </label>
+          </div>
+          <label class="field-label">Sugestões curtas (uma por linha, no formato "Roupa: 6 anos")
+            <textarea id="invGiftSuggestions" class="input" rows="3" maxlength="600"></textarea>
+          </label>
+          <label class="field-label">Texto "Ele vai amar"
+            <textarea id="invGiftLoveValue" class="input" rows="2" maxlength="240"></textarea>
+          </label>
+          <div class="grid-2">
+            <label class="field-label">Início do prazo de confirmação
+              <input id="invDeadlinePrefix" class="input" maxlength="80" />
+            </label>
+            <label class="field-label">Fim do prazo de confirmação
+              <input id="invDeadlineSuffix" class="input" maxlength="30" />
+            </label>
+          </div>
+          <div class="grid-2">
+            <label class="field-label">Texto do botão de confirmar
+              <input id="invConfirmLabel" class="input" maxlength="60" />
+            </label>
+            <label class="field-label">Nota abaixo do botão
+              <input id="invConfirmNote" class="input" maxlength="160" />
+            </label>
+          </div>
+        </details>
+
+        <details class="invite-copy-details">
+          <summary>🎙️ Recado do Ben</summary>
+          <div class="grid-2">
+            <label class="field-label">Título do aviso
+              <input id="invVoiceCueTitle" class="input" maxlength="80" />
+            </label>
+            <label class="field-label">Dica normal
+              <input id="invVoiceCueHint" class="input" maxlength="120" />
+            </label>
+          </div>
+          <label class="field-label">Dica quando o navegador bloquear o áudio
+            <input id="invVoiceCueTapHint" class="input" maxlength="120" />
+          </label>
+        </details>
+
+        <details class="invite-copy-details">
+          <summary>✅ Textos da página de confirmação</summary>
+          <div class="grid-2">
+            <label class="field-label">Frase acima do título
+              <input id="invRsvpEyebrow" class="input" maxlength="80" />
+            </label>
+            <label class="field-label">Título do painel
+              <input id="invRsvpTitle" class="input" maxlength="80" />
+            </label>
+          </div>
+          <label class="field-label">Introdução do painel
+            <input id="invRsvpIntro" class="input" maxlength="160" />
+          </label>
+          <label class="field-label">Subtítulo inicial
+            <input id="invRsvpSubtitle" class="input" maxlength="160" />
+          </label>
+          <label class="field-label">Instrução para buscar o nome
+            <input id="invRsvpPickerSubtitle" class="input" maxlength="160" />
+          </label>
+          <label class="field-label">Saudação depois de encontrar o nome
+            <input id="invRsvpGreeting" class="input" maxlength="160" />
+          </label>
+          <label class="field-label">Mensagem do modo somente link
+            <input id="invRsvpLinksMessage" class="input" maxlength="160" />
+          </label>
+          <label class="field-label">Início do prazo
+            <input id="invRsvpDeadlinePrefix" class="input" maxlength="60" />
+          </label>
+        </details>
+
+        <p class="invite-publish-state" id="publishInviteState" role="status"></p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
+          <span class="spacer"></span>
+          <button type="submit" class="btn btn-primary">Salvar configurações</button>
         </div>
       </form>
     </div>
@@ -942,7 +955,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261106p33"></script>
+  <script src="assets/app.js?v=20261106p34"></script>
   <script src="assets/assistente.js?v=20261105p11"></script>
 </body>
 </html>
