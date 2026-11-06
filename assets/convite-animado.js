@@ -14,6 +14,7 @@
   const audio = document.querySelector("#themeAudio");
   const benVoice = document.querySelector("#benVoiceAudio");
   const benVoiceCue = document.querySelector("#benVoiceCue");
+  const benVoiceCueHint = document.querySelector("#benVoiceCueHint");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const audioStateKey = "ben-invite-audio";
 
@@ -33,6 +34,8 @@
   let startOpeningTheme = () => {};
   let voiceTimer = 0;
   let volumeFrame = 0;
+  let buzzStarted = false;
+  let voicePrimed = false;
   const themeVolume = 0.62;
 
   const finishPrelude = () => {
@@ -77,14 +80,24 @@
     updateBuzzSoundControl();
   };
 
+  const rewindBuzz = () => {
+    if (!buzzPreludeVideo) return;
+    buzzPreludeVideo.pause();
+    try { buzzPreludeVideo.currentTime = 0; } catch { /* aguarda loadedmetadata */ }
+  };
+
+  if (buzzPreludeVideo) rewindBuzz();
+
   if (reduceMotion.matches) {
     finishPrelude();
   } else if (buzzPreludeVideo) {
     buzzPreludeVideo.addEventListener("ended", finishPrelude, { once: true });
     buzzPreludeVideo.muted = false;
     buzzPreludeVideo.volume = 0.9;
-    buzzPreludeVideo.currentTime = 0;
     const startBuzz = async () => {
+      if (buzzStarted || preludeFinishing) return;
+      buzzStarted = true;
+      rewindBuzz();
       experience.classList.add("is-buzz-playing");
       updateBuzzSoundControl();
       try {
@@ -96,8 +109,8 @@
       }
       window.setTimeout(finishPrelude, 16000);
     };
-    if (buzzPreludeVideo.readyState >= 2) startBuzz();
-    else buzzPreludeVideo.addEventListener("canplay", startBuzz, { once: true });
+    if (buzzPreludeVideo.readyState >= 1) startBuzz();
+    else buzzPreludeVideo.addEventListener("loadedmetadata", startBuzz, { once: true });
 
     if (buzzSoundToggle) {
       buzzSoundToggle.addEventListener("click", (event) => {
@@ -121,10 +134,31 @@
     timers = [];
   };
 
-  const setVoiceCue = (visible) => {
+  const setVoiceCue = (visible, needsTap = false) => {
     if (!benVoiceCue) return;
     benVoiceCue.classList.toggle("is-visible", visible);
+    benVoiceCue.classList.toggle("needs-tap", needsTap);
     benVoiceCue.setAttribute("aria-hidden", String(!visible));
+    benVoiceCue.tabIndex = visible && needsTap ? 0 : -1;
+    if (benVoiceCueHint) benVoiceCueHint.textContent = needsTap ? "Toque para ouvir o Ben" : "Escute só um pouquinho…";
+  };
+
+  const primeBenVoice = () => {
+    if (!benVoice || voicePrimed || !soundEnabled) return;
+    const previousVolume = benVoice.volume;
+    benVoice.muted = false;
+    benVoice.volume = 0.001;
+    benVoice.currentTime = 0;
+    const attempt = benVoice.play();
+    if (!attempt) return;
+    attempt.then(() => {
+      benVoice.pause();
+      benVoice.currentTime = 0;
+      benVoice.volume = previousVolume || 0.96;
+      voicePrimed = true;
+    }).catch(() => {
+      benVoice.volume = previousVolume || 0.96;
+    });
   };
 
   const fadeThemeTo = (target, duration = 650) => {
@@ -158,7 +192,7 @@
     try {
       await benVoice.play();
     } catch {
-      setVoiceCue(false);
+      setVoiceCue(true, true);
       fadeThemeTo(themeVolume, 550);
     }
   };
@@ -262,8 +296,14 @@
     later(() => experience.classList.remove("is-between-scenes"), 7400);
   };
 
-  startButton.addEventListener("click", () => runAnimation({ restartAudio: false }));
-  replayButton.addEventListener("click", () => runAnimation({ restartAudio: true }));
+  startButton.addEventListener("click", () => {
+    primeBenVoice();
+    runAnimation({ restartAudio: false });
+  });
+  replayButton.addEventListener("click", () => {
+    primeBenVoice();
+    runAnimation({ restartAudio: true });
+  });
   skipButton.addEventListener("click", showFinal);
 
   soundButton.addEventListener("click", () => {
@@ -305,6 +345,28 @@
       if (soundEnabled && !audio.paused) fadeThemeTo(themeVolume, 900);
     });
   }
+
+  if (benVoiceCue) {
+    benVoiceCue.addEventListener("click", () => {
+      if (!benVoiceCue.classList.contains("needs-tap")) return;
+      playBenVoice();
+    });
+  }
+
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted || experience.classList.contains("is-prelude-complete")) return;
+    buzzStarted = false;
+    preludeFinishing = false;
+    rewindBuzz();
+    if (buzzPreludeVideo.readyState >= 1) {
+      buzzPreludeVideo.play().catch(() => {
+        buzzPreludeVideo.muted = true;
+        updateBuzzSoundControl();
+        buzzPreludeVideo.play().catch(finishPrelude);
+      });
+      buzzStarted = true;
+    }
+  });
 
   reduceMotion.addEventListener?.("change", (event) => {
     if (event.matches && experience.classList.contains("is-started")) showFinal();

@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/convite-animado.css?v=20261105p5" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=20261106p6" />
 </head>
 <body>
   <a class="skip-link" href="#finalInvite">Pular para o convite</a>
@@ -52,8 +52,8 @@
     </div>
 
     <div class="buzz-prelude" id="buzzPrelude" aria-label="Buzz Lightyear chegando para a aventura">
-      <video id="buzzPreludeVideo" autoplay playsinline preload="auto" poster="assets/convite/buzz-poster.webp?v=20261102">
-        <source src="assets/convite/buzz.mp4?v=20261102" type="video/mp4" />
+      <video id="buzzPreludeVideo" playsinline preload="auto" poster="assets/convite/buzz-poster.webp?v=20261106">
+        <source src="assets/convite/buzz.mp4?v=20261106" type="video/mp4" />
       </video>
       <div class="buzz-prelude-controls" aria-label="Controles da abertura">
         <button class="buzz-prelude-control" id="buzzSoundToggle" type="button" aria-label="Ativar som do Buzz" aria-pressed="true"><span aria-hidden="true">🔇</span></button>
@@ -163,10 +163,10 @@
       <span></span><span></span><span></span><span></span><span></span>
     </div>
 
-    <div class="ben-voice-cue" id="benVoiceCue" role="status" aria-live="polite" aria-hidden="true">
+    <button class="ben-voice-cue" id="benVoiceCue" type="button" aria-live="polite" aria-hidden="true" tabindex="-1">
       <span aria-hidden="true">🎙️</span>
-      <span><strong>Um recado do Ben</strong><small>Escute só um pouquinho…</small></span>
-    </div>
+      <span><strong>Um recado do Ben</strong><small id="benVoiceCueHint">Escute só um pouquinho…</small></span>
+    </button>
 
     <audio id="themeAudio" preload="metadata">
       <source src="assets/audio/amigo-estou-aqui.mp3" type="audio/mpeg" />
@@ -180,6 +180,6 @@
     <div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div>
   </noscript>
   <script src="assets/convite-dados.js?v=20261104p4"></script>
-  <script src="assets/convite-animado.js?v=20261105p17"></script>
+  <script src="assets/convite-animado.js?v=20261106p18"></script>
 </body>
 </html>

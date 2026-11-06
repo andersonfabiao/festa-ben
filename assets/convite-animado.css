@@ -769,6 +769,8 @@ button { color: inherit; }
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  appearance: none;
+  font: inherit;
   transform: translate(-50%, -14px) scale(.94);
   transition: opacity .35s ease, transform .45s cubic-bezier(.2,.8,.2,1), visibility .35s;
 }
@@ -780,6 +782,19 @@ button { color: inherit; }
   opacity: 1;
   visibility: visible;
   transform: translate(-50%, 0) scale(1);
+}
+.ben-voice-cue.needs-tap {
+  pointer-events: auto;
+  cursor: pointer;
+  border-color: #ffd34e;
+  box-shadow: 0 0 0 4px rgba(255,211,78,.25), 0 10px 28px rgba(20,72,108,.22);
+  animation: ben-voice-pulse 1.6s ease-in-out infinite;
+}
+.ben-voice-cue.needs-tap small { color: #b04a2f; }
+.ben-voice-cue.needs-tap:focus-visible { outline: 4px solid #155f91; outline-offset: 3px; }
+
+@keyframes ben-voice-pulse {
+  50% { transform: translate(-50%, 0) scale(1.035); }
 }
 
 /* Queda do Buzz → carta de abertura. A fumaça começa concentrada na base,
