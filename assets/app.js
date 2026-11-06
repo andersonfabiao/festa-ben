@@ -3158,6 +3158,8 @@
 
   /* ---------- Convite ---------- */
 
+  const INVITE_RELEASE = "20261106p21";
+
   function invitePageUrl() {
     try {
       const url = new URL("convite.html", location.href);
@@ -3173,6 +3175,7 @@
     try {
       const url = new URL("convite-animado.html", location.href);
       url.search = "";
+      url.searchParams.set("v", INVITE_RELEASE);
       url.hash = "";
       return url.href;
     } catch (e) {
@@ -3187,7 +3190,13 @@
 
   function guestAnimatedInviteUrl(guest) {
     const key = guest && guest.id ? String(guest.id) : guestKey(guest.name, guest.type);
-    return animatedInviteUrl() + "?convite=" + encodeURIComponent(key);
+    try {
+      const url = new URL(animatedInviteUrl(), location.href);
+      url.searchParams.set("convite", key);
+      return url.href;
+    } catch (e) {
+      return "convite-animado.html?v=" + encodeURIComponent(INVITE_RELEASE) + "&convite=" + encodeURIComponent(key);
+    }
   }
 
   function inviteMessageText(options) {

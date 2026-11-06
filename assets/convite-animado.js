@@ -1,4 +1,6 @@
-(() => {
+(async () => {
+  if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
+  const inviteRelease = "20261106p21";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -22,7 +24,7 @@
   try {
     const inviteKey = new URLSearchParams(window.location.search).get("convite");
     if (inviteKey && confirmButton) {
-      confirmButton.href = "convite.html?music=1&convite=" + encodeURIComponent(inviteKey);
+      confirmButton.href = "convite.html?music=1&v=" + encodeURIComponent(inviteRelease) + "&convite=" + encodeURIComponent(inviteKey);
     }
   } catch (e) {
     /* ignora */
@@ -358,6 +360,10 @@
       playBenVoice();
     });
   }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") window.__checkBenInviteVersion?.();
+  });
 
   window.addEventListener("pageshow", (event) => {
     if (!event.persisted || experience.classList.contains("is-prelude-complete")) return;

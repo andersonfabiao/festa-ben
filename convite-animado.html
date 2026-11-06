@@ -6,6 +6,30 @@
   <title>Uma aventura especial · Ben faz 5!</title>
   <meta name="description" content="Abra o convite animado do aniversário de 5 anos do Ben e venha viver essa aventura com a gente!" />
   <meta name="theme-color" content="#55b9e8" />
+  <meta name="app-version" content="20261106p21" />
+  <script>
+    window.__checkBenInviteVersion = async () => {
+      if (!/^https?:$/.test(location.protocol) || /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
+      try {
+        const current = document.querySelector('meta[name="app-version"]')?.content;
+        const checkUrl = new URL("convite-animado.html", location.href);
+        checkUrl.searchParams.set("_check", Date.now().toString());
+        const response = await fetch(checkUrl.href, { cache: "no-store" });
+        if (!response.ok) return false;
+        const html = await response.text();
+        const remote = new DOMParser().parseFromString(html, "text/html")
+          .querySelector('meta[name="app-version"]')?.content;
+        if (!current || !remote || current === remote) return false;
+        const nextUrl = new URL(location.href);
+        nextUrl.searchParams.set("v", remote);
+        location.replace(nextUrl.href);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    window.__benInviteVersionCheck = window.__checkBenInviteVersion();
+  </script>
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:site_name" content="Aniversário do Ben" />
@@ -180,6 +204,6 @@
     <div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div>
   </noscript>
   <script src="assets/convite-dados.js?v=20261104p4"></script>
-  <script src="assets/convite-animado.js?v=20261106p20"></script>
+  <script src="assets/convite-animado.js?v=20261106p21"></script>
 </body>
 </html>
