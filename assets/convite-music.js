@@ -9,6 +9,9 @@
   const themeVolume = 0.085;
   const arrivedFromInvite = new URLSearchParams(location.search).get("music") === "1";
   let state = null;
+  let blocked = false;
+  let explicitlyPaused = false;
+  let attempting = false;
 
   try {
     state = JSON.parse(sessionStorage.getItem(stateKey) || "null");
@@ -17,13 +20,20 @@
   }
 
   const freshState = state && Number.isFinite(state.savedAt) && Date.now() - state.savedAt < 30 * 60 * 1000;
-  player.hidden = false;
+  const savedShouldPlay = freshState ? state.shouldPlay !== false : true;
+  explicitlyPaused = freshState && savedShouldPlay === false && !arrivedFromInvite;
+
+  audio.loop = true;
+  audio.volume = freshState && Number.isFinite(state.volume)
+    ? Math.min(state.volume, themeVolume)
+    : themeVolume;
+  player.hidden = true;
 
   const saveState = () => {
     try {
       sessionStorage.setItem(stateKey, JSON.stringify({
         currentTime: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
-        shouldPlay: !audio.paused,
+        shouldPlay: !audio.paused && !explicitlyPaused,
         volume: audio.volume,
         savedAt: Date.now(),
       }));
@@ -32,56 +42,89 @@
     }
   };
 
-  const updateControl = (blocked = false) => {
+  const updateControl = (mode) => {
     const playing = !audio.paused;
+    player.hidden = mode === "hidden";
+    player.classList.toggle("needs-tap", mode === "blocked");
     button.setAttribute("aria-pressed", String(!playing));
     button.setAttribute("aria-label", playing ? "Pausar música" : "Continuar música");
-    label.textContent = playing ? "Música tocando" : (blocked ? "Continuar música" : "Música pausada");
-    player.classList.toggle("needs-tap", blocked);
+    label.textContent = playing
+      ? "Música tocando"
+      : mode === "blocked"
+        ? "Continuar música"
+        : "Música pausada";
   };
 
   const continueAudio = async () => {
+    if (attempting) return;
+    attempting = true;
     try {
       await audio.play();
-      updateControl(false);
+      blocked = false;
+      updateControl("hidden");
     } catch {
-      updateControl(true);
+      blocked = true;
+      updateControl("blocked");
+    } finally {
+      attempting = false;
     }
   };
 
-  const prepare = () => {
+  const applySavedTime = () => {
+    if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
     const savedTime = freshState && Number.isFinite(state.currentTime) ? state.currentTime : 0;
-    const travelTime = freshState && state.shouldPlay ? Math.max(0, (Date.now() - state.savedAt) / 1000) : 0;
+    const travelTime = freshState && savedShouldPlay
+      ? Math.max(0, (Date.now() - state.savedAt) / 1000)
+      : 0;
     const target = savedTime + travelTime;
-    if (Number.isFinite(audio.duration) && audio.duration > 0) {
-      audio.currentTime = Math.min(target, Math.max(0, audio.duration - .25));
-    }
-    audio.volume = freshState && Number.isFinite(state.volume) ? Math.min(state.volume, themeVolume) : themeVolume;
-
-    const explicitlyPaused = freshState && state.shouldPlay === false;
-    if (!explicitlyPaused || arrivedFromInvite) {
-      continueAudio();
-    } else {
-      updateControl(false);
-    }
+    audio.currentTime = Math.min(target, Math.max(0, audio.duration - .25));
   };
 
-  if (audio.readyState >= 1) prepare();
-  else audio.addEventListener("loadedmetadata", prepare, { once: true });
+  if (audio.readyState >= 1) applySavedTime();
+  else audio.addEventListener("loadedmetadata", applySavedTime, { once: true });
+
+  if (!explicitlyPaused || arrivedFromInvite) {
+    // Tenta retomar sozinho. Se o navegador bloquear, o botão discreto aparece
+    // e qualquer toque na página também tenta iniciar a música.
+    continueAudio();
+  } else {
+    updateControl("paused");
+  }
+
+  audio.addEventListener("canplay", () => {
+    if (!explicitlyPaused && audio.paused) continueAudio();
+  }, { once: true });
+
+  const resumeOnGesture = () => {
+    if (!explicitlyPaused && audio.paused) continueAudio();
+  };
+  document.addEventListener("pointerdown", resumeOnGesture, { once: true, passive: true });
+  document.addEventListener("keydown", resumeOnGesture, { once: true });
 
   button.addEventListener("click", async () => {
-    if (audio.paused) await continueAudio();
-    else {
+    if (audio.paused) {
+      explicitlyPaused = false;
+      await continueAudio();
+    } else {
+      explicitlyPaused = true;
       audio.pause();
-      updateControl(false);
+      updateControl("paused");
     }
     saveState();
+  });
+
+  audio.addEventListener("pause", () => {
+    if (audio.ended) return;
+    updateControl(blocked ? "blocked" : "paused");
   });
 
   audio.addEventListener("ended", () => {
-    audio.currentTime = 0;
-    updateControl(false);
+    if (!explicitlyPaused) {
+      audio.currentTime = 0;
+      continueAudio();
+    }
     saveState();
   });
+
   window.addEventListener("pagehide", saveState);
 })();

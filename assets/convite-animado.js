@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261106p22";
+  const inviteRelease = "20261106p33";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -37,10 +37,11 @@
   let voiceTimer = 0;
   let volumeFrame = 0;
   let buzzStarted = false;
+  let buzzSoundUnlocked = false;
   let voicePrimed = false;
-  // Compensa a masterização: a música está ~22 dB acima do áudio do Buzz.
+  // Compensa a masterização: a música fica bem abaixo da voz do Ben.
   const themeVolume = 0.085;
-  const duckedThemeVolume = 0.002;
+  const duckedThemeVolume = 0.02;
 
   const finishPrelude = () => {
     if (preludeFinishing || experience.classList.contains("is-prelude-complete")) return;
@@ -74,10 +75,12 @@
   };
 
   const enableBuzzSound = () => {
-    if (!buzzPreludeVideo || !buzzPreludeVideo.muted) return;
+    if (!buzzPreludeVideo) return;
+    buzzSoundUnlocked = true;
     buzzPreludeVideo.muted = false;
     buzzPreludeVideo.volume = 0.9;
     buzzPreludeVideo.play().catch(() => {
+      // Só volta a mutar se o navegador recusar o som mesmo depois do gesto.
       buzzPreludeVideo.muted = true;
       updateBuzzSoundControl();
     });
@@ -107,9 +110,19 @@
       try {
         await buzzPreludeVideo.play();
       } catch {
-        buzzPreludeVideo.muted = true;
-        updateBuzzSoundControl();
-        buzzPreludeVideo.play().catch(finishPrelude);
+        if (buzzSoundUnlocked) {
+          // O gesto do usuário chegou antes da recusa do autoplay: tenta de novo
+          // com som em vez de mutar por cima da ativação.
+          await buzzPreludeVideo.play().catch(() => {
+            buzzPreludeVideo.muted = true;
+            updateBuzzSoundControl();
+            buzzPreludeVideo.play().catch(finishPrelude);
+          });
+        } else {
+          buzzPreludeVideo.muted = true;
+          updateBuzzSoundControl();
+          buzzPreludeVideo.play().catch(finishPrelude);
+        }
       }
       window.setTimeout(finishPrelude, 16000);
     };
@@ -119,8 +132,10 @@
     if (buzzSoundToggle) {
       buzzSoundToggle.addEventListener("click", (event) => {
         event.stopPropagation();
-        buzzPreludeVideo.muted = !buzzPreludeVideo.muted;
-        if (!buzzPreludeVideo.muted) buzzPreludeVideo.play().catch(() => {});
+        const willUnmute = buzzPreludeVideo.muted;
+        buzzSoundUnlocked = willUnmute;
+        buzzPreludeVideo.muted = !willUnmute;
+        if (willUnmute) buzzPreludeVideo.play().catch(() => {});
         updateBuzzSoundControl();
       });
     }
@@ -140,11 +155,20 @@
 
   const setVoiceCue = (visible, needsTap = false) => {
     if (!benVoiceCue) return;
+    const copy = Object.assign(
+      {
+        voiceCueHint: "Escute só um pouquinho…",
+        voiceCueTapHint: "Toque para ouvir o Ben",
+      },
+      window.BEN_INVITE_COPY || {}
+    );
     benVoiceCue.classList.toggle("is-visible", visible);
     benVoiceCue.classList.toggle("needs-tap", needsTap);
     benVoiceCue.setAttribute("aria-hidden", String(!visible));
     benVoiceCue.tabIndex = visible && needsTap ? 0 : -1;
-    if (benVoiceCueHint) benVoiceCueHint.textContent = needsTap ? "Toque para ouvir o Ben" : "Escute só um pouquinho…";
+    if (benVoiceCueHint) {
+      benVoiceCueHint.textContent = needsTap ? copy.voiceCueTapHint : copy.voiceCueHint;
+    }
   };
 
   const primeBenVoice = () => {
@@ -191,7 +215,7 @@
     setVoiceCue(true);
     // A trilha fica apenas como um fundo quase imperceptível durante a fala.
     // A descida curta evita encobrir as primeiras palavras do Ben.
-    fadeThemeTo(duckedThemeVolume, 180);
+    fadeThemeTo(duckedThemeVolume, 350);
     benVoice.currentTime = 0;
     benVoice.volume = 0.96;
     benVoice.muted = false;
@@ -387,6 +411,19 @@
   reduceMotion.addEventListener?.("change", (event) => {
     if (event.matches && experience.classList.contains("is-started")) showFinal();
   });
+
+  const unlockOnFirstGesture = (event) => {
+    const target = event && event.target;
+    const handledByPrelude = target && target.closest &&
+      target.closest("#buzzSoundToggle, #buzzSkip");
+    if (!handledByPrelude && !preludeFinishing && buzzStarted && buzzPreludeVideo &&
+        buzzPreludeVideo.muted && !buzzPreludeVideo.ended) {
+      enableBuzzSound();
+    }
+    primeBenVoice();
+  };
+  document.addEventListener("pointerdown", unlockOnFirstGesture, { once: true, passive: true });
+  document.addEventListener("keydown", unlockOnFirstGesture, { once: true });
 
   updateSoundButton();
 })();

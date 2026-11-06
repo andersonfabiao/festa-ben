@@ -1695,6 +1695,49 @@ body.no-scroll { overflow: hidden; }
   border-top: 1px solid var(--line);
 }
 
+.invite-copy-details {
+  margin: 14px 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #f8fbff;
+  padding: 4px 14px 12px;
+}
+
+.invite-copy-details > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  font-weight: 800;
+  color: #21446b;
+  cursor: pointer;
+  list-style: none;
+}
+
+.invite-copy-details > summary::-webkit-details-marker { display: none; }
+.invite-copy-details > summary::after {
+  content: "▾";
+  margin-left: auto;
+  color: #5a7392;
+  transition: transform .18s ease;
+}
+.invite-copy-details:not([open]) > summary::after { transform: rotate(-90deg); }
+.invite-copy-details > summary:focus-visible {
+  outline: 3px solid rgba(47, 128, 237, .35);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.invite-copy-details .grid-2 { margin-bottom: 0; }
+.invite-copy-details .field-label { margin: 8px 0 0; }
+
+.invite-publish-state {
+  margin: 10px 0 0;
+  min-height: 1.1em;
+  color: #4a5b78;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
 /* ---------- Página do convite ---------- */
 
 .invite-body {
@@ -2995,20 +3038,33 @@ body.no-scroll { overflow: hidden; }
 .rsvp-music button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border: 2px solid rgba(255,255,255,.85);
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255,255,255,.7);
   border-radius: 999px;
-  color: #fff;
-  background: rgba(18, 68, 109, .9);
-  box-shadow: 0 8px 24px rgba(15, 61, 94, .28);
+  color: #eef7ff;
+  background: rgba(18, 68, 109, .72);
+  box-shadow: 0 6px 18px rgba(15, 61, 94, .22);
+  font-size: .78rem;
   font-weight: 800;
   cursor: pointer;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  opacity: .88;
+  transition: opacity .18s ease, transform .18s ease;
 }
 
-.rsvp-music.needs-tap button { background: #df403b; animation: rsvp-music-pulse 1.8s ease-in-out infinite; }
+.rsvp-music button:hover,
+.rsvp-music button:focus-visible { opacity: 1; transform: translateY(-1px); }
+
+.rsvp-music.needs-tap button {
+  background: rgba(190, 52, 48, .9);
+  animation: rsvp-music-pulse 2.4s ease-in-out infinite;
+}
 .rsvp-music button:focus-visible { outline: 4px solid #ffd947; outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rsvp-music.needs-tap button { animation: none; }
+}
 
 @keyframes rsvp-music-pulse {
   50% { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(190, 45, 42, .36); }

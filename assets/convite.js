@@ -15,6 +15,17 @@
     declined: { label: "Não vai" },
   };
 
+  const FALLBACK_INVITE = {
+    rsvpEyebrow: "Confirmação de presença",
+    rsvpSubtitle: "Que bom ter você por aqui. Encontre seu nome para responder.",
+    rsvpPickerSubtitle: "Encontre seu nome para confirmar a presença.",
+    rsvpGreeting: "Confirme sua presença.",
+    rsvpLinksMessage: "Abra o link pessoal que você recebeu.",
+    rsvpTitle: "Vamos confirmar?",
+    rsvpIntro: "Sua resposta ajuda a gente a preparar tudo com carinho.",
+    rsvpDeadlinePrefix: "Prazo para confirmar:",
+  };
+
   const FALLBACK_META = {
     name: "Ben",
     age: 5,
@@ -28,6 +39,7 @@
     fatherPhone: "",
     motherPhone: "",
     inviteMode: "search",
+    invite: FALLBACK_INVITE,
   };
 
   const esc = (value) =>
@@ -155,6 +167,12 @@
     if (["enjoy livmall", "buffet alegria — salão 2"].includes(location.trim().toLowerCase())) {
       location = FALLBACK_META.location;
     }
+    const rawInvite = base.invite && typeof base.invite === "object" ? base.invite : {};
+    const invite = {};
+    Object.keys(FALLBACK_INVITE).forEach((key) => {
+      const value = String(rawInvite[key] == null ? "" : rawInvite[key]).trim().slice(0, 400);
+      invite[key] = value || FALLBACK_INVITE[key];
+    });
     return {
       name: String(base.name || "Ben").slice(0, 40),
       age: Math.min(99, Math.max(1, parseInt(base.age, 10) || 5)),
@@ -170,6 +188,7 @@
       fatherPhone: String(base.fatherPhone || "").replace(/\D/g, "").slice(0, 15),
       motherPhone: String(base.motherPhone || "").replace(/\D/g, "").slice(0, 15),
       inviteMode: base.inviteMode === "links" ? "links" : "search",
+      invite,
     };
   }
 
@@ -342,7 +361,20 @@
     }
   }
 
+  function applyInviteCopy() {
+    const copy = meta.invite;
+    const eyebrow = $("#inviteEyebrow");
+    if (eyebrow) eyebrow.textContent = copy.rsvpEyebrow;
+    const title = $("#rsvpTitle");
+    if (title) title.textContent = copy.rsvpTitle;
+    const intro = $("#rsvpIntro");
+    if (intro) intro.textContent = copy.rsvpIntro;
+    const sub = $("#inviteSub");
+    if (sub) sub.textContent = copy.rsvpSubtitle;
+  }
+
   function renderMeta() {
+    applyInviteCopy();
     const name = $("#inviteName");
     if (name) {
       name.replaceChildren();
@@ -375,7 +407,7 @@
     );
     $("#inviteMeta").innerHTML = chips.join("");
     const deadline = $("#inviteRsvpDeadline");
-    if (deadline) deadline.textContent = "Prazo para confirmar: " + shortDate(meta.rsvpDeadline);
+    if (deadline) deadline.textContent = meta.invite.rsvpDeadlinePrefix + " " + shortDate(meta.rsvpDeadline);
     renderParentContacts();
   }
 
@@ -383,7 +415,7 @@
     current = null;
 
     if (meta.inviteMode === "links") {
-      $("#inviteSub").textContent = "Abra o link pessoal que você recebeu.";
+      $("#inviteSub").textContent = meta.invite.rsvpLinksMessage;
       $("#inviteContent").innerHTML =
         '<div class="invite-error">' +
           '<p>Para confirmar sua presença, use o <strong>link individual</strong> que os anfitriões enviaram. 💌</p>' +
@@ -392,7 +424,7 @@
       return;
     }
 
-    $("#inviteSub").textContent = "Encontre seu nome para confirmar a presença.";
+    $("#inviteSub").textContent = meta.invite.rsvpPickerSubtitle;
 
     $("#inviteContent").innerHTML =
       '<div class="invite-picker">' +
@@ -579,7 +611,7 @@
 
   function renderRsvp(guest) {
     current = guest;
-    $("#inviteSub").textContent = "Olá, " + displayGuestName(guest) + "! Confirme sua presença.";
+    $("#inviteSub").textContent = "Olá, " + displayGuestName(guest) + "! " + meta.invite.rsvpGreeting;
 
     const configured = !!meta.rsvpUrl;
     const status = GUEST_STATUS[guest.status] || GUEST_STATUS.pending;

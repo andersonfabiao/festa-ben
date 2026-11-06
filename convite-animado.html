@@ -6,7 +6,7 @@
   <title>Uma aventura especial · Ben faz 5!</title>
   <meta name="description" content="Abra o convite animado do aniversário de 5 anos do Ben e venha viver essa aventura com a gente!" />
   <meta name="theme-color" content="#55b9e8" />
-  <meta name="app-version" content="20261106p22" />
+  <meta name="app-version" content="20261106p33" />
   <script>
     window.__checkBenInviteVersion = async () => {
       if (!/^https?:$/.test(location.protocol) || /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -83,7 +83,7 @@
         <button class="buzz-prelude-control" id="buzzSoundToggle" type="button" aria-label="Ativar som do Buzz" aria-pressed="true"><span aria-hidden="true">🔇</span></button>
         <button class="buzz-prelude-control" id="buzzSkip" type="button" aria-label="Pular animação do Buzz"><span aria-hidden="true">»</span></button>
       </div>
-      <p class="buzz-sound-hint"><span aria-hidden="true">♫</span> Toque para ativar o som e entrar na brincadeira!</p>
+      <p class="buzz-sound-hint" id="buzzSoundHint"><span aria-hidden="true">♫</span> Toque para ativar o som e entrar na brincadeira!</p>
     </div>
 
     <div class="opening-screen" id="openingScreen">
@@ -97,13 +97,13 @@
             <span class="ben-word">BEN</span>
             <span class="story-word">STORY</span>
           </div>
-          <p class="eyebrow">Uma mensagem especial chegou para você</p>
-          <h1>Prepare-se para uma<br /><strong>grande aventura!</strong></h1>
+          <p class="eyebrow" id="openingEyebrow">Uma mensagem especial chegou para você</p>
+          <h1><span id="openingTitleLead">Prepare-se para uma</span><br /><strong id="openingTitleHighlight">grande aventura!</strong></h1>
           <button class="start-button" id="startButton" type="button">
             <span class="start-icon" aria-hidden="true">▶</span>
-            <span>Abrir convite</span>
+            <span id="startButtonLabel">Abrir convite</span>
           </button>
-          <p class="sound-hint"><span aria-hidden="true">♫</span> Ative o som para entrar na brincadeira</p>
+          <p class="sound-hint" id="openingSoundHint"><span aria-hidden="true">♫</span> Ative o som para entrar na brincadeira</p>
         </div>
       </div>
     </div>
@@ -135,7 +135,7 @@
                 <span class="ben-word">BEN</span>
                 <span class="story-word">STORY</span>
               </div>
-              <p>Você foi escolhido para esta missão!</p>
+              <p id="missionText">Você foi escolhido para esta missão!</p>
               <h2>
                 <span class="name-blocks" id="animatedNameBlocks" role="img" aria-label="Ben">
                   <span>B</span><span>E</span><span>N</span>
@@ -144,17 +144,17 @@
               </h2>
             </header>
 
-            <p class="invite-message">Venha brincar, sorrir e viver uma aventura inesquecível com a gente.</p>
+            <p class="invite-message" id="inviteMessage">Venha brincar, sorrir e viver uma aventura inesquecível com a gente.</p>
 
             <div class="event-details">
               <a id="animatedDate" href="#" download="aniversario-ben.ics" aria-label="Adicionar aniversário do Ben à agenda"><span aria-hidden="true">📅</span><strong id="animatedDateText">09 de janeiro de 2027</strong><small id="animatedWeekday">Sábado · adicionar à agenda</small></a>
-              <div id="animatedTime"><span aria-hidden="true">🕕</span><strong id="animatedTimeText">18h</strong><small>Hora da missão</small></div>
+              <div id="animatedTime"><span aria-hidden="true">🕕</span><strong id="animatedTimeText">18h</strong><small id="animatedTimeLabel">Hora da missão</small></div>
               <a class="location" id="animatedLocation" href="https://maps.app.goo.gl/A1W6p14GLiRxY7Sy8" target="_blank" rel="noopener noreferrer" aria-label="Abrir a localização do Enjoy Kids no Google Maps"><span aria-hidden="true">📍</span><strong id="animatedLocationName">Enjoy Kids</strong><small id="animatedLocationDetail">Liv Mall Shopping · abrir mapa ↗</small></a>
             </div>
 
             <section class="gift-guide" aria-labelledby="giftTitle">
               <div class="gift-title"><span aria-hidden="true">🎁</span><strong id="giftTitle">Diquinha de presente</strong></div>
-              <div class="gift-options">
+              <div class="gift-options" id="giftOptions">
                 <span><small>Roupa</small><b>6 anos</b></span>
                 <span><small>Calçado</small><b>27</b></span>
                 <span class="gift-theme"><small>Ele vai amar</small><b>Tudo do universo Toy Story ou bloquinhos de montar estilo Lego</b></span>
@@ -163,10 +163,10 @@
 
             <p class="rsvp-deadline" id="animatedRsvpDeadline">Confirme sua presença até 29 de dezembro 💫</p>
             <a class="confirm-button" id="confirmButton" href="convite.html?music=1">
-              <span>Confirmar presença</span>
+              <span id="confirmButtonLabel">Confirmar presença</span>
               <span aria-hidden="true">→</span>
             </a>
-            <p class="confirm-note">Clique no botão para encontrar seu nome e responder.</p>
+            <p class="confirm-note" id="confirmNote">Clique no botão para encontrar seu nome e responder.</p>
 
             <div class="base-cast-art" aria-hidden="true">
               <picture>
@@ -189,7 +189,7 @@
 
     <button class="ben-voice-cue" id="benVoiceCue" type="button" aria-live="polite" aria-hidden="true" tabindex="-1">
       <span aria-hidden="true">🎙️</span>
-      <span><strong>Um recado do Ben</strong><small id="benVoiceCueHint">Escute só um pouquinho…</small></span>
+      <span><strong id="benVoiceCueTitle">Um recado do Ben</strong><small id="benVoiceCueHint">Escute só um pouquinho…</small></span>
     </button>
 
     <audio id="themeAudio" preload="metadata">
@@ -203,7 +203,7 @@
   <noscript>
     <div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div>
   </noscript>
-  <script src="assets/convite-dados.js?v=20261104p4"></script>
-  <script src="assets/convite-animado.js?v=20261106p22"></script>
+  <script src="assets/convite-dados.js?v=20261106p33"></script>
+  <script src="assets/convite-animado.js?v=20261106p33"></script>
 </body>
 </html>

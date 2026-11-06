@@ -1,6 +1,32 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
+  const INVITE_COPY_DEFAULTS = {
+    openingEyebrow: "Uma mensagem especial chegou para você",
+    openingTitle: "Prepare-se para uma",
+    openingHighlight: "grande aventura!",
+    startLabel: "Abrir convite",
+    openingSoundHint: "Ative o som para entrar na brincadeira",
+    buzzSoundHint: "Toque para ativar o som e entrar na brincadeira!",
+    missionText: "Você foi escolhido para esta missão!",
+    message: "Venha brincar, sorrir e viver uma aventura inesquecível com a gente.",
+    calendarHint: "adicionar à agenda",
+    timeLabel: "Hora da missão",
+    mapHint: "abrir mapa ↗",
+    giftTitle: "Diquinha de presente",
+    giftLoveLabel: "Ele vai amar",
+    giftLoveValue: "Tudo do universo Toy Story ou bloquinhos de montar estilo Lego",
+    deadlinePrefix: "Confirme sua presença até",
+    deadlineSuffix: "💫",
+    confirmLabel: "Confirmar presença",
+    confirmNote: "Clique no botão para encontrar seu nome e responder.",
+    voiceCueTitle: "Um recado do Ben",
+    voiceCueHint: "Escute só um pouquinho…",
+    voiceCueTapHint: "Toque para ouvir o Ben",
+  };
+
+  const DEFAULT_GIFTS = ["Roupa: 6 anos", "Calçado: 27"];
+
   const escapeHtml = (value) =>
     String(value)
       .replace(/&/g, "&amp;")
@@ -12,6 +38,11 @@
   const setText = (id, text) => {
     const el = $(id);
     if (el) el.textContent = text;
+  };
+
+  const setIconText = (id, icon, text) => {
+    const el = $(id);
+    if (el) el.innerHTML = '<span aria-hidden="true">' + icon + "</span> " + escapeHtml(text);
   };
 
   const longDate = (iso) => {
@@ -66,6 +97,68 @@
     return [cleaned, ""];
   };
 
+  const normalizeCopy = (raw) => {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const copy = {};
+    Object.keys(INVITE_COPY_DEFAULTS).forEach((key) => {
+      const value = String(source[key] == null ? "" : source[key]).trim().slice(0, 400);
+      copy[key] = value || INVITE_COPY_DEFAULTS[key];
+    });
+    return copy;
+  };
+
+  const giftItems = (raw) => {
+    const list = Array.isArray(raw) && raw.length ? raw : DEFAULT_GIFTS;
+    return list
+      .map((item) => {
+        const text = String(item || "").trim().slice(0, 120);
+        if (!text) return null;
+        const colon = text.indexOf(":");
+        if (colon > 0) {
+          return { label: text.slice(0, colon).trim(), value: text.slice(colon + 1).trim() };
+        }
+        return { label: "Sugestão", value: text };
+      })
+      .filter(Boolean)
+      .slice(0, 6);
+  };
+
+  const renderGiftOptions = (meta, copy) => {
+    const host = $("giftOptions");
+    if (!host) return;
+    const smalls = giftItems(meta.giftSuggestions)
+      .map(
+        (item) =>
+          "<span><small>" + escapeHtml(item.label) + "</small><b>" +
+          escapeHtml(item.value) + "</b></span>"
+      )
+      .join("");
+    const love = copy.giftLoveValue
+      ? '<span class="gift-theme"><small>' + escapeHtml(copy.giftLoveLabel) +
+        "</small><b>" + escapeHtml(copy.giftLoveValue) + "</b></span>"
+      : "";
+    host.innerHTML = smalls + love;
+  };
+
+  const applyInviteCopy = (meta, copy) => {
+    setText("openingEyebrow", copy.openingEyebrow);
+    setText("openingTitleLead", copy.openingTitle);
+    setText("openingTitleHighlight", copy.openingHighlight);
+    setText("startButtonLabel", copy.startLabel);
+    setIconText("openingSoundHint", "♫", copy.openingSoundHint);
+    setIconText("buzzSoundHint", "♫", copy.buzzSoundHint);
+    setText("missionText", copy.missionText);
+    setText("inviteMessage", copy.message);
+    setText("animatedTimeLabel", copy.timeLabel);
+    setText("giftTitle", copy.giftTitle);
+    setText("confirmButtonLabel", copy.confirmLabel);
+    setText("confirmNote", copy.confirmNote);
+    setText("benVoiceCueTitle", copy.voiceCueTitle);
+    setText("benVoiceCueHint", copy.voiceCueHint);
+    renderGiftOptions(meta, copy);
+    window.BEN_INVITE_COPY = copy;
+  };
+
   const applyMeta = (meta) => {
     if (!meta || typeof meta !== "object") return;
 
@@ -75,6 +168,9 @@
     const rsvpDeadline = /^\d{4}-\d{2}-\d{2}$/.test(meta.rsvpDeadline) ? meta.rsvpDeadline : "2026-12-29";
     const time = /^\d{2}:\d{2}$/.test(meta.time) ? meta.time : "";
     const location = splitLocation(meta.location);
+    const copy = normalizeCopy(meta.invite);
+
+    applyInviteCopy(meta, copy);
 
     const blocks = $("animatedNameBlocks");
     if (blocks) {
@@ -86,17 +182,24 @@
 
     setText("animatedAge", String(age));
     setText("animatedDateText", longDate(date));
-    setText("animatedWeekday", weekday(date) + " · adicionar à agenda");
+    setText("animatedWeekday", weekday(date) + " · " + copy.calendarHint);
     const calendar = $("animatedDate");
-    if (calendar) calendar.href = calendarHref(meta);
+    if (calendar) {
+      calendar.href = calendarHref(meta);
+      calendar.setAttribute("aria-label", "Adicionar aniversário de " + name + " à agenda");
+    }
     setText("animatedTimeText", displayTime(time));
-    setText("animatedRsvpDeadline", "Confirme sua presença até " + longDate(rsvpDeadline) + " 💫");
+    const deadline = [copy.deadlinePrefix, longDate(rsvpDeadline), copy.deadlineSuffix]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    setText("animatedRsvpDeadline", deadline);
     setText("animatedLocationName", location[0]);
 
     const detail = $("animatedLocationDetail");
     if (detail) {
-      detail.textContent = location[1] ? location[1] + " · abrir mapa ↗" : "Abrir no Google Maps ↗";
-      detail.hidden = !location[1];
+      detail.textContent = location[1] ? location[1] + " · " + copy.mapHint : copy.mapHint;
+      detail.hidden = !location[1] && !copy.mapHint;
     }
 
     const locationLink = $("animatedLocation");

@@ -14,10 +14,39 @@
     "motherPhone": "",
     "inviteMode": "search",
     "giftSuggestions": [
-      "Roupa tamanho 6 anos",
-      "Calçado número 27",
-      "Tudo do universo Toy Story",
-      "Bloquinhos de montar estilo Lego"
-    ]
+      "Roupa: 6 anos",
+      "Calçado: 27"
+    ],
+    "invite": {
+      "openingEyebrow": "Uma mensagem especial chegou para você",
+      "openingTitle": "Prepare-se para uma",
+      "openingHighlight": "grande aventura!",
+      "startLabel": "Abrir convite",
+      "openingSoundHint": "Ative o som para entrar na brincadeira",
+      "buzzSoundHint": "Toque para ativar o som e entrar na brincadeira!",
+      "missionText": "Você foi escolhido para esta missão!",
+      "message": "Venha brincar, sorrir e viver uma aventura inesquecível com a gente.",
+      "calendarHint": "adicionar à agenda",
+      "timeLabel": "Hora da missão",
+      "mapHint": "abrir mapa ↗",
+      "giftTitle": "Diquinha de presente",
+      "giftLoveLabel": "Ele vai amar",
+      "giftLoveValue": "Tudo do universo Toy Story ou bloquinhos de montar estilo Lego",
+      "deadlinePrefix": "Confirme sua presença até",
+      "deadlineSuffix": "💫",
+      "confirmLabel": "Confirmar presença",
+      "confirmNote": "Clique no botão para encontrar seu nome e responder.",
+      "voiceCueTitle": "Um recado do Ben",
+      "voiceCueHint": "Escute só um pouquinho…",
+      "voiceCueTapHint": "Toque para ouvir o Ben",
+      "rsvpEyebrow": "Confirmação de presença",
+      "rsvpSubtitle": "Que bom ter você por aqui. Encontre seu nome para responder.",
+      "rsvpPickerSubtitle": "Encontre seu nome para confirmar a presença.",
+      "rsvpGreeting": "Confirme sua presença.",
+      "rsvpLinksMessage": "Abra o link pessoal que você recebeu.",
+      "rsvpTitle": "Vamos confirmar?",
+      "rsvpIntro": "Sua resposta ajuda a gente a preparar tudo com carinho.",
+      "rsvpDeadlinePrefix": "Prazo para confirmar:"
+    }
   }
 }

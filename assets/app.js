@@ -327,6 +327,78 @@
     ];
   }
 
+  const INVITE_COPY_DEFAULTS = {
+    openingEyebrow: "Uma mensagem especial chegou para você",
+    openingTitle: "Prepare-se para uma",
+    openingHighlight: "grande aventura!",
+    startLabel: "Abrir convite",
+    openingSoundHint: "Ative o som para entrar na brincadeira",
+    buzzSoundHint: "Toque para ativar o som e entrar na brincadeira!",
+    missionText: "Você foi escolhido para esta missão!",
+    message: "Venha brincar, sorrir e viver uma aventura inesquecível com a gente.",
+    calendarHint: "adicionar à agenda",
+    timeLabel: "Hora da missão",
+    mapHint: "abrir mapa ↗",
+    giftTitle: "Diquinha de presente",
+    giftLoveLabel: "Ele vai amar",
+    giftLoveValue: "Tudo do universo Toy Story ou bloquinhos de montar estilo Lego",
+    deadlinePrefix: "Confirme sua presença até",
+    deadlineSuffix: "💫",
+    confirmLabel: "Confirmar presença",
+    confirmNote: "Clique no botão para encontrar seu nome e responder.",
+    voiceCueTitle: "Um recado do Ben",
+    voiceCueHint: "Escute só um pouquinho…",
+    voiceCueTapHint: "Toque para ouvir o Ben",
+    rsvpEyebrow: "Confirmação de presença",
+    rsvpSubtitle: "Que bom ter você por aqui. Encontre seu nome para responder.",
+    rsvpPickerSubtitle: "Encontre seu nome para confirmar a presença.",
+    rsvpGreeting: "Confirme sua presença.",
+    rsvpLinksMessage: "Abra o link pessoal que você recebeu.",
+    rsvpTitle: "Vamos confirmar?",
+    rsvpIntro: "Sua resposta ajuda a gente a preparar tudo com carinho.",
+    rsvpDeadlinePrefix: "Prazo para confirmar:",
+  };
+
+  const INVITE_FIELD_IDS = {
+    openingEyebrow: "invOpeningEyebrow",
+    openingTitle: "invOpeningTitle",
+    openingHighlight: "invOpeningHighlight",
+    startLabel: "invStartLabel",
+    openingSoundHint: "invOpeningSoundHint",
+    buzzSoundHint: "invBuzzSoundHint",
+    missionText: "invMissionText",
+    message: "invMessage",
+    calendarHint: "invCalendarHint",
+    timeLabel: "invTimeLabel",
+    mapHint: "invMapHint",
+    giftTitle: "invGiftTitle",
+    giftLoveLabel: "invGiftLoveLabel",
+    giftLoveValue: "invGiftLoveValue",
+    deadlinePrefix: "invDeadlinePrefix",
+    deadlineSuffix: "invDeadlineSuffix",
+    confirmLabel: "invConfirmLabel",
+    confirmNote: "invConfirmNote",
+    voiceCueTitle: "invVoiceCueTitle",
+    voiceCueHint: "invVoiceCueHint",
+    voiceCueTapHint: "invVoiceCueTapHint",
+    rsvpEyebrow: "invRsvpEyebrow",
+    rsvpSubtitle: "invRsvpSubtitle",
+    rsvpPickerSubtitle: "invRsvpPickerSubtitle",
+    rsvpGreeting: "invRsvpGreeting",
+    rsvpLinksMessage: "invRsvpLinksMessage",
+    rsvpTitle: "invRsvpTitle",
+    rsvpIntro: "invRsvpIntro",
+    rsvpDeadlinePrefix: "invRsvpDeadlinePrefix",
+  };
+
+  function defaultInviteCopy() {
+    return Object.assign({}, INVITE_COPY_DEFAULTS);
+  }
+
+  function defaultGiftSuggestions() {
+    return ["Roupa: 6 anos", "Calçado: 27"];
+  }
+
   function defaultMeta() {
     return {
       name: "Ben",
@@ -342,6 +414,8 @@
       fatherPhone: "",
       motherPhone: "",
       inviteMode: "search",
+      giftSuggestions: defaultGiftSuggestions(),
+      invite: defaultInviteCopy(),
       maxAdults: 50,
       maxChildren: 25,
       stageNames: {},
@@ -484,6 +558,24 @@
     meta.fatherPhone = normalizePhone(meta.fatherPhone);
     meta.motherPhone = normalizePhone(meta.motherPhone);
     meta.inviteMode = meta.inviteMode === "links" ? "links" : "search";
+    const rawInvite = meta.invite && typeof meta.invite === "object" ? meta.invite : {};
+    meta.invite = {};
+    Object.keys(INVITE_COPY_DEFAULTS).forEach((key) => {
+      const value = String(rawInvite[key] == null ? "" : rawInvite[key]).trim().slice(0, 400);
+      meta.invite[key] = value || INVITE_COPY_DEFAULTS[key];
+    });
+    const rawGifts = Array.isArray(meta.giftSuggestions) ? meta.giftSuggestions : defaultGiftSuggestions();
+    meta.giftSuggestions = rawGifts
+      .map((item) => {
+        if (item && typeof item === "object") {
+          return [item.label, item.value].filter(Boolean).join(": ");
+        }
+        return String(item == null ? "" : item);
+      })
+      .map((item) => item.trim().slice(0, 120))
+      .filter(Boolean)
+      .slice(0, 6);
+    if (!meta.giftSuggestions.length) meta.giftSuggestions = defaultGiftSuggestions();
     meta.maxAdults = Math.min(999, Math.max(1, parseInt(meta.maxAdults, 10) || 50));
     meta.maxChildren = Math.min(999, Math.max(1, parseInt(meta.maxChildren, 10) || 25));
     const rawStageNames = meta.stageNames && typeof meta.stageNames === "object" ? meta.stageNames : {};
@@ -2927,6 +3019,9 @@
     $("#setPath").value = cloud.path || "data.json";
     $("#setToken").value = cloud.token || "";
     $("#setAuto").checked = !!cloud.auto;
+    $("#setPublicRepo").value = cloud.publicRepo || "";
+    $("#setPublicBranch").value = cloud.publicBranch || "main";
+    $("#setPublicToken").value = cloud.publicToken || "";
     $("#setInviteLink").value = invitePageUrl();
     $("#setRsvpUrl").value = meta.rsvpUrl || "";
     $("#setInviteMode").value = meta.inviteMode === "links" ? "links" : "search";
@@ -2960,6 +3055,9 @@
     cloud.path = $("#setPath").value.trim() || "data.json";
     cloud.token = $("#setToken").value.trim();
     cloud.auto = $("#setAuto").checked;
+    cloud.publicRepo = $("#setPublicRepo").value.trim();
+    cloud.publicBranch = $("#setPublicBranch").value.trim() || "main";
+    cloud.publicToken = $("#setPublicToken").value.trim();
 
     const identity = [cloud.owner, cloud.repo, cloud.branch, cloud.path, cloud.token].join("|");
     if (cloud._identity && cloud._identity !== identity) {
@@ -2968,7 +3066,7 @@
     }
     cloud._identity = identity;
 
-    if (!cloud.owner && !cloud.repo && !cloud.token) {
+    if (!cloud.owner && !cloud.repo && !cloud.token && !cloud.publicRepo && !cloud.publicToken) {
       cloud = {};
     }
     saveCloudCfg();
@@ -3338,18 +3436,27 @@
     setValue("#invMapsUrl", meta.mapsUrl || "");
     setValue("#invRsvpUrl", meta.rsvpUrl || "");
     setValue("#invMode", meta.inviteMode === "links" ? "links" : "search");
+    Object.keys(INVITE_FIELD_IDS).forEach((key) => {
+      setValue("#" + INVITE_FIELD_IDS[key], meta.invite[key] || INVITE_COPY_DEFAULTS[key]);
+    });
+    setValue("#invGiftSuggestions", (meta.giftSuggestions || []).join("\n"));
+
+    const publishState = $("#publishInviteState");
+    if (publishState && cloud.lastPublish) {
+      publishState.textContent = "Último envio do convite: " +
+        new Date(cloud.lastPublish).toLocaleString("pt-BR");
+    }
 
     renderInvitePreview();
   }
 
-  function handleInviteSubmit(event) {
-    event.preventDefault();
+  function collectInviteMeta() {
     const meta = state.meta;
     const name = ($("#invName").value || "").trim();
     if (!name) {
       toast("Informe o nome do aniversariante.", "err");
       $("#invName").focus();
-      return;
+      return false;
     }
 
     const rsvpValue = $("#invRsvpUrl").value.trim();
@@ -3357,7 +3464,7 @@
     if (rsvpValue && !rsvpUrl) {
       toast("A URL do Apps Script precisa começar com https://", "err");
       $("#invRsvpUrl").focus();
-      return;
+      return false;
     }
 
     const date = $("#invDate").value;
@@ -3374,10 +3481,209 @@
     meta.rsvpUrl = rsvpUrl;
     meta.inviteMode = $("#invMode").value === "links" ? "links" : "search";
 
+    const giftField = $("#invGiftSuggestions");
+    const gifts = giftField
+      ? giftField.value.split(/\r?\n/).map((item) => item.trim().slice(0, 120)).filter(Boolean).slice(0, 6)
+      : [];
+    meta.giftSuggestions = gifts.length ? gifts : defaultGiftSuggestions();
+
+    if (!meta.invite || typeof meta.invite !== "object") meta.invite = defaultInviteCopy();
+    Object.keys(INVITE_COPY_DEFAULTS).forEach((key) => {
+      const field = $("#" + INVITE_FIELD_IDS[key]);
+      if (!field) return;
+      const value = String(field.value || "").trim().slice(0, 400);
+      meta.invite[key] = value || INVITE_COPY_DEFAULTS[key];
+    });
+
+    return true;
+  }
+
+  function handleInviteSubmit(event) {
+    event.preventDefault();
+    if (!collectInviteMeta()) return;
     touch();
     renderAll();
     renderInviteView();
     toast("Dados do convite salvos.", "ok");
+  }
+
+  /* ---------- Publicação do convite público ---------- */
+
+  function publicRepoInfo() {
+    const custom = String(cloud.publicRepo || "")
+      .trim()
+      .replace(/^https?:\/\/github\.com\//i, "")
+      .replace(/\.git$/i, "");
+    if (custom) {
+      const parts = custom.split("/").filter(Boolean);
+      if (parts.length >= 2) {
+        return {
+          owner: parts[0],
+          repo: parts[1],
+          branch: cloud.publicBranch || "main",
+        };
+      }
+    }
+    const guessed = guessRepoFromHost();
+    if (!guessed) return null;
+    return {
+      owner: guessed.owner,
+      repo: guessed.repo,
+      branch: cloud.publicBranch || "main",
+    };
+  }
+
+  function publicPublishToken() {
+    return String(cloud.publicToken || cloud.token || "").trim();
+  }
+
+  function publicEventPayload() {
+    const meta = state.meta;
+    return {
+      version: 1,
+      meta: {
+        name: meta.name,
+        age: meta.age,
+        date: meta.date,
+        rsvpDeadline: meta.rsvpDeadline,
+        time: meta.time,
+        location: meta.location,
+        theme: meta.theme,
+        rsvpUrl: meta.rsvpUrl,
+        mapsUrl: meta.mapsUrl,
+        inviteMode: meta.inviteMode,
+        giftSuggestions: Array.isArray(meta.giftSuggestions)
+          ? meta.giftSuggestions.slice(0, 6)
+          : defaultGiftSuggestions(),
+        invite: Object.assign({}, INVITE_COPY_DEFAULTS, meta.invite || {}),
+      },
+    };
+  }
+
+  async function ghPublic(method, body) {
+    const info = publicRepoInfo();
+    const token = publicPublishToken();
+    if (!info) throw new Error("não consegui detectar o repositório público do site.");
+    if (!token) throw new Error("configure o token para publicar o convite.");
+
+    const headers = {
+      Authorization: "Bearer " + token,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    };
+    if (body) headers["Content-Type"] = "application/json";
+
+    let url =
+      "https://api.github.com/repos/" +
+      encodeURIComponent(info.owner) + "/" + encodeURIComponent(info.repo) +
+      "/contents/event.json";
+    if (method === "GET") url += "?ref=" + encodeURIComponent(info.branch);
+
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      cache: "no-store",
+    });
+    if (res.status === 404) return { notFound: true };
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const error = new Error(data.message || "Erro " + res.status + " na API do GitHub");
+      error.status = res.status;
+      throw error;
+    }
+    return data;
+  }
+
+  async function verifyPublicRepo() {
+    const info = publicRepoInfo();
+    const token = publicPublishToken();
+    if (!info) throw new Error("não consegui detectar o repositório público do site.");
+    if (!token) throw new Error("configure o token para publicar o convite.");
+
+    const res = await fetch(
+      "https://api.github.com/repos/" + encodeURIComponent(info.owner) + "/" + encodeURIComponent(info.repo),
+      {
+        headers: {
+          Authorization: "Bearer " + token,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+        cache: "no-store",
+      }
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const error = new Error(data.message || "Não foi possível verificar o repositório público.");
+      error.status = res.status;
+      throw error;
+    }
+    if (data.private) {
+      throw new Error("o repositório configurado é privado; o convite precisa de um repositório público.");
+    }
+    return data;
+  }
+
+  async function publishInvite() {
+    if (!collectInviteMeta()) return;
+    const status = $("#publishInviteState");
+    if (!publicRepoInfo()) {
+      const message = "Não consegui detectar o repositório público. Abra o site pelo GitHub Pages ou informe usuário/repositório em Editar festa.";
+      if (status) status.textContent = message;
+      toast(message, "warn");
+      openSettings();
+      return;
+    }
+    if (!publicPublishToken()) {
+      const message = "Configure o token de publicação em Editar festa para enviar o convite ao site.";
+      if (status) status.textContent = message;
+      toast(message, "warn");
+      openSettings();
+      return;
+    }
+
+    touch();
+    renderAll();
+    renderInviteView();
+    if (status) status.textContent = "Publicando o convite no site…";
+
+    try {
+      await verifyPublicRepo();
+      const payload = JSON.stringify(publicEventPayload(), null, 2) + "\n";
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const head = await ghPublic("GET");
+        const body = {
+          message: "convite: atualizar textos e dados públicos — " + new Date().toLocaleString("pt-BR"),
+          content: b64encode(payload),
+          branch: publicRepoInfo().branch,
+        };
+        if (!head.notFound) body.sha = head.sha;
+
+        try {
+          await ghPublic("PUT", body);
+          cloud.lastPublish = nowISO();
+          saveCloudCfg();
+          if (status) status.textContent = "Convite publicado! O GitHub Pages atualiza em alguns minutos.";
+          toast("Convite publicado no site 🚀", "ok");
+          return;
+        } catch (error) {
+          if (attempt === 0 && (error.status === 409 || error.status === 422)) continue;
+          throw error;
+        }
+      }
+    } catch (error) {
+      let message = error.message || "erro desconhecido";
+      if (error.status === 401) message = "token inválido ou expirado.";
+      if (error.status === 403) message = "o token não tem permissão de escrita no repositório público.";
+      if (error.status === 404) message = "repositório público não encontrado ou token sem acesso.";
+      if (error.status === 409 || error.status === 422) {
+        message = "outra publicação aconteceu ao mesmo tempo. Tente de novo.";
+      }
+      if (status) status.textContent = "Não foi possível publicar: " + message;
+      toast("Não foi possível publicar o convite: " + message, "err");
+    }
   }
 
   /* ---------- Importar convidados ---------- */
@@ -3891,6 +4197,10 @@
     $("#saveInviteCloudBtn").addEventListener("click", () => {
       if (!hasCloud()) openSettings();
       else saveCloud();
+    });
+    const publishButtons = [$("#publishInviteBtn"), $("#publishInviteBtnBottom")];
+    publishButtons.forEach((button) => {
+      if (button) button.addEventListener("click", publishInvite);
     });
 
     $("#toggleValuesBtn").addEventListener("click", () => {

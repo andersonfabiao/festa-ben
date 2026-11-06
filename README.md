@@ -12,8 +12,8 @@ Projeto com duas áreas: convite público para os convidados e painel de organiz
 - **Convidados** — lista com criança/adulto, confirmação de presença, parentesco/apelido opcional (ex.: “Vovô Tito”), WhatsApp, observações e vínculo de cada criança com um ou mais adultos responsáveis. O parentesco aparece na busca e na saudação do convite. A lista vem agrupada em **Adultos** e **Crianças**, sempre em ordem **A–Z**, com filtros e busca por nome; clique no título de cada grupo para recolher ou expandir (a escolha fica salva no aparelho). Convidados com parentesco **Pai** ou **Mãe** aparecem na lista com o selo **Anfitrião**, mas não entram nas contagens, nos limites nem no resumo em PDF. Importação de lista em `.txt`, `.csv` ou `.json`.
 - **WhatsApp do convidado** — o telefone é formatado sozinho (`(83) 99999-9999`) e validado ao salvar (DDD + 10 ou 11 dígitos). Em cada convidado com número aparecem dois atalhos: **WhatsApp ↗** (abre a conversa) e **Enviar convite ↗** (abre o WhatsApp com somente o link individual do convite animado).
 - **Página de confirmação** — página responsiva acessada pelo link enviado junto ao convite oficial. Mostra um resumo da festa e leva o convidado diretamente à busca do nome e aos botões **Vou comemorar** / **Não poderei ir**, com recado opcional. A página respeita a preferência do aparelho por menos movimento e não mostra a lista completa: os nomes aparecem só depois de digitar 3 letras (ou use somente links individuais). Adultos veem as crianças vinculadas para confirmar junto. A resposta cai direto na lista de convidados e, ao confirmar, estrelas sobem pela tela em comemoração.
-- **Convite oficial animado** — experiência separada em `convite-animado.html`, com identidade **Ben Story**, personagens, envelope animado, sugestões de presente e música iniciada após o primeiro toque. Os dados públicos do evento vêm de `event.json`; lista, telefones e orçamento não são carregados pelo convite.
-- **Aba Convite** — em **💌 Convite** você ajusta nome, idade, data, horário, local, link do mapa, URL do Apps Script e o modo de busca, com prévia do convite. A mesma aba reúne os links do **convite animado** e da **página de confirmação**, com botões para abrir e copiar (inclusive copiar somente o link do convite animado para o WhatsApp). As alterações aparecem no topo da organização, no convite animado e na confirmação depois de salvar na nuvem.
+- **Convite oficial animado** — experiência separada em `convite-animado.html`, com identidade **Ben Story**, personagens, envelope animado, sugestões de presente e música iniciada assim que o navegador permite (a abertura do Buzz já tenta sair com som e a música entra em seguida). O recado do Ben fica acima da trilha, que abaixa durante a fala e volta ao terminar. Os dados públicos do evento vêm de `event.json`; lista, telefones e orçamento não são carregados pelo convite.
+- **Aba Convite** — em **💌 Convite** você ajusta nome, idade, data, horário, local, link do mapa, URL do Apps Script e o modo de busca, com prévia do convite. A mesma aba permite editar os textos da abertura, das cenas, do recado do Ben, dos presentes e da página de confirmação, além das sugestões de presente. O botão **🚀 Publicar convite** grava o `event.json` no repositório público do GitHub Pages, sem depender de editar arquivos à mão. A mesma aba reúne os links do **convite animado** e da **página de confirmação**, com botões para abrir e copiar (inclusive copiar somente o link do convite animado para o WhatsApp). As alterações aparecem no topo da organização, no convite animado e na confirmação depois de salvar na nuvem.
 - **Limite de convidados** — os cards de **Adultos** e **Crianças** mostram a ocupação do limite: verde até 75%, amarelo de 76% a 95% e vermelho acima de 95%. O card **Confirmados** mostra o percentual de presença confirmada em verde. Os totais padrão são **50 adultos** e **25 crianças**, ajustáveis em **Editar festa → Limite de convidados**.
 - **Resumo em PDF** — em **💰 Orçamento → 📄 Exportar resumo PDF**, abra a impressão e escolha **Salvar como PDF** para gerar um relatório com dados da festa, resumo financeiro, itens do checklist/orçamento e convidados separados por adultos e crianças.
 - **PDF dos confirmados** — em **🎟️ Convidados → 📄 PDF dos confirmados**, abra a impressão e escolha **Salvar como PDF** para gerar uma lista limpa só com quem confirmou presença, além dos dados da festa e dos contatos dos pais.
@@ -101,8 +101,9 @@ Depois da primeira sincronização, o salvamento automático funciona normalment
 ### Segurança e privacidade
 
 - O token não vai para o repositório nem para o `data.json`; ele fica no `localStorage` do navegador.
-- O painel recusa salvar em repositório público.
+- O painel recusa salvar dados privados em repositório público.
 - O site público recebe apenas `event.json`, sem convidados, telefones, recados ou orçamento.
+- O token opcional de publicação do convite também fica só no `localStorage`; ele precisa de permissão **Contents: read & write** no repositório público.
 - Revogue o token em **Settings → Developer settings** se ele vazar.
 
 ## Importar a lista de convidados
@@ -237,6 +238,7 @@ Sem essa URL, o convite abre normalmente, mas os botões ficam desativados e apa
 - **Cores e fontes**: `assets/styles.css`, variáveis no topo (`:root`).
 - **Dados iniciais**: `defaultMeta()` em `assets/app.js` (nome, idade, data, local e orçamento).
 - **Textos do painel**: `painel.html`.
+- **Textos e presentes do convite**: aba **💌 Convite** do painel. Os valores padrão ficam em `INVITE_COPY_DEFAULTS` (`assets/app.js`), `assets/convite-dados.js` e `FALLBACK_INVITE` (`assets/convite.js`).
 
 ## Estrutura
 
