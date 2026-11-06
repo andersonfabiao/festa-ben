@@ -37,6 +37,7 @@
   let buzzStarted = false;
   let voicePrimed = false;
   const themeVolume = 0.62;
+  const duckedThemeVolume = 0.025;
 
   const finishPrelude = () => {
     if (preludeFinishing || experience.classList.contains("is-prelude-complete")) return;
@@ -185,7 +186,9 @@
   const playBenVoice = async () => {
     if (!soundEnabled || !benVoice || experience.classList.contains("is-departing")) return;
     setVoiceCue(true);
-    fadeThemeTo(0.11, 700);
+    // A trilha fica apenas como um fundo quase imperceptível durante a fala.
+    // A descida curta evita encobrir as primeiras palavras do Ben.
+    fadeThemeTo(duckedThemeVolume, 180);
     benVoice.currentTime = 0;
     benVoice.volume = 0.96;
     benVoice.muted = false;
