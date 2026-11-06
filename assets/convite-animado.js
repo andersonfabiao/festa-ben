@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261106p21";
+  const inviteRelease = "20261106p22";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -295,12 +295,16 @@
       revealVideo.play().catch(() => {});
     }
     playAudio(restartAudio);
-    later(() => experience.classList.add("is-between-scenes"), 6000);
+    const revealDuration = revealVideo && Number.isFinite(revealVideo.duration)
+      ? Math.max(6500, Math.round(revealVideo.duration * 1000))
+      : 6700;
+    const transitionAt = Math.max(6200, revealDuration - 120);
+    later(() => experience.classList.add("is-between-scenes"), transitionAt);
     later(() => {
       setScene("final");
       scheduleBenVoice();
-    }, 6550);
-    later(() => experience.classList.remove("is-between-scenes"), 7400);
+    }, transitionAt + 550);
+    later(() => experience.classList.remove("is-between-scenes"), transitionAt + 1400);
   };
 
   startButton.addEventListener("click", () => {
