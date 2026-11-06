@@ -6,6 +6,7 @@
   const button = document.querySelector("#rsvpMusicButton");
   const label = document.querySelector("#rsvpMusicLabel");
   const stateKey = "ben-invite-audio";
+  const themeVolume = 0.085;
   const arrivedFromInvite = new URLSearchParams(location.search).get("music") === "1";
   let state = null;
 
@@ -55,7 +56,7 @@
     if (Number.isFinite(audio.duration) && audio.duration > 0) {
       audio.currentTime = Math.min(target, Math.max(0, audio.duration - .25));
     }
-    audio.volume = freshState && Number.isFinite(state.volume) ? state.volume : .62;
+    audio.volume = freshState && Number.isFinite(state.volume) ? Math.min(state.volume, themeVolume) : themeVolume;
 
     const explicitlyPaused = freshState && state.shouldPlay === false;
     if (!explicitlyPaused || arrivedFromInvite) {

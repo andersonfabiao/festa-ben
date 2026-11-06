@@ -36,8 +36,9 @@
   let volumeFrame = 0;
   let buzzStarted = false;
   let voicePrimed = false;
-  const themeVolume = 0.62;
-  const duckedThemeVolume = 0.025;
+  // Compensa a masterização: a música está ~22 dB acima do áudio do Buzz.
+  const themeVolume = 0.085;
+  const duckedThemeVolume = 0.002;
 
   const finishPrelude = () => {
     if (preludeFinishing || experience.classList.contains("is-prelude-complete")) return;
@@ -238,7 +239,7 @@
   const playAudio = async (restart = false) => {
     if (!soundEnabled) return;
     if (restart) audio.currentTime = 0;
-    audio.volume = 0.62;
+    audio.volume = themeVolume;
     try {
       await audio.play();
     } catch {
@@ -250,14 +251,15 @@
   startOpeningTheme = async () => {
     if (!soundEnabled || !audio.paused) return;
     audio.currentTime = 0;
-    audio.volume = 0.06;
+    const openingVolume = 0.008;
+    audio.volume = openingVolume;
     try {
       await audio.play();
       const startedAt = performance.now();
       const fade = (now) => {
         if (audio.paused || !soundEnabled) return;
         const progress = Math.min(1, (now - startedAt) / 950);
-        audio.volume = 0.06 + (0.56 * progress);
+        audio.volume = openingVolume + ((themeVolume - openingVolume) * progress);
         if (progress < 1) requestAnimationFrame(fade);
       };
       requestAnimationFrame(fade);
@@ -324,6 +326,7 @@
     if (navigatingToRsvp) return;
     navigatingToRsvp = true;
     stopBenVoice({ restoreTheme: false });
+    audio.volume = themeVolume;
     saveAudioState();
     const destination = confirmButton.href;
     if (reduceMotion.matches) {
