@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/convite-animado.css?v=modelo2-12" />
-  <link rel="stylesheet" href="assets/convite/modelo%202/modelo-2.css?v=modelo2-12" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=modelo2-16" />
+  <link rel="stylesheet" href="assets/convite/modelo%202/modelo-2.css?v=modelo2-16" />
 </head>
 <body>
   <a class="skip-link" href="#finalInvite">Pular para o convite</a>
@@ -34,6 +34,12 @@
     </div>
 
     <div class="opening-screen" id="openingScreen">
+      <div class="opening-bg" aria-hidden="true">
+        <img class="opening-bg-blur" src="assets/convite/todo-poster.webp" alt="" />
+        <video id="openingVideo" class="opening-bg-video" muted loop playsinline preload="metadata" poster="assets/convite/todo-poster.webp">
+          <source src="assets/convite/todo-loop.mp4" type="video/mp4" />
+        </video>
+      </div>
       <div class="opening-stage"><div class="opening-card">
         <div class="ben-story-logo opening-logo" role="img" aria-label="Ben Story">
           <picture class="opening-peek" aria-hidden="true"><source srcset="assets/convite/woody-buzz-espiando.webp?v=20261119" type="image/webp" /><img src="assets/convite/woody-buzz-espiando.png?v=20261118a" alt="" /></picture>
@@ -41,7 +47,7 @@
         </div>
         <p class="eyebrow" id="openingEyebrow">Uma mensagem especial chegou para você</p>
         <h1><span id="openingTitleLead">Prepare-se para uma</span><br /><strong id="openingTitleHighlight">grande aventura!</strong></h1>
-        <button class="start-button" id="startButton" type="button"><span class="start-icon" aria-hidden="true">▶</span><span id="startButtonLabel">Abrir convite</span></button>
+        <button class="start-button" id="startButton" type="button"><span class="start-badge" aria-hidden="true"><img src="assets/convite/spaceranger-bold.png" alt="" /></span><span id="startButtonLabel">Abrir convite</span></button>
         <p class="sound-hint" id="openingSoundHint"><span aria-hidden="true">♫</span> Ative o som para entrar na brincadeira</p>
       </div></div>
     </div>
@@ -119,8 +125,8 @@
     <audio id="benVoiceAudio" preload="metadata"><source src="assets/audio/ben-convite.mp3?v=20261105" type="audio/mpeg" /></audio>
   </div>
   <noscript><div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div></noscript>
-  <script src="assets/convite-dados.js?v=modelo2-12"></script>
-  <script src="assets/convite-animado.js?v=modelo2-12"></script>
-  <script src="assets/convite/modelo%202/modelo-2.js?v=modelo2-12"></script>
+  <script src="assets/convite-dados.js?v=modelo2-16"></script>
+  <script src="assets/convite-animado.js?v=modelo2-16"></script>
+  <script src="assets/convite/modelo%202/modelo-2.js?v=modelo2-16"></script>
 </body>
 </html>

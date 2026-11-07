@@ -71,7 +71,38 @@
   border-radius:5px; color:#fff; background:rgba(23,75,118,.84);
   font:800 clamp(.43rem,1.3vw,.56rem)/1.05 "Baloo 2",sans-serif; letter-spacing:.03em; text-align:center;
 }
-.m2-gift-ball { width:76%; height:76%; object-fit:contain; filter:drop-shadow(0 4px 3px rgba(0,0,0,.16)); animation:m2-ball-play 5.4s ease-in-out infinite; }
+.m2-gift-ball { width:92%; height:92%; object-fit:contain; filter:drop-shadow(0 5px 4px rgba(0,0,0,.18)); animation:m2-ball-play 5.4s ease-in-out infinite; }
+
+/* Abertura com o fundo animado do Toy Story */
+.model-two .opening-screen { overflow:hidden; padding:12px; background:#e9ebe7; }
+.model-two .opening-bg { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; background:#e9ebe7; }
+.model-two .opening-bg-blur { position:absolute; inset:-8%; width:116%; height:116%; object-fit:cover; opacity:.72; filter:blur(30px) saturate(.92) brightness(1.02); transform:scale(1.03); }
+.model-two .opening-bg::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(90deg, rgba(233,235,231,.58) 0, rgba(233,235,231,.18) 22%, transparent 42%, transparent 58%, rgba(233,235,231,.18) 78%, rgba(233,235,231,.58) 100%); }
+.model-two .opening-bg::after { content:""; position:absolute; inset:0; z-index:3; background:radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0) 34%, rgba(17,72,112,.28) 100%); }
+.model-two .opening-bg-video { position:absolute; z-index:2; top:0; left:50%; width:auto; height:100%; aspect-ratio:900/1050; transform:translateX(-50%); object-fit:cover; -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%); mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%); }
+.model-two .opening-stage { position:relative; z-index:2; width:min(100%,540px); }
+.model-two .opening-card { display:flex; flex-direction:column; align-items:center; justify-content:space-evenly; min-height:68vh; padding:clamp(28px,5.2vh,50px) clamp(20px,5vw,34px); background:linear-gradient(180deg,#fffefa,#fffaf0); }
+.model-two .opening-logo { margin:0 auto; }
+.model-two .opening-card .eyebrow,
+.model-two .opening-card h1,
+.model-two .opening-card .sound-hint { margin:0; }
+.model-two .opening-card .start-button { margin-top:0; }
+
+.model-two .start-button { gap:12px; padding:9px 22px 9px 9px; background:linear-gradient(135deg,#3b93d4,#15518f); box-shadow:0 8px 0 #0d3e6b,0 13px 24px rgba(21,81,143,.3); }
+.model-two .start-button:hover { box-shadow:0 10px 0 #0d3e6b,0 15px 25px rgba(21,81,143,.34); }
+.model-two .start-button:active { box-shadow:0 3px 0 #0d3e6b; }
+.model-two .start-badge { display:grid; flex:none; place-items:center; width:70px; height:52px; border-radius:12px; overflow:hidden; background:radial-gradient(circle at 45% 35%,#fffdf4 0 58%,#e9e1cf 100%); box-shadow:inset 0 0 0 2px rgba(21,81,143,.16); }
+.model-two .start-badge img { width:88%; height:88%; object-fit:contain; }
+
+/* Telas baixas: card um pouco maior e logo menor para o conteúdo respirar */
+@media (max-height:640px) {
+  .model-two .opening-card { min-height:max(68vh,430px); }
+  .model-two .opening-logo { font-size:clamp(4.1rem,15vw,5rem); }
+  .model-two .opening-card .sound-hint { margin-top:12px; }
+}
+
+.model-two .m2-gift-orbit { width:clamp(80px,22vw,116px); border:0; background:none; box-shadow:none; }
+.model-two .m2-gift-orbit span { font-size:clamp(2.9rem,9vw,4rem); }
 
 .m2-star { position:absolute; z-index:3; color:#f5c32d; text-shadow:0 2px 0 #cb8e17; animation:twinkle 1.8s ease-in-out infinite; }
 .m2-star-a { left:5%; top:38%; font-size:25px; }.m2-star-b { right:5%; top:47%; font-size:20px; animation-delay:.55s; }.m2-star-c { right:10%; bottom:19%; font-size:27px; animation-delay:1s; }

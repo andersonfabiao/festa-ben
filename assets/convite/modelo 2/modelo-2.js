@@ -7,6 +7,8 @@
   const giftAction = $("giftAction");
   const backButton = $("backButton");
   const clipVideo = $("m2ClipVideo");
+  const openingVideo = $("openingVideo");
+  const experience = $("experience");
   const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   const clipVisible = () => !!clipVideo && clipVideo.offsetParent !== null &&
@@ -27,6 +29,27 @@
     clipObserver.observe(clipVideo);
   } else {
     playClip();
+  }
+
+  const openingVisible = () => !!experience &&
+    experience.classList.contains("is-prelude-complete") &&
+    !experience.classList.contains("is-started");
+
+  const syncOpeningVideo = () => {
+    if (!openingVideo) return;
+    if (openingVisible() && !document.hidden && !reduceMotion) {
+      openingVideo.play?.().catch(() => { /* autoplay bloqueado: mantém o poster */ });
+    } else {
+      openingVideo.pause();
+    }
+  };
+
+  if (openingVideo) {
+    if (reduceMotion) openingVideo.pause();
+    if (experience && "MutationObserver" in window) {
+      new MutationObserver(syncOpeningVideo).observe(experience, { attributes: true, attributeFilter: ["class"] });
+    }
+    syncOpeningVideo();
   }
 
   const fallback = {
@@ -93,6 +116,10 @@
   };
 
   document.addEventListener("visibilitychange", () => {
+    if (openingVideo) {
+      if (document.hidden) openingVideo.pause();
+      else syncOpeningVideo();
+    }
     if (!clipVideo) return;
     if (document.hidden) clipVideo.pause();
     else if (!gifts?.classList.contains("is-active")) playClip();
