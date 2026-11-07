@@ -6,6 +6,28 @@
   const gifts = $("giftScreen");
   const giftAction = $("giftAction");
   const backButton = $("backButton");
+  const clipVideo = $("m2ClipVideo");
+  const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  const clipVisible = () => !!clipVideo && clipVideo.offsetParent !== null &&
+    !document.hidden && !gifts?.classList.contains("is-active");
+
+  const playClip = () => {
+    if (!clipVideo || reduceMotion || !clipVisible()) return;
+    clipVideo.play?.().catch(() => { /* autoplay bloqueado: mantém o poster */ });
+  };
+
+  if (clipVideo && reduceMotion) {
+    clipVideo.pause();
+  } else if (clipVideo && "IntersectionObserver" in window) {
+    const clipObserver = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) playClip();
+      else clipVideo.pause();
+    }, { threshold: 0.15 });
+    clipObserver.observe(clipVideo);
+  } else {
+    playClip();
+  }
 
   const fallback = {
     date: "2027-01-09",
@@ -63,8 +85,18 @@
     gifts.classList.toggle("is-active", visible);
     main.setAttribute("aria-hidden", String(visible));
     gifts.setAttribute("aria-hidden", String(!visible));
+    if (clipVideo) {
+      if (visible) clipVideo.pause();
+      else playClip();
+    }
     (visible ? backButton : giftAction).focus({ preventScroll: true });
   };
+
+  document.addEventListener("visibilitychange", () => {
+    if (!clipVideo) return;
+    if (document.hidden) clipVideo.pause();
+    else if (!gifts?.classList.contains("is-active")) playClip();
+  });
 
   giftAction?.addEventListener("click", () => showGifts(true));
   backButton?.addEventListener("click", () => showGifts(false));
