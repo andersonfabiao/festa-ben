@@ -121,6 +121,35 @@
   let lookupSequence = 0;
   const pageStartedAt = Date.now();
 
+  // Permite que um convite externo (ex.: modelos alternativos) receba o
+  // convidado de volta depois da confirmação, sem alterar o fluxo padrão.
+  const returnParam = (() => {
+    try {
+      return new URLSearchParams(location.search).get("voltar") || "";
+    } catch {
+      return "";
+    }
+  })();
+
+  function resolveReturnUrl(raw) {
+    if (!raw) return "";
+    try {
+      const url = new URL(raw, location.href);
+      if (url.origin !== location.origin) return "";
+      if (!/^https?:$/.test(url.protocol)) return "";
+      return url.href;
+    } catch {
+      return "";
+    }
+  }
+
+  let returnUrl = resolveReturnUrl(returnParam);
+
+  function preserveReturnParam(base) {
+    if (!returnParam) return base;
+    return base + (base.includes("?") ? "&" : "?") + "voltar=" + encodeURIComponent(returnParam);
+  }
+
   function toast(message, type) {
     const el = $("#inviteToast");
     if (!el) return;
@@ -719,7 +748,7 @@
     }
     if (!guest) return;
     try {
-      history.replaceState(null, "", location.pathname + "?convite=" + encodeURIComponent(key));
+      history.replaceState(null, "", preserveReturnParam(location.pathname + "?convite=" + encodeURIComponent(key)));
     } catch (e) {
       /* file:// pode bloquear */
     }
@@ -728,7 +757,7 @@
 
   function clearGuestParam() {
     try {
-      history.replaceState(null, "", location.pathname);
+      history.replaceState(null, "", preserveReturnParam(location.pathname));
     } catch (e) {
       /* file:// pode bloquear */
     }
@@ -796,7 +825,10 @@
         '<p class="goodbye-kicker">Resposta registrada</p>' +
         '<h2>' + (confirmed ? "Presença confirmada!" : "Obrigado por avisar!") + '</h2>' +
         '<p>' + (confirmed ? "Obrigado, nos vemos lá! 🎉" : "Não tem problema, nos vemos em breve! 🚀") + '</p>' +
-        '<span class="goodbye-close-hint">Você já pode fechar esta página.</span>' +
+        (returnUrl
+          ? '<a class="btn btn-primary goodbye-back-btn" href="' + esc(returnUrl) + '">← Voltar ao convite</a>' +
+            '<span class="goodbye-close-hint">Ou feche esta página quando quiser.</span>'
+          : '<span class="goodbye-close-hint">Você já pode fechar esta página.</span>') +
       '</div>';
   }
 
@@ -877,6 +909,12 @@
   }
 
   function bind() {
+    const backLink = $("#rsvpBack");
+    if (backLink && returnUrl) {
+      backLink.href = returnUrl;
+      backLink.hidden = false;
+    }
+
     $("#inviteContent").addEventListener("submit", (event) => {
       if (event.target.matches("#unlistedGuestForm")) {
         event.preventDefault();

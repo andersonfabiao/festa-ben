@@ -40,10 +40,20 @@ for (const forbiddenFile of ["data.json", "convidados.json", "lista_convidados.t
 const refPattern = /(?:src|href)=["']([^"'#?]+)["']/g;
 for (const htmlPath of filesIn(root, ".html")) {
   const html = readFileSync(htmlPath, "utf8");
+  const baseMatch = html.match(/<base\s+[^>]*href=["']([^"']+)["']/i);
+  const baseHref = baseMatch ? baseMatch[1] : "";
   for (const match of html.matchAll(refPattern)) {
     const ref = match[1];
-    if (/^(?:https?:|mailto:|tel:|data:)/i.test(ref)) continue;
-    const target = resolve(htmlPath, "..", ref);
+    if (/^(?:https?:|mailto:|tel:|data:|\/\/)/i.test(ref)) continue;
+    let decoded = ref;
+    try {
+      decoded = decodeURIComponent(ref);
+    } catch {
+      /* mantém a referência original */
+    }
+    const target = baseHref
+      ? resolve(htmlPath, "..", baseHref, decoded)
+      : resolve(htmlPath, "..", decoded);
     if (!existsSync(target)) {
       errors.push(`${relative(root, htmlPath)}: referência ausente: ${ref}`);
     }

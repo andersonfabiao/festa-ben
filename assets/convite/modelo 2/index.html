@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <base href="../../../" />
+  <title>Uma aventura especial · Ben faz 5!</title>
+  <meta name="description" content="Abra o convite animado do aniversário de 5 anos do Ben e venha viver essa aventura com a gente!" />
+  <meta name="theme-color" content="#55b9e8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=modelo2-4" />
+  <link rel="stylesheet" href="assets/convite/modelo%202/modelo-2.css?v=modelo2-4" />
+</head>
+<body>
+  <a class="skip-link" href="#finalInvite">Pular para o convite</a>
+  <div class="experience model-two" id="experience">
+    <div class="room" aria-hidden="true">
+      <div class="wall-stars"></div>
+      <div class="room-cloud cloud-one"></div><div class="room-cloud cloud-two"></div><div class="room-cloud cloud-three"></div>
+      <div class="window"><span class="window-sky"></span><span class="window-frame frame-v"></span><span class="window-frame frame-h"></span></div>
+      <div class="shelf"><span class="book book-one"></span><span class="book book-two"></span><span class="book book-three"></span><span class="rocket">🚀</span></div>
+      <div class="baseboard"></div><div class="floor"></div>
+    </div>
+
+    <div class="buzz-prelude" id="buzzPrelude" aria-label="Buzz Lightyear chegando para a aventura">
+      <video id="buzzPreludeVideo" playsinline preload="auto" poster="assets/convite/buzz-poster.webp?v=20261106"><source src="assets/convite/buzz.mp4?v=20261106" type="video/mp4" /></video>
+      <div class="buzz-prelude-controls" aria-label="Controles da abertura">
+        <button class="buzz-prelude-control" id="buzzSoundToggle" type="button" aria-label="Ativar som do Buzz" aria-pressed="true"><span aria-hidden="true">🔇</span></button>
+        <button class="buzz-prelude-control" id="buzzSkip" type="button" aria-label="Pular animação do Buzz"><span aria-hidden="true">»</span></button>
+      </div>
+      <p class="buzz-sound-hint" id="buzzSoundHint"><span aria-hidden="true">♫</span> Toque para ativar o som e entrar na brincadeira!</p>
+    </div>
+
+    <div class="opening-screen" id="openingScreen">
+      <div class="opening-stage"><div class="opening-card">
+        <div class="ben-story-logo opening-logo" role="img" aria-label="Ben Story">
+          <picture class="opening-peek" aria-hidden="true"><source srcset="assets/convite/woody-buzz-espiando.webp?v=20261119" type="image/webp" /><img src="assets/convite/woody-buzz-espiando.png?v=20261118a" alt="" /></picture>
+          <span class="ben-word">BEN</span><span class="story-word">STORY</span>
+        </div>
+        <p class="eyebrow" id="openingEyebrow">Uma mensagem especial chegou para você</p>
+        <h1><span id="openingTitleLead">Prepare-se para uma</span><br /><strong id="openingTitleHighlight">grande aventura!</strong></h1>
+        <button class="start-button" id="startButton" type="button"><span class="start-icon" aria-hidden="true">▶</span><span id="startButtonLabel">Abrir convite</span></button>
+        <p class="sound-hint" id="openingSoundHint"><span aria-hidden="true">♫</span> Ative o som para entrar na brincadeira</p>
+      </div></div>
+    </div>
+
+    <main class="stage" id="stage" aria-live="polite">
+      <div class="stage-controls" aria-label="Controles do convite">
+        <button class="round-control" id="soundButton" type="button" aria-label="Desativar som" aria-pressed="false">♫</button>
+        <button class="round-control" id="replayButton" type="button" aria-label="Repetir animação">↻</button>
+        <button class="skip-animation" id="skipButton" type="button">Pular animação</button>
+      </div>
+      <section class="reveal-scene" id="revealScene" aria-label="A carta especial está se abrindo">
+        <div class="reveal-glow" aria-hidden="true"></div>
+        <div class="reveal-frame"><video id="revealVideo" muted playsinline preload="metadata" poster="assets/convite/start-poster.webp?v=20261106p22" aria-label="Woody, Buzz e Jessie revelados pela carta"><source src="assets/convite/start-tratado.mp4?v=20261106p22" type="video/mp4" /></video></div>
+      </section>
+
+      <section class="final-invite" id="finalInvite" tabindex="-1" aria-label="Convite do aniversário do Ben">
+        <div class="m2-card" id="m2Main">
+          <span class="tape tape-left" aria-hidden="true"></span><span class="tape tape-right" aria-hidden="true"></span>
+          <span class="m2-star m2-star-a" aria-hidden="true">★</span><span class="m2-star m2-star-b" aria-hidden="true">✦</span><span class="m2-star m2-star-c" aria-hidden="true">★</span>
+          <header class="invite-heading m2-heading">
+            <div class="ben-story-logo card-logo" role="img" aria-label="Ben Story"><span class="ben-word">BEN</span><span class="story-word">STORY</span></div>
+            <p id="missionText">Você foi escolhido para esta missão!</p>
+            <h2><span class="name-blocks" id="animatedNameBlocks" role="img" aria-label="Ben"><span>B</span><span>E</span><span>N</span></span><span class="age-copy" id="animatedAgeCopy">faz <strong id="animatedAge">5</strong> anos!</span></h2>
+          </header>
+          <p class="invite-message m2-message" id="inviteMessage">Venha brincar, sorrir e viver uma aventura inesquecível com a gente.</p>
+
+          <div class="m2-date-row" aria-label="Data e horário da festa">
+            <span class="m2-rule" aria-hidden="true"></span><span class="m2-month" id="m2Month">JANEIRO</span>
+            <a class="m2-day" id="animatedDate" href="#" download="aniversario-ben.ics" aria-label="Adicionar aniversário do Ben à agenda"><strong id="m2Day">09</strong><span id="animatedDateText" class="sr-only">09 de janeiro de 2027</span><span id="animatedWeekday" class="sr-only">Sábado</span></a>
+            <span class="m2-time">ÀS <strong id="animatedTimeText">18h</strong><small id="animatedTimeLabel" class="sr-only">Hora da missão</small></span><span class="m2-rule" aria-hidden="true"></span>
+          </div>
+          <p class="m2-venue" id="m2Venue"><span class="m2-venue-star" aria-hidden="true">★</span><span id="m2VenueName">Enjoy Kids - Liv Mall Shopping</span><span class="m2-venue-star" aria-hidden="true">★</span></p>
+          <p class="m2-call">Clique nos botões</p>
+          <nav class="m2-actions" aria-label="Ações do convite">
+            <a class="m2-action m2-confirm" id="confirmButton" href="convite.html?music=1&amp;voltar=assets/convite/modelo%202/index.html"><span class="m2-medal"><i aria-hidden="true">✓</i><b aria-hidden="true">★</b></span><strong>Confirmar<br />presença</strong></a>
+            <button class="m2-action m2-gift" id="giftAction" type="button" aria-controls="giftScreen"><span class="m2-medal"><i aria-hidden="true">🎁</i><b aria-hidden="true">★</b></span><strong>Sugestão<br />de presentes</strong></button>
+            <a class="m2-action m2-map" id="animatedLocation" href="https://maps.app.goo.gl/A1W6p14GLiRxY7Sy8" target="_blank" rel="noopener noreferrer"><span class="m2-medal"><i aria-hidden="true">●</i><b aria-hidden="true">★</b></span><strong>Local<br />da festa</strong><span id="animatedLocationName" class="sr-only">Enjoy Kids</span><span id="animatedLocationDetail" class="sr-only">Liv Mall Shopping</span></a>
+          </nav>
+          <p class="m2-closing">Esperamos por você!</p>
+          <p class="rsvp-deadline m2-deadline" id="animatedRsvpDeadline">Confirme sua presença até 29 de dezembro 💫</p>
+          <div class="base-cast-art m2-cast" aria-hidden="true"><picture><source srcset="assets/convite/personagens-base.webp?v=20261119" type="image/webp" /><img src="assets/convite/personagens-base.png?v=20261118a" alt="" /></picture></div>
+        </div>
+
+        <section class="m2-card m2-gifts" id="giftScreen" aria-labelledby="giftHeading" aria-hidden="true">
+          <span class="tape tape-left" aria-hidden="true"></span><span class="tape tape-right" aria-hidden="true"></span>
+          <button class="m2-back" id="backButton" type="button" aria-label="Voltar para o convite">← Voltar</button>
+          <span class="m2-star m2-star-a" aria-hidden="true">★</span><span class="m2-star m2-star-b" aria-hidden="true">✦</span>
+          <div class="m2-gift-title">
+            <p class="m2-gift-kicker"><span aria-hidden="true">★</span> Diquinha de presente <span aria-hidden="true">★</span></p>
+            <h2 id="giftHeading">Sugestões<br /><span>de presentes</span></h2>
+            <p>Uma diquinha para ajudar 💫</p>
+          </div>
+          <div class="m2-gift-grid">
+            <article><div class="m2-gift-orbit"><span aria-hidden="true">👕</span></div><h3 id="giftOneLabel">Roupa</h3><p id="giftOneValue">6 anos</p></article>
+            <article><div class="m2-gift-orbit"><span aria-hidden="true">👟</span></div><h3 id="giftTwoLabel">Calçado</h3><p id="giftTwoValue">27</p></article>
+            <article><div class="m2-gift-orbit m2-toy"><span aria-hidden="true">★</span></div><h3>Brinquedos</h3><p id="giftToyValue">Tudo do universo Toy Story ou bloquinhos de montar estilo Lego</p></article>
+          </div>
+          <div class="base-cast-art m2-cast" aria-hidden="true"><picture><source srcset="assets/convite/personagens-base.webp?v=20261119" type="image/webp" /><img src="assets/convite/personagens-base.png?v=20261118a" alt="" /></picture></div>
+          <p class="m2-gift-closing">O melhor presente é comemorar com você!</p>
+        </section>
+      </section>
+    </main>
+
+    <div class="smoke-transition" id="smokeTransition" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <button class="ben-voice-cue" id="benVoiceCue" type="button" aria-live="polite" aria-hidden="true" tabindex="-1"><span aria-hidden="true">🎙️</span><span><strong id="benVoiceCueTitle">Um recado do Ben</strong><small id="benVoiceCueHint">Escute só um pouquinho…</small></span></button>
+    <audio id="themeAudio" preload="metadata"><source src="assets/audio/amigo-estou-aqui.mp3" type="audio/mpeg" /></audio>
+    <audio id="benVoiceAudio" preload="metadata"><source src="assets/audio/ben-convite.mp3?v=20261105" type="audio/mpeg" /></audio>
+  </div>
+  <noscript><div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div></noscript>
+  <script src="assets/convite-dados.js?v=modelo2-4"></script>
+  <script src="assets/convite-animado.js?v=modelo2-4"></script>
+  <script src="assets/convite/modelo%202/modelo-2.js?v=modelo2-4"></script>
+</body>
+</html>
