@@ -7,8 +7,10 @@
   const giftAction = $("giftAction");
   const backButton = $("backButton");
   const clipVideo = $("m2ClipVideo");
+  const giftsCast = $("giftsCastVideo");
   const openingVideo = $("openingVideo");
   const experience = $("experience");
+  const startButton = $("startButton");
   const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   const clipVisible = () => !!clipVideo && clipVideo.offsetParent !== null &&
@@ -31,6 +33,13 @@
     playClip();
   }
 
+  const playGiftsCast = () => {
+    if (!giftsCast || reduceMotion || document.hidden || !gifts?.classList.contains("is-active")) return;
+    giftsCast.play?.().catch(() => { /* autoplay bloqueado: mantém o poster */ });
+  };
+
+  if (giftsCast) giftsCast.pause();
+
   const openingVisible = () => !!experience &&
     experience.classList.contains("is-prelude-complete") &&
     !experience.classList.contains("is-started");
@@ -50,6 +59,19 @@
       new MutationObserver(syncOpeningVideo).observe(experience, { attributes: true, attributeFilter: ["class"] });
     }
     syncOpeningVideo();
+  }
+
+  if (startButton) {
+    let glowTimer = 0;
+    const glowArmor = () => {
+      startButton.classList.remove("is-glowing");
+      void startButton.offsetWidth;
+      startButton.classList.add("is-glowing");
+      window.clearTimeout(glowTimer);
+      glowTimer = window.setTimeout(() => startButton.classList.remove("is-glowing"), 950);
+    };
+    startButton.addEventListener("pointerdown", glowArmor);
+    startButton.addEventListener("click", glowArmor);
   }
 
   const fallback = {
@@ -112,6 +134,10 @@
       if (visible) clipVideo.pause();
       else playClip();
     }
+    if (giftsCast) {
+      if (visible) playGiftsCast();
+      else giftsCast.pause();
+    }
     (visible ? backButton : giftAction).focus({ preventScroll: true });
   };
 
@@ -120,6 +146,8 @@
       if (document.hidden) openingVideo.pause();
       else syncOpeningVideo();
     }
+    if (document.hidden) giftsCast?.pause();
+    else playGiftsCast();
     if (!clipVideo) return;
     if (document.hidden) clipVideo.pause();
     else if (!gifts?.classList.contains("is-active")) playClip();
