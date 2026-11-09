@@ -723,7 +723,7 @@
     document.body.classList.toggle("hide-values", valuesHidden);
     const btn = $("#toggleValuesBtn");
     if (!btn) return;
-    btn.textContent = valuesHidden ? "🙈 Valores" : "👁️ Valores";
+    btn.textContent = valuesHidden ? "👁️ Mostrar valores" : "🙈 Ocultar valores";
     btn.setAttribute("aria-pressed", valuesHidden ? "true" : "false");
     btn.title = valuesHidden ? "Mostrar valores" : "Ocultar valores";
   }
@@ -1028,11 +1028,12 @@
     if (meta.time) chips.push('<span class="chip">⏰ ' + esc(meta.time.replace(":", "h")) + "</span>");
 
     const map = mapsLink();
-    const place = meta.location || (map ? "Ver no mapa" : "Local a definir");
+    const fullPlace = meta.location || (map ? "Ver no mapa" : "Local a definir");
+    const place = String(fullPlace).split(/\s+—\s+/)[0].replace(/\s*,\s*/, " — ");
     chips.push(
       map
         ? '<a class="chip chip-link" href="' + esc(map) +
-          '" target="_blank" rel="noopener noreferrer" title="Abrir no Google Maps">📍 ' +
+          '" target="_blank" rel="noopener noreferrer" title="' + esc(fullPlace) + ' · abrir no Google Maps">📍 ' +
           esc(place) + " ↗</a>"
         : '<span class="chip">📍 ' + esc(place) + "</span>"
     );
@@ -1050,14 +1051,13 @@
       { label: "Contratados", value: state.items.filter((item) => item.status === "contracted").length, count: state.items.filter((item) => item.status === "contracted").length, cls: "" },
       { label: "A fazer", value: state.items.filter((item) => item.status === "todo").length, count: state.items.filter((item) => item.status === "todo").length, cls: "" },
     ];
-    $("#checklistStats").innerHTML = checklistStats.map((st) => {
-      const pct = s.total ? Math.round(st.count / s.total * 100) : 0;
-      return '<div class="stat-card guest-stat ' + st.cls + '"><span class="label">' + st.label +
-        '</span><span class="value">' + st.value + '</span><span class="note">de ' + s.total + ' itens</span>' +
-        '<div class="stat-progress-row"><div class="stat-progress" role="progressbar" aria-label="' + esc(st.label) +
-        '" aria-valuemin="0" aria-valuemax="' + Math.max(1, s.total) + '" aria-valuenow="' + st.count + '"><span class="stat-progress-fill checklist" style="width:' + pct +
-        '%"></span></div><span class="stat-progress-pct">' + pct + "%</span></div></div>";
-    }).join("");
+    const statusKeys = ["done", "doing", "contracted", "todo"];
+    const currentStatus = $("#statusFilter") ? $("#statusFilter").value : "";
+    $("#checklistStats").innerHTML = checklistStats.map((st, index) =>
+      '<button class="checklist-status-chip ' + st.cls + (currentStatus === statusKeys[index] ? " is-active" : "") +
+      '" type="button" data-status-chip="' + statusKeys[index] + '"><span>' + esc(st.label) +
+      '</span><b>' + st.value + "</b></button>"
+    ).join("");
     renderActivity();
   }
 
@@ -1251,6 +1251,14 @@
     const soonDate = new Date();
     soonDate.setDate(soonDate.getDate() + 7);
     const soonISO = soonDate.toLocaleDateString("sv-SE");
+    const stats = $("#checklistStats");
+    const progressCard = document.querySelector(".checklist-progress-card");
+    const toolbar = document.querySelector(".checklist-toolbar");
+    const isEmpty = state.items.length === 0;
+    if (stats) stats.hidden = isEmpty;
+    if (progressCard) progressCard.hidden = isEmpty;
+    if (toolbar) toolbar.classList.toggle("is-empty", isEmpty);
+
     const alerts = [
       { id: "overdue", icon: "⚠️", label: "Atrasados", count: state.items.filter((item) => item.due && item.due < today && item.status !== "done").length },
       { id: "today", icon: "📅", label: "Vencem hoje", count: state.items.filter((item) => item.due === today && item.status !== "done").length },
@@ -1258,7 +1266,23 @@
       { id: "balance", icon: "💳", label: "Com saldo", count: state.items.filter((item) => num(item.cost) > num(item.paid)).length },
     ];
     const alertWrap = $("#checklistAlerts");
-    if (alertWrap) alertWrap.innerHTML = alerts.map((alert) => '<button class="checklist-alert' + (checklistAlertFilter === alert.id ? " is-active" : "") + (alert.count ? " has-items" : "") + '" type="button" data-check-alert="' + alert.id + '"><span>' + alert.icon + '</span><b>' + alert.count + '</b><small>' + alert.label + "</small></button>").join("");
+    const visibleAlerts = alerts.filter((alert) => alert.count > 0 || checklistAlertFilter === alert.id);
+    if (alertWrap) {
+      alertWrap.hidden = isEmpty || !visibleAlerts.length;
+      alertWrap.innerHTML = visibleAlerts.map((alert) => '<button class="checklist-alert' + (checklistAlertFilter === alert.id ? " is-active" : "") + ' has-items" type="button" data-check-alert="' + alert.id + '"><span aria-hidden="true">' + alert.icon + '</span><b>' + alert.count + '</b><small>' + alert.label + "</small></button>").join("");
+    }
+
+    if (isEmpty) {
+      wrap.innerHTML =
+        '<section class="checklist-welcome"><span class="checklist-welcome-icon" aria-hidden="true">⭐</span>' +
+        '<div><h3>Seu checklist está vazio</h3><p>Comece com o modelo completo da festa ou adicione somente o que precisa.</p></div>' +
+        '<div class="checklist-welcome-actions">' +
+          '<button class="btn btn-primary" type="button" data-use-checklist-template>Usar modelo de festa infantil</button>' +
+          '<button class="btn btn-ghost" type="button" data-empty-add-item><span aria-hidden="true">＋</span> Novo item</button>' +
+          '<button class="btn btn-ghost" type="button" data-empty-import>📥 Importar CSV</button>' +
+        "</div></section>";
+      return;
+    }
 
     if (!filtered.length && (f.q || f.status || f.pending || checklistAlertFilter)) {
       wrap.innerHTML =
@@ -1277,7 +1301,7 @@
       const done = items.filter((i) => i.status === "done").length;
       const subtotal = items.reduce((a, i) => a + num(i.cost), 0);
       const pct = total ? Math.round((done / total) * 100) : 0;
-      const isCollapsed = collapsed.has(stage.id);
+      const isCollapsed = !items.length || collapsed.has(stage.id);
       const tint = stage.color + "16";
 
       return (
@@ -1288,14 +1312,15 @@
             '<span class="stage-icon" style="background:' + stage.color + '22;color:' + stage.color + '">' +
               stage.icon + "</span>" +
             '<span class="stage-title"><h2>' + esc(stage.name) + "</h2>" +
-              '<span class="stage-sub">' + done + "/" + total + " concluídos" +
-              " · " + (total - done) + " pendentes" +
-              (subtotal ? ' · <span class="money">' + money(subtotal) + "</span>" : "") + "</span></span>" +
+              '<span class="stage-sub">' + (total
+                ? done + "/" + total + " concluídos · " + (total - done) + " pendentes" +
+                  (subtotal ? ' · <span class="money">' + money(subtotal) + "</span>" : "")
+                : "Sem itens · abra para adicionar") + "</span></span>" +
             '<span class="stage-progress"><div style="width:' + pct + "%;background:" + stage.color + '"></div></span>' +
             '<span class="stage-chevron">⌄</span>' +
           "</button>" +
           '<div class="stage-body"><div class="stage-add-row"><button class="btn btn-ghost btn-sm" type="button" data-add-stage="' + stage.id + '">＋ Adicionar em ' + esc(stage.name) + "</button></div>" +
-            (sorted.length ? sorted.map(itemHTML).join("") : '<div class="stage-empty">Nenhum item nesta etapa.</div>') + "</div>" +
+            sorted.map(itemHTML).join("") + "</div>" +
         "</section>"
       );
     }).join("");
@@ -1313,13 +1338,24 @@
       budgetInput.value = s.budget || "";
     }
 
+    const budgetBase = Math.max(1, s.budget || s.previsto || s.contratado || s.pago);
+    const budgetOverview = $("#budgetOverview");
+    if (budgetOverview) {
+      const rows = [
+        { label: "Previsto", value: s.previsto, cls: "planned" },
+        { label: "Contratado", value: s.contratado, cls: "committed" },
+        { label: "Pago", value: s.pago, cls: "paid" },
+      ];
+      budgetOverview.classList.toggle("is-over", !!s.budget && s.previsto > s.budget);
+      budgetOverview.innerHTML = '<div class="budget-overview-head"><div><span>Orçamento disponível</span><strong class="money">' + money(s.budget) +
+        '</strong></div><small>' + (s.budget && s.previsto > s.budget ? "⚠ Previsão acima do orçamento" : "Acompanhe cada etapa do valor planejado") + "</small></div>" +
+        '<div class="budget-overview-bars">' + rows.map((row) => {
+          const pct = Math.max(0, Math.min(100, Math.round(row.value / budgetBase * 100)));
+          return '<div class="budget-overview-row"><span>' + row.label + '</span><div><i class="' + row.cls + '" style="width:' + pct + '%"></i></div><b class="money">' + money(row.value) + "</b></div>";
+        }).join("") + "</div>";
+    }
+
     const cards = [
-      {
-        label: "Orçamento total",
-        value: money(s.budget),
-        note: "definido em Editar festa",
-        cls: "highlight",
-      },
       {
         label: "Previsto",
         value: money(s.previsto),
@@ -4151,6 +4187,19 @@
 
   /* ---------- Eventos ---------- */
 
+  function useChecklistTemplate() {
+    if (state.items.length && !window.confirm("Adicionar o checklist modelo aos itens atuais?")) return;
+    createAutomaticBackup("antes de aplicar o checklist modelo");
+    const templateItems = seedItems(state.meta.date).map((item) => Object.assign({}, item, { id: uid() }));
+    state.items = state.items.length ? state.items.concat(templateItems) : templateItems;
+    collapsed.clear();
+    saveCollapsed();
+    addActivity("update", "Checklist modelo adicionado com " + templateItems.length + " itens");
+    touch();
+    renderAll();
+    toast("Checklist modelo adicionado sem alterar convidados ou configurações.", "ok");
+  }
+
   function bindEvents() {
     $$(".tab").forEach((tab) => {
       tab.addEventListener("click", () => showView(tab.dataset.view));
@@ -4181,7 +4230,10 @@
 
     $("#searchInput").addEventListener("input", renderChecklist);
     $("#stageFilter").addEventListener("change", renderChecklist);
-    $("#statusFilter").addEventListener("change", renderChecklist);
+    $("#statusFilter").addEventListener("change", () => {
+      renderHero();
+      renderChecklist();
+    });
     $("#sortItems").addEventListener("change", renderChecklist);
     $("#pendingOnly").addEventListener("change", renderChecklist);
     $("#expandStagesBtn").addEventListener("click", () => {
@@ -4198,6 +4250,14 @@
       const alert = event.target.closest("[data-check-alert]");
       if (!alert) return;
       checklistAlertFilter = checklistAlertFilter === alert.dataset.checkAlert ? "" : alert.dataset.checkAlert;
+      renderChecklist();
+    });
+    $("#checklistStats").addEventListener("click", (event) => {
+      const chip = event.target.closest("[data-status-chip]");
+      if (!chip) return;
+      const status = chip.dataset.statusChip;
+      $("#statusFilter").value = $("#statusFilter").value === status ? "" : status;
+      renderHero();
       renderChecklist();
     });
     $("#addItemBtn").addEventListener("click", () => openItemModal());
@@ -4343,6 +4403,18 @@
     });
 
     $("#checklist").addEventListener("click", (event) => {
+      if (event.target.closest("[data-use-checklist-template]")) {
+        useChecklistTemplate();
+        return;
+      }
+      if (event.target.closest("[data-empty-add-item]")) {
+        openItemModal();
+        return;
+      }
+      if (event.target.closest("[data-empty-import]")) {
+        openChecklistImportModal();
+        return;
+      }
       const toggle = event.target.closest("[data-toggle-stage]");
       if (toggle) {
         const id = toggle.dataset.toggleStage;
