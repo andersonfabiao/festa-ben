@@ -750,7 +750,7 @@
   function loadAutomaticBackups() {
     try {
       const parsed = JSON.parse(localStorage.getItem(BACKUP_KEY) || "[]");
-      return Array.isArray(parsed) ? parsed.filter((entry) => entry && entry.state).slice(0, 3) : [];
+      return Array.isArray(parsed) ? parsed.filter((entry) => entry && entry.state).slice(0, 5) : [];
     } catch (e) {
       return [];
     }
@@ -765,7 +765,7 @@
       state: JSON.parse(JSON.stringify(state)),
     };
     try {
-      const backups = [entry, ...loadAutomaticBackups()].slice(0, 3);
+      const backups = [entry, ...loadAutomaticBackups()].slice(0, 5);
       localStorage.setItem(BACKUP_KEY, JSON.stringify(backups));
       renderBackupState();
       return entry;
@@ -781,8 +781,8 @@
     const latest = loadAutomaticBackups()[0];
     const restore = $("#restoreAutoBackupBtn");
     if (restore) {
-      restore.disabled = !latest;
-      restore.title = latest ? "Restaurar a cópia mais recente deste navegador" : "Nenhuma cópia automática disponível";
+      restore.disabled = false;
+      restore.title = latest ? "Ver e restaurar cópias deste navegador" : "Abrir o histórico e criar a primeira cópia";
     }
     if (message) {
       el.textContent = message;
@@ -796,7 +796,7 @@
     const when = isNaN(date.getTime())
       ? "data desconhecida"
       : date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
-    el.textContent = "Última cópia automática: " + when + " · " + latest.reason + ". Até 3 versões ficam neste navegador.";
+    el.textContent = "Última cópia automática: " + when + " · " + latest.reason + ". Até 5 versões ficam neste navegador.";
   }
 
   function verifyRecovery() {
@@ -818,8 +818,52 @@
     }
   }
 
-  function restoreLatestAutomaticBackup() {
-    const latest = loadAutomaticBackups()[0];
+  function backupEntrySummary(entry) {
+    const copy = normalizeState(entry && entry.state);
+    if (!copy) return null;
+    const subitems = copy.items.reduce((sum, item) => sum + (item.subtasks || []).length, 0);
+    return { items: copy.items.length, guests: copy.guests.length, subitems };
+  }
+
+  function renderBackupHistory() {
+    const list = $("#backupHistoryList");
+    const clearButton = $("#clearBackupHistoryBtn");
+    if (!list) return;
+    const backups = loadAutomaticBackups();
+    if (clearButton) clearButton.disabled = !backups.length;
+    list.innerHTML = backups.length
+      ? backups.map((entry, index) => {
+          const date = new Date(entry.at);
+          const when = isNaN(date.getTime()) ? "Data desconhecida" : date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+          const summary = backupEntrySummary(entry);
+          return '<article class="backup-history-item">' +
+            '<span class="backup-history-index" aria-hidden="true">' + (index + 1) + '</span>' +
+            '<div><strong>' + esc(entry.reason || "Cópia automática") + '</strong><small>' + esc(when) + '</small>' +
+            (summary ? '<p>' + summary.items + ' itens · ' + summary.subitems + ' subitens · ' + summary.guests + ' convidados</p>' : '<p>Cópia inválida</p>') + '</div>' +
+            '<button class="btn btn-ghost btn-sm" type="button" data-restore-backup="' + esc(entry.id) + '"' + (summary ? "" : " disabled") + '>Restaurar</button>' +
+          '</article>';
+        }).join("")
+      : '<div class="activity-empty">Nenhuma cópia automática foi criada neste dispositivo.</div>';
+  }
+
+  function openBackupHistory() {
+    renderBackupHistory();
+    openModal($("#backupHistoryModal"));
+  }
+
+  function createManualAutomaticBackup() {
+    const entry = createAutomaticBackup("cópia criada manualmente");
+    if (!entry) {
+      toast("Adicione itens ou convidados antes de criar uma cópia.", "warn");
+      return;
+    }
+    renderBackupHistory();
+    renderBackupState();
+    toast("Cópia criada neste dispositivo.", "ok");
+  }
+
+  function restoreAutomaticBackup(id) {
+    const latest = loadAutomaticBackups().find((entry) => entry.id === id);
     if (!latest) {
       toast("Ainda não existe cópia automática neste navegador.", "warn");
       renderBackupState();
@@ -830,7 +874,9 @@
       toast("A cópia automática está inválida.", "err");
       return;
     }
-    if (!window.confirm("Restaurar a última cópia automática?\n\nO estado atual será preservado em uma nova cópia antes da restauração.")) return;
+    const date = new Date(latest.at);
+    const when = isNaN(date.getTime()) ? "data desconhecida" : date.toLocaleString("pt-BR");
+    if (!window.confirm("Restaurar a cópia de " + when + "?\n\nO estado atual será preservado em uma nova cópia antes da restauração.")) return;
     createAutomaticBackup("antes de restaurar uma cópia automática");
     state = next;
     addActivity("update", "Cópia automática restaurada neste dispositivo");
@@ -838,6 +884,16 @@
     closeAllModals();
     renderAll();
     toast("Cópia restaurada localmente. Revise e salve na nuvem quando estiver pronto.", "ok");
+  }
+
+  function clearAutomaticBackups() {
+    const backups = loadAutomaticBackups();
+    if (!backups.length) return;
+    if (!window.confirm("Apagar todas as cópias automáticas deste dispositivo?\n\nO checklist atual e a versão da nuvem não serão alterados.")) return;
+    localStorage.removeItem(BACKUP_KEY);
+    renderBackupHistory();
+    renderBackupState("Cópias automáticas removidas. O checklist atual foi preservado.");
+    toast("Histórico de cópias limpo.", "ok");
   }
 
   function loadCloudCfg() {
@@ -3353,7 +3409,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261109p3";
+  const INVITE_RELEASE = "20261109p5";
 
   function invitePageUrl() {
     try {
@@ -4718,7 +4774,13 @@
 
     $("#exportBtn").addEventListener("click", exportData);
     $("#importBtn").addEventListener("click", () => $("#importFile").click());
-    $("#restoreAutoBackupBtn").addEventListener("click", restoreLatestAutomaticBackup);
+    $("#restoreAutoBackupBtn").addEventListener("click", openBackupHistory);
+    $("#backupHistoryList").addEventListener("click", (event) => {
+      const restore = event.target.closest("[data-restore-backup]");
+      if (restore) restoreAutomaticBackup(restore.dataset.restoreBackup);
+    });
+    $("#clearBackupHistoryBtn").addEventListener("click", clearAutomaticBackups);
+    $("#createAutoBackupBtn").addEventListener("click", createManualAutomaticBackup);
     $("#verifyBackupBtn").addEventListener("click", verifyRecovery);
     $("#importFile").addEventListener("change", (event) => {
       const file = event.target.files && event.target.files[0];

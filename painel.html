@@ -7,13 +7,13 @@
   <title>Ben faz 5! · Checklist Toy Story</title>
   <meta name="description" content="Checklist, orçamento e convidados do aniversário de 5 anos do Ben — tema Toy Story." />
   <meta name="theme-color" content="#8fd3ff" />
-  <meta name="app-version" content="20261109p3" />
+  <meta name="app-version" content="20261109p5" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 61,38 96,38 68,59 79,93 50,72 21,93 32,59 4,38 39,38' fill='%23ffc93c' stroke='%23e8453c' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261109p3" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261109p5" />
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Ir para o conteúdo principal</a>
@@ -572,12 +572,12 @@
           <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">⬇️ Baixar backup completo</button>
           <button type="button" class="btn btn-ghost btn-sm" id="importBtn">⬆️ Restaurar arquivo JSON</button>
           <input type="file" id="importFile" accept="application/json,.json" hidden />
-          <button type="button" class="btn btn-ghost btn-sm" id="restoreAutoBackupBtn">↩️ Restaurar cópia automática</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="restoreAutoBackupBtn">🕘 Ver cópias automáticas</button>
           <button type="button" class="btn btn-ghost btn-sm" id="verifyBackupBtn">✓ Verificar recuperação</button>
           <button type="button" class="btn btn-ghost btn-sm" id="resetBtn">↺ Restaurar exemplo</button>
           <button type="button" class="btn btn-danger-ghost btn-sm" id="clearBtn">🗑 Apagar itens</button>
         </div>
-        <p class="hint" id="backupState">São mantidas até 3 cópias automáticas neste navegador antes de carregar, importar ou apagar dados. O backup baixado permite restaurar tudo em outro aparelho.</p>
+        <p class="hint" id="backupState">São mantidas até 5 cópias automáticas neste navegador antes de carregar, importar ou apagar dados. O backup baixado permite restaurar tudo em outro aparelho.</p>
 
         <div class="modal-actions">
           <span class="spacer"></span>
@@ -585,6 +585,22 @@
           <button type="submit" class="btn btn-primary">Salvar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div class="modal" id="backupHistoryModal" hidden>
+    <div class="modal-card modal-card-sm" role="dialog" aria-modal="true" aria-labelledby="backupHistoryTitle">
+      <div class="modal-head">
+        <div><h2 id="backupHistoryTitle">🛡️ Cópias automáticas</h2><p class="muted">Escolha uma versão deste dispositivo para revisar e restaurar.</p></div>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </div>
+      <div id="backupHistoryList" class="backup-history-list"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-cloud btn-sm" id="createAutoBackupBtn">＋ Criar cópia agora</button>
+        <button type="button" class="btn btn-danger-ghost btn-sm" id="clearBackupHistoryBtn">Limpar cópias</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn-ghost" data-close>Fechar</button>
+      </div>
     </div>
   </div>
 
@@ -965,7 +981,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/guest-id.js?v=20261105"></script>
-  <script src="assets/app.js?v=20261109p3"></script>
+  <script src="assets/app.js?v=20261109p5"></script>
   <script src="assets/assistente.js?v=20261105p11"></script>
 </body>
 </html>

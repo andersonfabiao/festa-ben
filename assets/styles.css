@@ -367,6 +367,17 @@ strong { font-weight: 800; }
 .activity-item strong { overflow:hidden; color:#324761; font-size:.78rem; text-overflow:ellipsis; white-space:nowrap; }
 .activity-item small { flex:none; color:#718096; font-size:.68rem; font-weight:700; }
 .activity-empty { padding:16px; border:1px dashed #cfdeeb; border-radius:12px; color:#718096; text-align:center; font-size:.8rem; font-weight:700; }
+.backup-history-list { display:grid; gap:9px; margin:4px 0 16px; }
+.backup-history-item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:11px; padding:12px; border:1px solid #dbe7f2; border-radius:14px; background:#f8fbfe; }
+.backup-history-index { display:grid; place-items:center; width:31px; height:31px; border-radius:10px; color:#15518f; font-weight:900; background:#e4f2ff; }
+.backup-history-item > div { display:grid; min-width:0; }
+.backup-history-item strong { overflow:hidden; color:var(--navy); font-size:.86rem; text-overflow:ellipsis; white-space:nowrap; }
+.backup-history-item small { color:var(--muted); font-weight:700; }
+.backup-history-item p { margin:3px 0 0; color:#52627a; font-size:.72rem; font-weight:700; }
+@media (max-width:640px) {
+  .backup-history-item { grid-template-columns:auto minmax(0,1fr); }
+  .backup-history-item .btn { grid-column:1 / -1; width:100%; }
+}
 
 .hero-stats {
   display: grid;
