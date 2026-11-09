@@ -1805,6 +1805,12 @@
       g.type === "child"
         ? guests.filter((a) => a.type === "adult" && g.guardians.includes(a.id))
         : [];
+    const confirmedGuardians = guardians.filter((adult) => adult.status === "confirmed");
+    const accompaniedBadge =
+      g.type === "child" && g.status === "confirmed" && confirmedGuardians.length
+        ? ' <span class="guest-accompanied-badge" title="Presença confirmada com responsável">✓ Vai com ' +
+          esc(confirmedGuardians.map((adult) => displayGuestName(adult)).join(", ")) + "</span>"
+        : "";
     const kids =
       g.type === "adult"
         ? guests.filter((c) => c.type === "child" && c.guardians.includes(g.id))
@@ -1822,7 +1828,7 @@
     return (
       '<div class="guest-row' + (selectedGuestIds.has(g.id) ? " is-selected" : "") + '">' + selectBox +
         '<div class="guest-avatar ' + g.type + '">' + esc(initials(g.name)) + "</div>" +
-        '<div class="guest-main"><div class="guest-name">' + esc(displayGuestName(g)) + unlistedBadge + hostBadge + "</div>" +
+        '<div class="guest-main"><div class="guest-name' + (accompaniedBadge ? " is-accompanied" : "") + '">' + esc(displayGuestName(g)) + unlistedBadge + hostBadge + accompaniedBadge + "</div>" +
           '<div class="guest-type">' + (isHostGuest(g) ? "Pais" : g.type === "child" ? "Criança" : "Adulto") +
           " · " + gs.label + "</div>" + phone + sentNote + reminderNote + notes + guardianLine + kidsLine +
           rsvpNote + rsvpMsg + "</div>" +
@@ -2775,6 +2781,55 @@
     return state.guests.find((g) => g.id === id) || null;
   }
 
+  function linkedConfirmedChildren(guest) {
+    if (!guest || guest.type !== "adult") return [];
+    return state.guests.filter(
+      (child) =>
+        child.type === "child" &&
+        child.status === "confirmed" &&
+        Array.isArray(child.guardians) &&
+        child.guardians.includes(guest.id)
+    );
+  }
+
+  function applyGuardianStatusChange(guest, nextStatus) {
+    const previousStatus = guest.status;
+    if (guest.type !== "adult" || nextStatus === "confirmed" || nextStatus === previousStatus) {
+      guest.status = nextStatus;
+      return true;
+    }
+
+    const children = linkedConfirmedChildren(guest);
+    if (!children.length) {
+      guest.status = nextStatus;
+      return true;
+    }
+
+    const names = children.map((child) => displayGuestName(child)).join(", ");
+    const proceed = window.confirm(
+      displayGuestName(guest) + " tem " + (children.length === 1 ? "uma criança confirmada" : children.length + " crianças confirmadas") +
+      " vinculada(s): " + names + ".\n\nDeseja realmente alterar o adulto para “" +
+      (GUEST_STATUS[nextStatus] || GUEST_STATUS.pending).label + "”?"
+    );
+    if (!proceed) return false;
+
+    const keepChildren = window.confirm(
+      "As crianças continuarão confirmadas mesmo sem este adulto?\n\n" +
+      "OK: manter as crianças confirmadas.\nCancelar: alterar as crianças para “" +
+      (GUEST_STATUS[nextStatus] || GUEST_STATUS.pending).label + "”."
+    );
+    guest.status = nextStatus;
+    if (!keepChildren) {
+      children.forEach((child) => {
+        child.status = nextStatus;
+        child.rsvpAt = nowISO();
+        child.rsvpSource = "owner";
+        addActivity("rsvp", displayGuestName(child) + ": " + (GUEST_STATUS[nextStatus] || GUEST_STATUS.pending).label + " (com responsável)");
+      });
+    }
+    return true;
+  }
+
   function relationItem(kind, id, name, detail, checked) {
     return (
       '<label class="relation-item">' +
@@ -2887,6 +2942,9 @@
       $("#guestEditPhone").focus();
       return;
     }
+
+    if (existing && existing.type === "adult" && type === "adult" &&
+        !applyGuardianStatusChange(existing, status)) return;
 
     let guest = existing;
     if (!guest) {
@@ -4401,7 +4459,11 @@
       if (!select) return;
       const guest = state.guests.find((g) => g.id === select.dataset.guestStatus);
       if (!guest) return;
-      guest.status = select.value;
+      const previousStatus = guest.status;
+      if (!applyGuardianStatusChange(guest, select.value)) {
+        select.value = previousStatus;
+        return;
+      }
       guest.rsvpAt = nowISO();
       guest.rsvpSource = "owner";
       addActivity("rsvp", displayGuestName(guest) + ": " + (GUEST_STATUS[guest.status] || GUEST_STATUS.pending).label);
@@ -4880,7 +4942,9 @@
     if (!GUEST_STATUS[status]) return { ok: false, error: "Status de convidado inválido." };
 
     const before = JSON.stringify(state);
-    guest.status = status;
+    if (!applyGuardianStatusChange(guest, status)) {
+      return { ok: false, error: "Alteração cancelada para revisar as crianças vinculadas." };
+    }
     guest.rsvpAt = nowISO();
     guest.rsvpSource = "owner";
     addActivity(

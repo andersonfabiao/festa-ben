@@ -421,7 +421,7 @@
     document.title = "Confirmação de presença · " + meta.name + " faz " + meta.age + "!";
 
     const chips = [];
-    chips.push('<a class="invite-chip invite-chip-link" href="' + esc(calendarHref()) + '" download="aniversario-ben.ics" title="Adicionar à agenda">📅 ' + esc(longDate(meta.date)) + " · adicionar ↗</a>");
+    chips.push('<span class="invite-chip">📅 ' + esc(longDate(meta.date)) + "</span>");
     if (meta.time) {
       chips.push('<span class="invite-chip">🕒 ' + esc(displayTime(meta.time)) + "</span>");
     }
@@ -843,11 +843,30 @@
     const message = (messageEl ? messageEl.value : "").trim().slice(0, 280);
     const guest = current;
 
+    if (guest.type === "adult" && status !== "confirmed") {
+      const linkedConfirmed = $$('[data-child-status]').filter((select) => select.value === "confirmed");
+      if (linkedConfirmed.length) {
+        const names = linkedConfirmed
+          .map((select) => guests.find((item) => item.key === select.dataset.childStatus))
+          .filter(Boolean)
+          .map((child) => displayGuestName(child))
+          .join(", ");
+        if (!window.confirm(
+          "Há criança(s) confirmada(s) com você: " + names +
+          ".\n\nDeseja realmente informar que não irá à festa?"
+        )) return;
+        const keepChildren = window.confirm(
+          "As crianças irão mesmo sem você?\n\nOK: manter confirmadas.\nCancelar: marcar também que não irão."
+        );
+        if (!keepChildren) linkedConfirmed.forEach((select) => { select.value = "declined"; });
+      }
+    }
+
     const childUpdates = [];
     $$("[data-child-status]").forEach((select) => {
       const child = guests.find((g) => g.key === select.dataset.childStatus);
       if (!child || child.status === select.value) return;
-      if (select.value !== "confirmed" && select.value !== "declined") return;
+      if (!GUEST_STATUS[select.value]) return;
       childUpdates.push({ id: child.key, status: select.value });
     });
 

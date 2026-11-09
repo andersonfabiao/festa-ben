@@ -29,7 +29,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/styles.css?v=20261106p35" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261109p1" />
 </head>
 <body class="invite-body rsvp-page">
   <a class="skip-link" href="#inviteContent">Ir para a confirmação</a>
@@ -39,6 +39,8 @@
     <span class="rsvp-cloud cloud-three"></span>
     <span class="rsvp-star star-one">★</span>
     <span class="rsvp-star star-two">★</span>
+    <span class="rsvp-star star-three">✦</span>
+    <span class="rsvp-star star-four">★</span>
   </div>
 
   <div class="rsvp-music" id="rsvpMusic" hidden>
@@ -52,18 +54,11 @@
     <section class="rsvp-card" aria-labelledby="inviteTitle">
       <header class="rsvp-hero">
         <div class="rsvp-copy">
-          <div class="rsvp-ben-story" role="img" aria-label="Ben Story">
-            <span class="rsvp-ben-word">BEN</span>
-            <span class="rsvp-story-word">STORY</span>
-          </div>
+          <img class="rsvp-brand-logo" src="assets/convite/BEN_STORY.png" alt="Ben Story 5" width="518" height="453" />
           <p class="rsvp-eyebrow" id="inviteEyebrow">Confirmação de presença</p>
-          <h1 id="inviteTitle">
-            <span class="rsvp-name-blocks" id="inviteName" role="img" aria-label="Ben">
-              <span>B</span><span>E</span><span>N</span>
-            </span>
-            <span class="rsvp-title-rest">faz <b id="inviteAgeText">5</b> anos!</span>
-          </h1>
-          <p class="invite-sub" id="inviteSub">Que bom ter você por aqui. Encontre seu nome para responder.</p>
+          <h1 class="sr-only" id="inviteTitle">Confirmação de presença do aniversário do Ben</h1>
+          <span id="inviteName" class="sr-only">Ben</span><span id="inviteAgeText" class="sr-only">5</span>
+          <p class="invite-sub sr-only" id="inviteSub">Confirme sua presença.</p>
         </div>
 
         <div class="rsvp-art" aria-hidden="true">
@@ -104,6 +99,6 @@
 
   <script src="assets/convite-music.js?v=20261106p35"></script>
   <script src="assets/guest-id.js?v=20261031"></script>
-  <script src="assets/convite.js?v=20261106p35"></script>
+  <script src="assets/convite.js?v=20261109p1"></script>
 </body>
 </html>

@@ -36,10 +36,10 @@
 .m2-venue-star { flex:0 0 auto; color:#e5a51b; font-size:.72em; text-shadow:0 1px 0 #fff; }
 .m2-call { margin:0 0 5px; color:#66564b; font-family:"Baloo 2",sans-serif; font-size:.74rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
 
-.m2-actions { display:grid; grid-template-columns:repeat(3,1fr); align-items:start; gap:clamp(7px,2vw,18px); width:min(100%,500px); margin:0 auto; }
+.m2-actions { display:grid; grid-template-columns:repeat(3,1fr); align-items:start; gap:clamp(8px,2.2vw,20px); width:min(100%,560px); margin:0 auto; }
 .m2-action { display:grid; justify-items:center; gap:5px; min-width:0; padding:0; border:0; color:#44372e; text-decoration:none; background:none; font:inherit; cursor:pointer; }
-.m2-action strong { font-size:clamp(.66rem,2.2vw,.82rem); font-weight:900; line-height:1.03; text-transform:uppercase; }
-.m2-medal { position:relative; display:grid; place-items:center; width:clamp(86px,20vw,116px); aspect-ratio:1; border:0; border-radius:50%; background:radial-gradient(circle at 50% 32%,#fff 0 56%,#f0f9ff 78%,#e2f1fb 100%); box-shadow:0 6px 14px rgba(34,71,95,.16),0 3px 0 rgba(255,255,255,.85) inset,0 0 0 2px rgba(62,139,205,.09) inset; transition:transform .22s ease,filter .22s ease; }
+.m2-action strong { font-size:clamp(.7rem,2.3vw,.88rem); font-weight:900; line-height:1.06; text-transform:uppercase; }
+.m2-medal { position:relative; display:grid; place-items:center; width:clamp(94px,21vw,128px); aspect-ratio:1; border:0; border-radius:50%; background:radial-gradient(circle at 50% 32%,#fff 0 56%,#f0f9ff 78%,#e2f1fb 100%); box-shadow:0 7px 16px rgba(34,71,95,.18),0 3px 0 rgba(255,255,255,.85) inset,0 0 0 2px rgba(62,139,205,.09) inset; transition:transform .22s ease,filter .22s ease; }
 .m2-medal i { z-index:2; display:grid; place-items:center; width:60%; aspect-ratio:1; border-radius:50%; color:#fff; background:linear-gradient(160deg,#63cc7e,#2f9e57); box-shadow:0 3px 0 #1f7a3f,inset 0 0 0 2px rgba(255,255,255,.55); font-style:normal; font-size:clamp(1.9rem,6.6vw,2.8rem); font-weight:900; line-height:1; text-shadow:0 2px 1px rgba(20,90,48,.35); }
 .m2-map .m2-medal { background:radial-gradient(circle at 50% 32%,#fff 0 56%,#eef8ff 78%,#ddedfa 100%); }
 .m2-map-art { position:relative; z-index:2; width:86%; height:86%; object-fit:contain; filter:drop-shadow(0 3px 3px rgba(0,0,0,.14)); }
@@ -219,7 +219,7 @@
   .m2-message { max-width:350px; margin:8px auto 9px; font-size:.73rem; line-height:1.22; }
   .m2-date-row { gap:6px; margin-bottom:5px; }.m2-month,.m2-time { min-width:62px; font-size:.65rem; }.m2-day { width:52px; }.m2-day strong { font-size:1.9rem; }
   .m2-venue { gap:6px; margin-bottom:7px; font-size:.72rem; }
-  .m2-call { font-size:.62rem; }.m2-actions { gap:3px; }.m2-medal { width:clamp(76px,24vw,96px); border-width:5px; }.m2-action strong { font-size:.6rem; }
+  .m2-call { font-size:.62rem; }.m2-actions { gap:4px; }.m2-medal { width:clamp(84px,26vw,102px); }.m2-action strong { font-size:.63rem; }
   .m2-signoff { margin-top:0; }.m2-deadline { padding:4px 8px; font-size:.58rem; }
   .m2-clip { width:clamp(120px,17vh,150px); margin:clamp(6px,1.4vh,12px) auto 0; }
   .m2-gift-title { margin-top:54px; }.m2-gift-title h2 { font-size:clamp(2.2rem,11vw,3.2rem); }.m2-gift-kicker { margin-bottom:8px; font-size:.62rem; }.m2-gift-title > p:last-child { margin:7px 0 9px; font-size:.72rem; }
