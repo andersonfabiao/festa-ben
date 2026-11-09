@@ -6,7 +6,7 @@
   <title>Uma aventura especial · Ben faz 5!</title>
   <meta name="description" content="Abra o convite animado do aniversário de 5 anos do Ben e venha viver essa aventura com a gente!" />
   <meta name="theme-color" content="#55b9e8" />
-  <meta name="app-version" content="20261109p1" />
+  <meta name="app-version" content="20261109p3" />
   <script>
     window.__checkBenInviteVersion = async () => {
       if (!/^https?:$/.test(location.protocol) || /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -49,8 +49,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/convite-animado.css?v=modelo2-21" />
-  <link rel="stylesheet" href="assets/convite/modelo%202/modelo-2.css?v=modelo2-21" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=20261109p3" />
+  <link rel="stylesheet" href="assets/convite/modelo%202/modelo-2.css?v=20261109p3" />
 </head>
 <body>
   <a class="skip-link" href="#finalInvite">Pular para o convite</a>
@@ -75,7 +75,7 @@
     <div class="opening-screen" id="openingScreen">
       <div class="opening-bg" aria-hidden="true">
         <img class="opening-bg-blur" src="assets/convite/todo-poster.webp" alt="" />
-        <video id="openingVideo" class="opening-bg-video" muted loop playsinline preload="metadata" poster="assets/convite/todo-poster.webp">
+        <video id="openingVideo" class="opening-bg-video" muted loop playsinline preload="none" poster="assets/convite/todo-poster.webp">
           <source src="assets/convite/todo-loop.mp4" type="video/mp4" />
         </video>
       </div>
@@ -98,7 +98,7 @@
       </div>
       <section class="reveal-scene" id="revealScene" aria-label="A carta especial está se abrindo">
         <div class="reveal-glow" aria-hidden="true"></div>
-        <div class="reveal-frame"><video id="revealVideo" muted playsinline preload="metadata" poster="assets/convite/start-poster.webp?v=20261106p22" aria-label="Woody, Buzz e Jessie revelados pela carta"><source src="assets/convite/start-tratado.mp4?v=20261106p22" type="video/mp4" /></video></div>
+        <div class="reveal-frame"><video id="revealVideo" muted playsinline preload="none" poster="assets/convite/start-poster.webp?v=20261106p22" aria-label="Woody, Buzz e Jessie revelados pela carta"><source src="assets/convite/start-tratado.mp4?v=20261106p22" type="video/mp4" /></video></div>
       </section>
 
       <section class="final-invite" id="finalInvite" tabindex="-1" aria-label="Convite do aniversário do Ben">
@@ -128,7 +128,7 @@
             <p class="rsvp-deadline m2-deadline" id="animatedRsvpDeadline">Confirme sua presença até 29 de dezembro 💫</p>
           </div>
           <figure class="m2-clip">
-            <video id="m2ClipVideo" class="m2-clip-video" muted loop playsinline preload="metadata" poster="assets/convite/alien-loop-poster.webp" aria-label="Cabeça de Batata jogando o alien para cima">
+            <video id="m2ClipVideo" class="m2-clip-video" muted loop playsinline preload="none" poster="assets/convite/alien-loop-poster.webp" aria-label="Cabeça de Batata jogando o alien para cima">
               <source src="assets/convite/alien-loop.mp4" type="video/mp4" />
             </video>
           </figure>
@@ -150,7 +150,7 @@
             <article><div class="m2-gift-orbit m2-toy"><img class="m2-gift-ball" src="assets/convite/bola.png" alt="" aria-hidden="true" /></div><h3>Brinquedos</h3><p id="giftToyValue">Tudo do universo Toy Story ou bloquinhos de montar estilo Lego</p></article>
           </div>
           <div class="m2-gifts-cast" aria-hidden="true">
-            <video id="giftsCastVideo" class="m2-gifts-cast-video" muted loop playsinline preload="metadata" poster="assets/convite/personagens-poster.webp">
+            <video id="giftsCastVideo" class="m2-gifts-cast-video" muted loop playsinline preload="none" poster="assets/convite/personagens-poster.webp">
               <source src="assets/convite/personagens-loop.mp4" type="video/mp4" />
             </video>
           </div>
@@ -165,8 +165,8 @@
     <audio id="benVoiceAudio" preload="metadata"><source src="assets/audio/ben-convite.mp3?v=20261105" type="audio/mpeg" /></audio>
   </div>
   <noscript><div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div></noscript>
-  <script src="assets/convite-dados.js?v=modelo2-21"></script>
-  <script src="assets/convite-animado.js?v=modelo2-21"></script>
-  <script src="assets/convite/modelo%202/modelo-2.js?v=modelo2-21"></script>
+  <script src="assets/convite-dados.js?v=20261109p3"></script>
+  <script src="assets/convite-animado.js?v=20261109p3"></script>
+  <script src="assets/convite/modelo%202/modelo-2.js?v=20261109p3"></script>
 </body>
 </html>

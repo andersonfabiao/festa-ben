@@ -488,6 +488,15 @@
     '</div>';
   }
 
+  function lookupErrorMarkup(query) {
+    return '<div class="invite-lookup-error" role="alert">' +
+      '<span aria-hidden="true">📡</span>' +
+      '<div><strong>Não consegui consultar os nomes agora.</strong>' +
+      '<p>Confira sua internet e tente novamente.</p></div>' +
+      '<button class="btn btn-ghost btn-sm" type="button" data-retry-lookup="' + esc(query) + '">Tentar novamente</button>' +
+    '</div>';
+  }
+
   async function renderPickList(query) {
     const list = $("#guestPickList");
     if (!list) return;
@@ -510,8 +519,7 @@
       } catch (error) {
         if (sequence !== lookupSequence) return;
         if (!guests.length) {
-          list.innerHTML =
-            '<p class="invite-hint">Não consegui consultar os nomes agora. Verifique sua internet e tente novamente.</p>';
+          list.innerHTML = lookupErrorMarkup(query);
           return;
         }
       }
@@ -928,6 +936,18 @@
   }
 
   function bind() {
+    const connectionStatus = $("#connectionStatus");
+    const updateConnectionStatus = () => {
+      if (connectionStatus) connectionStatus.hidden = navigator.onLine;
+    };
+    window.addEventListener("online", () => {
+      updateConnectionStatus();
+      const search = $("#guestSearch");
+      if (search && norm(search.value).length >= 3) renderPickList(search.value);
+    });
+    window.addEventListener("offline", updateConnectionStatus);
+    updateConnectionStatus();
+
     const backLink = $("#rsvpBack");
     if (backLink && returnUrl) {
       backLink.href = returnUrl;
@@ -942,6 +962,11 @@
     });
 
     $("#inviteContent").addEventListener("click", (event) => {
+      const retryLookup = event.target.closest("[data-retry-lookup]");
+      if (retryLookup) {
+        renderPickList(retryLookup.dataset.retryLookup || $("#guestSearch")?.value || "");
+        return;
+      }
       const pick = event.target.closest("[data-key]");
       if (pick) {
         selectGuest(pick.dataset.key);

@@ -2064,6 +2064,17 @@ body.no-scroll { overflow: hidden; }
 }
 .invite-error { padding: 10px 0; }
 .invite-error p { margin: 0 0 14px; color: #4a5b78; font-weight: 700; }
+.connection-status { position:fixed; z-index:130; top:max(10px,env(safe-area-inset-top)); left:50%; display:flex; align-items:center; gap:9px; width:min(92vw,560px); padding:10px 14px; border:1px solid #efb36c; border-radius:14px; color:#704300; font-size:.78rem; background:rgba(255,247,222,.97); box-shadow:0 12px 34px rgba(55,45,22,.2); transform:translateX(-50%); }
+.connection-status[hidden] { display:none; }
+.connection-status > span:first-child { font-size:1.25rem; }
+.connection-status strong { display:block; }
+.invite-lookup-error { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; padding:13px; border:1px solid #efc88d; border-radius:14px; color:#6b4a1b; background:#fffaf0; }
+.invite-lookup-error > span { font-size:1.35rem; }
+.invite-lookup-error p { margin:2px 0 0; font-size:.78rem; }
+@media (max-width: 640px) {
+  .invite-lookup-error { grid-template-columns:auto 1fr; }
+  .invite-lookup-error .btn { grid-column:1 / -1; width:100%; }
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- Responsive ---------- */
@@ -2075,31 +2086,32 @@ body.no-scroll { overflow: hidden; }
 }
 
 @media (max-width: 640px) {
-  .hero { padding: 22px 16px 58px; border-radius: 0 0 28px 28px; }
-  .hero-top { gap: 14px; flex-wrap: wrap; }
+  .hero { padding: 15px 12px 48px; border-radius: 0 0 28px 28px; }
+  .hero-top { gap: 8px; flex-wrap: wrap; }
   .badge-age { width: 74px; height: 74px; border-width: 4px; }
   .badge-age span { font-size: 36px; }
   .badge-age small { font-size: 9px; }
   .hero-copy { flex: 1 1 200px; }
-  .hero h1 { font-size: clamp(2.2rem, 11vw, 3rem); }
-  .hero-sub { font-size: 0.86rem; }
+  .hero h1 { font-size: clamp(2rem, 10vw, 2.7rem); }
+  .hero-sub { display: none; }
   .hero-actions { order: 3; width: 100%; justify-content: stretch; }
   .hero-actions .hero-edit { flex: 1 1 0; width: auto; }
   .hero-edit.btn { padding: 8px 12px; font-size: 0.8rem; }
-  .hero-meta { margin-top: 16px; }
+  .hero-meta { margin-top: 10px; gap: 6px; }
   .hero-meta .chip { font-size: 0.78rem; padding: 5px 10px; }
-  .countdown .cd-item { padding: 5px 9px; }
+  .countdown { margin-top: 10px; gap: 6px; }
+  .countdown .cd-item { padding: 4px 8px; }
   .countdown .cd-item b { font-size: 1.2rem; }
   .hero-stats { gap: 8px; }
   .hero-stat { padding: 8px 10px; border-radius: 13px; }
   .hero-stat .value { font-size: 1.02rem; }
   .hero-stat .label { font-size: 0.58rem; }
-  .hero .cloud-bar { display: grid; gap: 9px; margin-top: 14px; padding: 10px; }
+  .hero .cloud-bar { display: grid; gap: 7px; margin-top: 10px; padding: 8px; }
   .hero .cloud-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .hero .cloud-actions .btn { width: 100%; font-size: .72rem; padding: 7px 6px; }
+  .hero .cloud-actions .btn { width: 100%; font-size: .7rem; padding: 6px 5px; }
   .stage-names-grid { grid-template-columns: 1fr; }
 
-  .shell { padding: 0 12px 30px; margin-top: -32px; }
+  .shell { padding: 0 12px 30px; margin-top: -30px; }
   .tabs {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

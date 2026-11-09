@@ -2508,11 +2508,14 @@
         }
         const cloudChangedSinceSync = !cloud.sha || cloud.sha !== head.sha;
         if (cloudChangedSinceSync) {
+          const remoteUpdatedAt = remoteState && Date.parse(remoteState.updatedAt || "")
+            ? new Date(remoteState.updatedAt).toLocaleString("pt-BR")
+            : "horário não informado";
           cloud.pending = true;
           dirty = true;
           saveCloudCfg();
           const conflictMessage =
-            "A nuvem possui uma versão mais recente. Para não perder itens, carregue a nuvem antes de salvar.";
+            "A nuvem mudou em " + remoteUpdatedAt + ". Para não perder itens, carregue a versão online antes de salvar.";
           setCloudPhase("error", conflictMessage);
           if (opts.fromSettings) setConfigState(conflictMessage);
           if (!opts.silent) toast(conflictMessage, "warn");
@@ -3350,7 +3353,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261106p22";
+  const INVITE_RELEASE = "20261109p3";
 
   function invitePageUrl() {
     try {

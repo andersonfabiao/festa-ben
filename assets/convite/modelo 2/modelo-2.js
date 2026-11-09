@@ -18,6 +18,10 @@
 
   const playClip = () => {
     if (!clipVideo || reduceMotion || !clipVisible()) return;
+    if (clipVideo.preload === "none") {
+      clipVideo.preload = "metadata";
+      clipVideo.load();
+    }
     clipVideo.play?.().catch(() => { /* autoplay bloqueado: mantém o poster */ });
   };
 
@@ -35,6 +39,10 @@
 
   const playGiftsCast = () => {
     if (!giftsCast || reduceMotion || document.hidden || !gifts?.classList.contains("is-active")) return;
+    if (giftsCast.preload === "none") {
+      giftsCast.preload = "metadata";
+      giftsCast.load();
+    }
     giftsCast.play?.().catch(() => { /* autoplay bloqueado: mantém o poster */ });
   };
 
@@ -47,6 +55,10 @@
   const syncOpeningVideo = () => {
     if (!openingVideo) return;
     if (openingVisible() && !document.hidden && !reduceMotion) {
+      if (openingVideo.preload === "none") {
+        openingVideo.preload = "metadata";
+        openingVideo.load();
+      }
       openingVideo.play?.().catch(() => { /* autoplay bloqueado: mantém o poster */ });
     } else {
       openingVideo.pause();

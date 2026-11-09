@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261106p34";
+  const inviteRelease = "20261109p3";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -62,8 +62,8 @@
     window.setTimeout(() => {
       experience.classList.add("is-prelude-complete");
       startOpeningTheme();
-    }, 820);
-    window.setTimeout(() => experience.classList.remove("is-prelude-transition"), 2850);
+    }, 360);
+    window.setTimeout(() => experience.classList.remove("is-prelude-transition"), 1500);
   };
 
   const updateBuzzSoundControl = () => {
@@ -328,6 +328,10 @@
 
     setScene("reveal");
     if (revealVideo) {
+      if (revealVideo.preload === "none") {
+        revealVideo.preload = "metadata";
+        revealVideo.load();
+      }
       revealVideo.currentTime = 0;
       revealVideo.play().catch(() => {});
     }

@@ -3,6 +3,7 @@ import { extname, join, relative, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const errors = [];
+const warnings = [];
 
 function filesIn(dir, extension) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -25,6 +26,18 @@ for (const name of ["event.json"]) {
 }
 
 const publicEvent = JSON.parse(readFileSync(join(root, "event.json"), "utf8"));
+const eventMeta = publicEvent.meta || {};
+if (!/^\d{4}-\d{2}-\d{2}$/.test(eventMeta.date || "")) {
+  errors.push("event.json: data da festa inválida");
+}
+if (!/^\d{4}-\d{2}-\d{2}$/.test(eventMeta.rsvpDeadline || "")) {
+  errors.push("event.json: prazo de confirmação inválido");
+} else if (eventMeta.rsvpDeadline >= eventMeta.date) {
+  errors.push("event.json: o prazo de confirmação deve ser anterior à festa");
+}
+if (!eventMeta.fatherPhone || !eventMeta.motherPhone) {
+  warnings.push("event.json: telefones dos pais ainda não foram publicados; os atalhos de WhatsApp ficarão ocultos");
+}
 for (const forbidden of ["guests", "items", "budget", "phone", "notes"]) {
   if (forbidden in publicEvent || forbidden in (publicEvent.meta || {})) {
     errors.push(`event.json: campo privado não permitido: ${forbidden}`);
@@ -40,6 +53,9 @@ for (const forbiddenFile of ["data.json", "convidados.json", "lista_convidados.t
 const refPattern = /(?:src|href)=["']([^"'#?]+)["']/g;
 for (const htmlPath of filesIn(root, ".html")) {
   const html = readFileSync(htmlPath, "utf8");
+  const ids = [...html.matchAll(/\sid=["']([^"']+)["']/g)].map((match) => match[1]);
+  const duplicateIds = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];
+  duplicateIds.forEach((id) => errors.push(`${relative(root, htmlPath)}: id duplicado: ${id}`));
   const baseMatch = html.match(/<base\s+[^>]*href=["']([^"']+)["']/i);
   const baseHref = baseMatch ? baseMatch[1] : "";
   for (const match of html.matchAll(refPattern)) {
@@ -60,9 +76,32 @@ for (const htmlPath of filesIn(root, ".html")) {
   }
 }
 
+const panelHtml = readFileSync(join(root, "painel.html"), "utf8");
+const animatedHtml = readFileSync(join(root, "convite-animado.html"), "utf8");
+const rsvpHtml = readFileSync(join(root, "convite.html"), "utf8");
+const appVersion = (html) => html.match(/<meta\s+name=["']app-version["']\s+content=["']([^"']+)/i)?.[1] || "";
+if (!appVersion(panelHtml) || appVersion(panelHtml) !== appVersion(animatedHtml)) {
+  errors.push("versão: painel.html e convite-animado.html devem usar o mesmo app-version");
+}
+const styleVersion = (html) => html.match(/assets\/styles\.css\?v=([^"']+)/i)?.[1] || "";
+if (!styleVersion(panelHtml) || styleVersion(panelHtml) !== styleVersion(rsvpHtml)) {
+  errors.push("versão: painel.html e convite.html devem carregar a mesma versão de assets/styles.css");
+}
+for (const required of ["buzzPreludeVideo", "startButton", "confirmButton", "giftAction", "animatedLocation"]) {
+  if (!animatedHtml.includes(`id="${required}"`)) errors.push(`convite-animado.html: controle obrigatório ausente: ${required}`);
+}
+if (!/id="buzzPreludeVideo"[^>]+preload="auto"/.test(animatedHtml)) {
+  warnings.push("convite-animado.html: a abertura do Buzz não está preparada para início imediato");
+}
+for (const lazyVideo of ["openingVideo", "revealVideo", "m2ClipVideo", "giftsCastVideo"]) {
+  const pattern = new RegExp(`id="${lazyVideo}"[^>]+preload="none"`);
+  if (!pattern.test(animatedHtml)) warnings.push(`convite-animado.html: ${lazyVideo} deveria carregar somente quando necessário`);
+}
+
 if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
 
+if (warnings.length) console.warn("Avisos:\n- " + warnings.join("\n- "));
 console.log("Validação concluída: JSON, privacidade básica e referências locais OK.");
