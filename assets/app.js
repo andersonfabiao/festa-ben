@@ -153,11 +153,45 @@
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
-  function formatPhoneBR(value) {
-    let digits = String(value == null ? "" : value).replace(/\D/g, "");
+  const THREE_DIGIT_CALLING_CODES = new Set([
+    "211", "212", "213", "216", "218", "220", "221", "222", "223", "224", "225", "226", "227", "228", "229",
+    "230", "231", "232", "233", "234", "235", "236", "237", "238", "239", "240", "241", "242", "243", "244", "245", "246", "248", "249",
+    "250", "251", "252", "253", "254", "255", "256", "257", "258", "260", "261", "262", "263", "264", "265", "266", "267", "268", "269",
+    "290", "291", "297", "298", "299", "350", "351", "352", "353", "354", "355", "356", "357", "358", "359", "370", "371", "372", "373", "374", "375", "376", "377", "378", "379", "380", "381", "382", "383", "385", "386", "387", "389",
+    "420", "421", "423", "500", "501", "502", "503", "504", "505", "506", "507", "508", "509", "590", "591", "592", "593", "594", "595", "596", "597", "598", "599",
+    "670", "672", "673", "674", "675", "676", "677", "678", "679", "680", "681", "682", "683", "685", "686", "687", "688", "689", "690", "691", "692",
+    "850", "852", "853", "855", "856", "880", "886", "960", "961", "962", "963", "964", "965", "966", "967", "968", "970", "971", "972", "973", "974", "975", "976", "977", "992", "993", "994", "995", "996", "998"
+  ]);
+
+  function internationalPhoneDigits(value) {
+    const raw = String(value == null ? "" : value).trim();
+    let digits = raw.replace(/\D/g, "");
+    if (digits.startsWith("00")) digits = digits.slice(2);
     if (!digits) return "";
-    if (digits.length > 11 && digits.startsWith("55")) digits = digits.slice(2);
-    if (digits.length > 11) return String(value).trim().slice(0, 40);
+    const explicitInternational = /^\s*(?:\+|00)/.test(raw);
+    if (!explicitInternational && (digits.length === 10 || digits.length === 11)) digits = "55" + digits;
+    return digits.slice(0, 15);
+  }
+
+  function nationalPhoneGroups(digits) {
+    if (!digits) return [];
+    if (digits.length <= 4) return [digits];
+    if (digits.length === 8) return [digits.slice(0, 4), digits.slice(4)];
+    if (digits.length === 9) return [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6)];
+    if (digits.length === 10) return [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6)];
+    const groups = [];
+    let cursor = 0;
+    while (digits.length - cursor > 4) {
+      groups.push(digits.slice(cursor, cursor + 3));
+      cursor += 3;
+    }
+    groups.push(digits.slice(cursor));
+    return groups;
+  }
+
+  function formatPhoneLocal(value) {
+    const digits = String(value == null ? "" : value).replace(/\D/g, "");
+    if (!digits) return "";
     if (digits.length <= 2) return digits;
     const ddd = digits.slice(0, 2);
     const rest = digits.slice(2);
@@ -166,15 +200,46 @@
     return ddd + " " + rest.slice(0, cut) + "-" + rest.slice(cut);
   }
 
+  function formatPhoneBR(value) {
+    const raw = String(value == null ? "" : value).trim();
+    const explicitInternational = /^\s*(?:\+|00)/.test(raw);
+    let digits = raw.replace(/\D/g, "");
+    if (digits.startsWith("00")) digits = digits.slice(2);
+    if (!digits) return "";
+
+    // Número brasileiro ainda incompleto: formata como local para não virar
+    // "+55 83 99" a cada tecla digitada no campo.
+    if (!explicitInternational && digits.length < 10) return formatPhoneLocal(digits);
+
+    if (!explicitInternational && (digits.length === 10 || digits.length === 11)) {
+      digits = "55" + digits;
+    }
+    digits = digits.slice(0, 15);
+
+    if (digits.startsWith("55")) {
+      const ddd = digits.slice(2, 4);
+      const number = digits.slice(4);
+      const cut = number.length > 8 ? 5 : 4;
+      return "+55" + (ddd ? " " + ddd : "") +
+        (number ? " " + number.slice(0, cut) + (number.length > cut ? "-" + number.slice(cut) : "") : "");
+    }
+
+    const codeLength = digits.startsWith("1") || digits.startsWith("7")
+      ? 1
+      : THREE_DIGIT_CALLING_CODES.has(digits.slice(0, 3)) ? 3 : 2;
+    const code = digits.slice(0, codeLength);
+    const national = digits.slice(codeLength);
+    return "+" + code + (national ? " " + nationalPhoneGroups(national).join(" ") : "");
+  }
+
   function normalizePhone(value) {
     const cleaned = String(value == null ? "" : value)
       .replace(/[^\d+()\-\s]/g, "")
       .replace(/\s+/g, " ")
       .trim();
     if (!cleaned) return "";
-    const digits = cleaned.replace(/\D/g, "");
-    if (!digits) return "";
-    return formatPhoneBR(digits).slice(0, 40);
+    if (!cleaned.replace(/\D/g, "")) return "";
+    return formatPhoneBR(cleaned).slice(0, 40);
   }
 
   function phoneDigits(value) {
@@ -182,16 +247,21 @@
   }
 
   function isValidPhone(value) {
-    let digits = phoneDigits(value);
+    const raw = String(value == null ? "" : value).trim();
+    if (!raw.replace(/\D/g, "")) return true;
+    const explicitInternational = /^\s*(?:\+|00)/.test(raw);
+    const digits = internationalPhoneDigits(raw);
     if (!digits) return true;
-    if (digits.length > 11 && digits.startsWith("55")) digits = digits.slice(2);
-    return digits.length === 10 || digits.length === 11;
+    if (explicitInternational) return digits.length >= 8 && digits.length <= 15;
+    const local = raw.replace(/\D/g, "");
+    return local.length === 10 || local.length === 11 ||
+      ((local.length === 12 || local.length === 13) && local.startsWith("55"));
   }
 
   function waLink(value) {
-    const digits = phoneDigits(value);
+    const digits = internationalPhoneDigits(value);
     if (!digits) return "";
-    return "https://wa.me/" + (digits.length <= 11 ? "55" + digits : digits);
+    return "https://wa.me/" + digits;
   }
 
   function whatsappIconSvg() {
@@ -3409,7 +3479,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261109p5";
+  const INVITE_RELEASE = "20261109p7";
 
   function invitePageUrl() {
     try {
@@ -3456,9 +3526,8 @@
   }
 
   function waInviteLink(guest) {
-    const digits = phoneDigits(guest && guest.phone);
-    if (!digits) return "";
-    const phone = digits.length <= 11 ? "55" + digits : digits;
+    const phone = internationalPhoneDigits(guest && guest.phone);
+    if (!phone) return "";
     const text = inviteMessageText({
       animatedUrl: guestAnimatedInviteUrl(guest),
     });
@@ -3466,9 +3535,8 @@
   }
 
   function waReminderLink(guest) {
-    const digits = phoneDigits(guest && guest.phone);
-    if (!digits) return "";
-    const phone = digits.length <= 11 ? "55" + digits : digits;
+    const phone = internationalPhoneDigits(guest && guest.phone);
+    if (!phone) return "";
     const firstName = String(guest && guest.name || "").trim().split(/\s+/)[0];
     const text = "Oi" + (firstName ? ", " + firstName : "") +
       "! Passando para lembrar do aniversário do " + (state.meta.name || "Ben") + " 🎉 " +
@@ -4305,6 +4373,45 @@
       saveCollapsed();
       renderChecklist();
     });
+
+    /* Menu "Mais ações": fica ancorado ao botão e abre para cima quando não
+       houver espaço embaixo, em vez de cair no fim da página no celular. */
+    const toolbarMore = $(".toolbar-more");
+    if (toolbarMore) {
+      const toolbarMenu = toolbarMore.querySelector(".toolbar-more-menu");
+      const closeToolbarMenu = () => {
+        if (toolbarMore.open) toolbarMore.open = false;
+      };
+      const placeToolbarMenu = () => {
+        toolbarMore.classList.remove("opens-up");
+        if (!toolbarMore.open || !toolbarMenu) return;
+        const trigger = toolbarMore.getBoundingClientRect();
+        const menuHeight = toolbarMenu.offsetHeight;
+        const spaceBelow = window.innerHeight - trigger.bottom;
+        const spaceAbove = trigger.top;
+        if (spaceBelow < menuHeight + 12 && spaceAbove > spaceBelow) {
+          toolbarMore.classList.add("opens-up");
+        }
+      };
+      toolbarMore.addEventListener("toggle", placeToolbarMenu);
+      window.addEventListener("resize", placeToolbarMenu);
+      window.addEventListener("scroll", () => {
+        if (toolbarMore.open) placeToolbarMenu();
+      }, { passive: true });
+      document.addEventListener("click", (event) => {
+        if (toolbarMore.open && !toolbarMore.contains(event.target)) closeToolbarMenu();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && toolbarMore.open) {
+          closeToolbarMenu();
+          toolbarMore.querySelector("summary").focus();
+        }
+      });
+      toolbarMore.addEventListener("click", (event) => {
+        if (event.target.closest(".toolbar-more-menu .btn")) closeToolbarMenu();
+      });
+    }
+
     $("#checklistAlerts").addEventListener("click", (event) => {
       const alert = event.target.closest("[data-check-alert]");
       if (!alert) return;
@@ -4679,19 +4786,32 @@
 
     /* Modal de convidado */
     $("#guestEditForm").addEventListener("submit", handleGuestEditSubmit);
-    $("#guestEditPhone").addEventListener("input", (event) => {
-      const input = event.target;
-      const atEnd = input.selectionStart === input.value.length;
-      const formatted = normalizePhone(input.value);
-      if (formatted === input.value) return;
-      input.value = formatted;
-      if (atEnd) {
-        try {
-          input.setSelectionRange(formatted.length, formatted.length);
-        } catch (e) {
-          /* ignora */
+    ["#guestEditPhone", "#setFatherPhone", "#setMotherPhone"].forEach((selector) => {
+      const field = $(selector);
+      if (!field) return;
+      field.addEventListener("input", (event) => {
+        const input = event.target;
+        // Números internacionais são normalizados só ao sair do campo, para
+        // não atrapalhar a digitação com espaços e agrupamentos a cada tecla.
+        if (/^\s*(?:\+|00)/.test(input.value)) return;
+        const digits = phoneDigits(input.value);
+        if (digits.length < 4 || digits.length > 11) return;
+        const atEnd = input.selectionStart === input.value.length;
+        const formatted = formatPhoneLocal(input.value);
+        if (formatted === input.value) return;
+        input.value = formatted;
+        if (atEnd) {
+          try {
+            input.setSelectionRange(formatted.length, formatted.length);
+          } catch (e) {
+            /* ignora */
+          }
         }
-      }
+      });
+      field.addEventListener("blur", () => {
+        const value = field.value.trim();
+        if (value && isValidPhone(value)) field.value = normalizePhone(value);
+      });
     });
     $("#guestEditType").addEventListener("change", () => {
       const id = $("#guestEditId").value;

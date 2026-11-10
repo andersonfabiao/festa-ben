@@ -318,8 +318,9 @@
 
   function whatsappHref(phone, parent) {
     let digits = String(phone || "").replace(/\D/g, "");
+    if (digits.startsWith("00")) digits = digits.slice(2);
     if (!digits) return "";
-    if (digits.length <= 11) digits = "55" + digits;
+    if (!/^\s*(?:\+|00)/.test(String(phone || "")) && digits.length <= 11) digits = "55" + digits;
     const who = parent === "Mamãe" ? "Mamãe" : "Papai";
     const text = "Olá, " + who + "! Preciso de ajuda com a confirmação do aniversário do Ben.";
     return "https://wa.me/" + digits + "?text=" + encodeURIComponent(text);

@@ -523,12 +523,16 @@ strong { font-weight: 800; }
   display: grid;
   gap: 6px;
   width: min(260px, calc(100vw - 40px));
+  max-height: min(70dvh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #fff;
   box-shadow: 0 18px 42px rgba(23, 38, 74, .18);
 }
+.toolbar-more.opens-up .toolbar-more-menu { top: auto; bottom: calc(100% + 8px); }
 .toolbar-more-menu .btn { width: 100%; justify-content: flex-start; }
 .checklist-toolbar.is-empty { display: none; }
 
@@ -2144,8 +2148,16 @@ body.no-scroll { overflow: hidden; }
   .toolbar select.input { flex: 1 1 45%; min-width: 0; }
   .toolbar-primary .search-field { flex-basis: auto; min-width: 0; }
   .toolbar-filters .check-inline { flex: 1 1 auto; }
-  .toolbar-more { margin-left: 0; }
-  .toolbar-more-menu { position: fixed; top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; }
+  .toolbar-more { margin-left: auto; }
+  .toolbar-more-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    bottom: auto;
+    left: auto;
+    width: min(280px, calc(100vw - 24px));
+    max-height: min(62dvh, 340px);
+  }
   .check-inline { margin-left: 2px; }
   .checklist-welcome { padding: 38px 16px; }
   .checklist-welcome-actions { width: 100%; }

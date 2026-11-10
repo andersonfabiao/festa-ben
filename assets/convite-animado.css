@@ -801,6 +801,15 @@ button { color: inherit; }
 }
 .ben-voice-cue.needs-tap small { color: #b04a2f; }
 .ben-voice-cue.needs-tap:focus-visible { outline: 4px solid #155f91; outline-offset: 3px; }
+/* Na tela de presentes o recado não deve cobrir o título. */
+.experience.is-gifts-open .ben-voice-cue,
+.experience.is-gifts-open .ben-voice-cue.needs-tap {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: none;
+  transform: translate(-50%, -14px) scale(.94);
+}
 
 @keyframes ben-voice-pulse {
   50% { transform: translate(-50%, 0) scale(1.035); }
@@ -1020,7 +1029,7 @@ button { color: inherit; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0ms !important; }
   .is-started .reveal-scene, .is-started .intro-scene, .is-started .envelope-scene { display: none; }
   .buzz-prelude { display: none; }
   .is-started .final-invite { opacity: 1; visibility: visible; pointer-events: auto; }
