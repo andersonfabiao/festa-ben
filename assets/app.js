@@ -685,6 +685,7 @@
             date: /^\d{4}-\d{2}-\d{2}$/.test(payment.date) ? payment.date : "",
             method: String(payment.method === "Cartão" ? "Cartão de crédito" : (payment.method || "")).slice(0, 40),
             note: String(payment.note || "").slice(0, 120),
+            receiptUrl: safeUrl(payment.receiptUrl || ""),
             installmentNumber: Math.max(0, parseInt(payment.installmentNumber, 10) || 0),
             installmentCount: Math.max(0, parseInt(payment.installmentCount, 10) || 0),
             paid: typeof payment.paid === "boolean"
@@ -694,6 +695,12 @@
         supplier: String(i.supplier || "").slice(0, 120),
         supplierPhone: normalizePhone(i.supplierPhone || ""),
         supplierInstagram: instagramHandle(i.supplierInstagram || ""),
+        shipping: parseMoney(i.shipping),
+        surcharge: parseMoney(i.surcharge),
+        discount: parseMoney(i.discount),
+        orderNumber: String(i.orderNumber || "").slice(0, 80),
+        deliveryDate: /^\d{4}-\d{2}-\d{2}$/.test(i.deliveryDate) ? i.deliveryDate : "",
+        deliveryStatus: ["ordered", "production", "shipped", "delivered"].includes(i.deliveryStatus) ? i.deliveryStatus : "",
         due: /^\d{4}-\d{2}-\d{2}$/.test(i.due) ? i.due : "",
         link: String(i.link || ""),
         notes: String(i.notes || "").slice(0, 1000),
@@ -717,8 +724,11 @@
       .map((item) => {
         const composedCost = item.subtasks.reduce((sum, subtask) => sum + num(subtask.cost), 0);
         if (composedCost > 0) {
-          item.cost = Math.round(composedCost * 100) / 100;
+          item.cost = Math.max(0, Math.round((composedCost + item.shipping + item.surcharge - item.discount) * 100) / 100);
           item.unitPrice = 0;
+        } else if (item.shipping || item.surcharge || item.discount) {
+          const baseCost = Math.max(0, Number(item.quantity) * num(item.unitPrice));
+          item.cost = Math.max(0, Math.round((baseCost + item.shipping + item.surcharge - item.discount) * 100) / 100);
         }
         if (item.payments.length) {
           item.paid = Math.round(item.payments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0) * 100) / 100;
@@ -1339,6 +1349,11 @@
     if (item.supplierInstagram) {
       metaBits.push('<a href="https://www.instagram.com/' + esc(item.supplierInstagram) + '/" target="_blank" rel="noopener noreferrer" title="Abrir Instagram do fornecedor">📷 @' + esc(item.supplierInstagram) + "</a>");
     }
+    if (item.orderNumber) metaBits.push("<span>🧾 " + esc(item.orderNumber) + "</span>");
+    const deliveryLabels = { ordered: "Pedido realizado", production: "Em produção", shipped: "Enviado", delivered: "Entregue" };
+    if (item.deliveryStatus || item.deliveryDate) {
+      metaBits.push("<span>📦 " + esc(deliveryLabels[item.deliveryStatus] || "Entrega") + (item.deliveryDate ? " · " + fmtDate(item.deliveryDate) : "") + "</span>");
+    }
     const payments = Array.isArray(item.payments) ? item.payments : [];
     const installments = payments.filter((payment) => payment.method === "Cartão de crédito" && payment.installmentCount > 1);
     const ordinaryPayments = payments.filter((payment) => !installments.includes(payment));
@@ -1351,13 +1366,18 @@
       const paidOrdinary = ordinaryPayments.filter((payment) => payment.paid).length;
       metaBits.push("<span>💰 " + paidOrdinary + "/" + ordinaryPayments.length + " pagamentos realizados</span>");
     }
+    const receipts = payments.filter((payment) => safeUrl(payment.receiptUrl));
+    receipts.forEach((payment, index) => metaBits.push('<a href="' + esc(safeUrl(payment.receiptUrl)) + '" target="_blank" rel="noopener noreferrer">📎 Comprovante ' + (receipts.length > 1 ? index + 1 : "") + " ↗</a>"));
     const quantity = Math.max(0.01, Number(item.quantity) || 1);
     const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
     const composedSubtasks = subtasks.filter((subtask) => num(subtask.cost) > 0);
     if (composedSubtasks.length) {
-      metaBits.push("<span>🧾 " + composedSubtasks.length + " subitens = " + money(item.cost) + "</span>");
+      metaBits.push("<span>🧾 " + composedSubtasks.length + " subitens = " + money(composedSubtasks.reduce((sum, subtask) => sum + num(subtask.cost), 0)) + "</span>");
     } else if (quantity !== 1 || unitPrice > 0) {
       metaBits.push("<span>📦 " + esc(String(quantity).replace(".", ",")) + " " + esc(item.unit || "un.") + " × " + money(unitPrice) + "</span>");
+    }
+    if (num(item.shipping) || num(item.surcharge) || num(item.discount)) {
+      metaBits.push("<span>🧮" + (num(item.shipping) ? " frete " + money(item.shipping) : "") + (num(item.surcharge) ? " · acréscimo " + money(item.surcharge) : "") + (num(item.discount) ? " · desconto −" + money(item.discount) : "") + "</span>");
     }
     if (item.due) {
       metaBits.push(
@@ -1706,6 +1726,11 @@
           item.supplier ? "Fornecedor: " + item.supplier : "",
           item.supplierPhone ? "Telefone: " + formatPhoneBR(item.supplierPhone) : "",
           item.supplierInstagram ? "Instagram: @" + item.supplierInstagram : "",
+          item.orderNumber ? "Pedido/contrato: " + item.orderNumber : "",
+          item.deliveryDate ? "Entrega: " + fmtDate(item.deliveryDate) : "",
+          num(item.shipping) ? "Frete: " + money(item.shipping) : "",
+          num(item.surcharge) ? "Acréscimo: " + money(item.surcharge) : "",
+          num(item.discount) ? "Desconto: " + money(item.discount) : "",
           Array.isArray(item.payments) && item.payments.length
             ? item.payments.filter((payment) => payment.paid).length + "/" + item.payments.length + " pagamentos quitados"
             : "",
@@ -2825,9 +2850,13 @@
       const subPrice = parseMoney(row.querySelector('[data-subtask-field="unitPrice"]')?.value || "");
       return sum + subQuantity * subPrice;
     }, 0);
-    const total = Math.round((composed > 0 ? composed : quantity * unitPrice) * 100) / 100;
+    const shipping = parseMoney($("#itemShipping").value);
+    const surcharge = parseMoney($("#itemSurcharge").value);
+    const discount = parseMoney($("#itemDiscount").value);
+    const base = composed > 0 ? composed : quantity * unitPrice;
+    const total = Math.max(0, Math.round((base + shipping + surcharge - discount) * 100) / 100);
     $("#itemCost").value = total ? total.toFixed(2).replace(".", ",") : "";
-    $("#itemCost").title = composed > 0 ? "Total formado pelos subitens" : "Quantidade × preço unitário";
+    $("#itemCost").title = (composed > 0 ? "Subitens" : "Quantidade × preço unitário") + " + frete + acréscimo − desconto";
   }
 
   function renderPaymentRows() {
@@ -2841,6 +2870,7 @@
           '<label class="field-label">Forma<select class="input" data-payment-field="method">' + methods.map((method) => '<option value="' + esc(method) + '"' + (method === payment.method ? " selected" : "") + '>' + esc(method || "Não informado") + '</option>').join("") + '</select></label>' +
           '<label class="payment-paid"><input type="checkbox" data-payment-field="paid"' + (payment.paid ? " checked" : "") + '><span>Pago</span></label>' +
           '<label class="field-label">Observação' + (payment.installmentCount > 1 ? '<span class="installment-tag">' + payment.installmentNumber + "/" + payment.installmentCount + "</span>" : "") + '<input class="input" maxlength="120" data-payment-field="note" value="' + esc(payment.note || "") + '" placeholder="Ex.: sinal"></label>' +
+          '<label class="field-label">Comprovante (link)<input class="input" type="url" data-payment-field="receiptUrl" value="' + esc(payment.receiptUrl || "") + '" placeholder="https://…"></label>' +
           '<button class="icon-btn payment-remove" type="button" data-payment-remove="' + esc(payment.id) + '" aria-label="Remover pagamento">🗑</button>' +
         "</div>").join("")
       : '<div class="payment-empty">Nenhum pagamento registrado.</div>';
@@ -2855,6 +2885,7 @@
       amount: parseMoney(row.querySelector('[data-payment-field="amount"]').value),
       method: row.querySelector('[data-payment-field="method"]').value,
       note: row.querySelector('[data-payment-field="note"]').value.trim().slice(0, 120),
+      receiptUrl: safeUrl(row.querySelector('[data-payment-field="receiptUrl"]').value),
       installmentNumber: parseInt(row.dataset.installmentNumber, 10) || 0,
       installmentCount: parseInt(row.dataset.installmentCount, 10) || 0,
       paid: row.querySelector('[data-payment-field="paid"]').checked,
@@ -2864,7 +2895,7 @@
 
   function addPaymentRow() {
     collectPaymentsFromRows();
-    editingPayments.push({ id: uid(), date: todayISO(), amount: 0, method: "Pix", note: "", paid: false, installmentNumber: 0, installmentCount: 0 });
+    editingPayments.push({ id: uid(), date: todayISO(), amount: 0, method: "Pix", note: "", receiptUrl: "", paid: false, installmentNumber: 0, installmentCount: 0 });
     renderPaymentRows();
     const rows = $$("#paymentRows [data-payment-id]");
     const last = rows[rows.length - 1];
@@ -2905,6 +2936,7 @@
       amount: (baseCents + (index < remainder ? 1 : 0)) / 100,
       method: "Cartão de crédito",
       note: "Parcela " + (index + 1) + " de " + count,
+      receiptUrl: "",
       paid: false,
       installmentNumber: index + 1,
       installmentCount: count,
@@ -2972,11 +3004,17 @@
       $("#itemQuantity").value = String(quantity);
       $("#itemUnit").value = item.unit || "un.";
       $("#itemUnitPrice").value = unitPrice ? String(unitPrice).replace(".", ",") : "";
+      $("#itemShipping").value = item.shipping ? String(item.shipping).replace(".", ",") : "";
+      $("#itemSurcharge").value = item.surcharge ? String(item.surcharge).replace(".", ",") : "";
+      $("#itemDiscount").value = item.discount ? String(item.discount).replace(".", ",") : "";
       updateItemCalculatedTotal();
       editingPayments = (Array.isArray(item.payments) ? item.payments : []).map((payment) => Object.assign({}, payment));
       if (!editingPayments.length && item.paid) editingPayments = [{ id: uid(), amount: item.paid, date: "", method: "", note: "Pagamento anterior", paid: true }];
       renderPaymentRows();
       $("#itemDue").value = item.due || "";
+      $("#itemOrderNumber").value = item.orderNumber || "";
+      $("#itemDeliveryDate").value = item.deliveryDate || "";
+      $("#itemDeliveryStatus").value = item.deliveryStatus || "";
       $("#itemSupplier").value = item.supplier || "";
       $("#itemSupplierPhone").value = formatPhoneBR(item.supplierPhone || "");
       $("#itemSupplierInstagram").value = item.supplierInstagram ? "@" + item.supplierInstagram : "";
@@ -2995,6 +3033,9 @@
       $("#itemQuantity").value = "1";
       $("#itemUnit").value = "un.";
       $("#itemUnitPrice").value = "";
+      $("#itemShipping").value = "";
+      $("#itemSurcharge").value = "";
+      $("#itemDiscount").value = "";
       updateItemCalculatedTotal();
       $("#itemDue").value = "";
       editingPayments = [];
@@ -3029,6 +3070,10 @@
     const payments = collectPaymentsFromRows();
     const subtasks = collectSubtasksFromRows();
     const composedCost = subtasks.reduce((sum, subtask) => sum + num(subtask.cost), 0);
+    const shipping = parseMoney($("#itemShipping").value);
+    const surcharge = parseMoney($("#itemSurcharge").value);
+    const discount = parseMoney($("#itemDiscount").value);
+    const baseCost = composedCost > 0 ? composedCost : quantity * unitPrice;
     const data = {
       title,
       stage: $("#itemStage").value,
@@ -3036,13 +3081,19 @@
       quantity,
       unit: $("#itemUnit").value,
       unitPrice,
-      cost: Math.round((composedCost > 0 ? composedCost : quantity * unitPrice) * 100) / 100,
+      cost: Math.max(0, Math.round((baseCost + shipping + surcharge - discount) * 100) / 100),
+      shipping,
+      surcharge,
+      discount,
       paid: Math.round(payments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0) * 100) / 100,
       payments,
       supplier: $("#itemSupplier").value.trim(),
       supplierPhone: normalizePhone($("#itemSupplierPhone").value),
       supplierInstagram: instagramHandle($("#itemSupplierInstagram").value),
       due: $("#itemDue").value,
+      orderNumber: $("#itemOrderNumber").value.trim().slice(0, 80),
+      deliveryDate: $("#itemDeliveryDate").value,
+      deliveryStatus: $("#itemDeliveryStatus").value,
       link: $("#itemLink").value.trim(),
       notes: $("#itemNotes").value.trim(),
       subtasks,
@@ -3617,7 +3668,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261110p10";
+  const INVITE_RELEASE = "20261110p11";
 
   function invitePageUrl() {
     try {
@@ -4337,11 +4388,15 @@
       items.push({
         id: uid(), title: title.slice(0, 200), stage: stage || "planejamento",
         status: parseChecklistStatus(row.status), quantity, unit: parseChecklistUnit(row.unidade || row.unit),
-        unitPrice, cost: Math.round(quantity * unitPrice * 100) / 100, paid,
+        unitPrice, cost: Math.max(0, Math.round((quantity * unitPrice + parseMoney(row.frete || 0) + parseMoney(row.acrescimo || 0) - parseMoney(row.desconto || 0)) * 100) / 100), paid,
         payments: paid ? [{ id: uid(), amount: paid, date: "", method: "", note: "Valor importado do CSV", paid: true }] : [],
         supplier: String(row.fornecedor || row.loja || "").trim().slice(0, 120), due,
         supplierPhone: normalizePhone(row.telefone_fornecedor || row.telefone || ""),
         supplierInstagram: instagramHandle(row.instagram_fornecedor || row.instagram || ""),
+        shipping: parseMoney(row.frete || 0), surcharge: parseMoney(row.acrescimo || 0), discount: parseMoney(row.desconto || 0),
+        orderNumber: String(row.pedido_contrato || row.pedido || "").trim().slice(0, 80),
+        deliveryDate: /^\d{4}-\d{2}-\d{2}$/.test(row.entrega || "") ? row.entrega : "",
+        deliveryStatus: ["ordered", "production", "shipped", "delivered"].includes(row.status_entrega) ? row.status_entrega : "",
         link: safeUrl(row.link || row.url || ""), notes: String(row.observacoes || row.observacao || row.notes || "").trim().slice(0, 1000),
         subtasks: String(row.subitens || row.subtarefas || "").split("|").map((title) => title.trim()).filter(Boolean).map((title) => ({ id: uid(), title: title.slice(0, 160), done: false })),
         createdAt: nowISO(),
@@ -4569,6 +4624,7 @@
     $("#addItemBtn").addEventListener("click", () => openItemModal());
     $("#itemQuantity").addEventListener("input", updateItemCalculatedTotal);
     $("#itemUnitPrice").addEventListener("input", updateItemCalculatedTotal);
+    ["#itemShipping", "#itemSurcharge", "#itemDiscount"].forEach((selector) => $(selector).addEventListener("input", updateItemCalculatedTotal));
     $("#addPaymentBtn").addEventListener("click", addPaymentRow);
     $("#generateInstallmentsBtn").addEventListener("click", generateCreditInstallments);
     $("#paymentRows").addEventListener("input", () => {
@@ -5010,9 +5066,9 @@
     $("#downloadChecklistCsvBtn").addEventListener("click", () => downloadCsvTemplate(
       "modelo-checklist-ben.csv",
       [
-        "etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;telefone_fornecedor;instagram_fornecedor;link;observacoes;subitens",
-        "Lembrancinhas;Sacolinhas Toy Story;a_fazer;25;unidade;12,50;100,00;2026-12-15;Loja Exemplo;+55 83 98875-4742;@lojaexemplo;;Confirmar cores;Comprar sacolas|Separar brindes|Montar kits",
-        "Comida & Bolo;Bolo principal;contratado;1;unidade;450,00;200,00;2027-01-05;Confeitaria Exemplo;+351 912 345 678;@confeitariaexemplo;;;Confirmar sabor|Confirmar entrega",
+        "etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;telefone_fornecedor;instagram_fornecedor;frete;acrescimo;desconto;pedido_contrato;entrega;status_entrega;link;observacoes;subitens",
+        "Lembrancinhas;Sacolinhas Toy Story;a_fazer;25;unidade;12,50;100,00;2026-12-15;Loja Exemplo;+55 83 98875-4742;@lojaexemplo;25,00;0;10,00;Pedido 1234;2026-12-20;production;;Confirmar cores;Comprar sacolas|Separar brindes|Montar kits",
+        "Comida & Bolo;Bolo principal;contratado;1;unidade;450,00;200,00;2027-01-05;Confeitaria Exemplo;+351 912 345 678;@confeitariaexemplo;0;0;0;Contrato 45;2027-01-08;ordered;;;Confirmar sabor|Confirmar entrega",
       ]
     ));
     $("#checklistImportFile").addEventListener("change", (event) => {
@@ -5428,6 +5484,10 @@
 
     const composedCost = subtasks.reduce((sum, subtask) => sum + subtask.cost, 0);
     if (composedCost > 0) cost = composedCost;
+    const shipping = parseMoney(input.shipping);
+    const surcharge = parseMoney(input.surcharge);
+    const discount = parseMoney(input.discount);
+    cost = Math.max(0, Math.round((cost + shipping + surcharge - discount) * 100) / 100);
 
     const before = JSON.stringify(state);
     const item = {
@@ -5444,6 +5504,12 @@
       supplier: String(input.supplier || "").trim().slice(0, 120),
       supplierPhone: normalizePhone(input.supplierPhone || ""),
       supplierInstagram: instagramHandle(input.supplierInstagram || ""),
+      shipping,
+      surcharge,
+      discount,
+      orderNumber: String(input.orderNumber || "").trim().slice(0, 80),
+      deliveryDate: /^\d{4}-\d{2}-\d{2}$/.test(input.deliveryDate) ? input.deliveryDate : "",
+      deliveryStatus: ["ordered", "production", "shipped", "delivered"].includes(input.deliveryStatus) ? input.deliveryStatus : "",
       due: /^\d{4}-\d{2}-\d{2}$/.test(input.due) ? input.due : "",
       link: "",
       notes: String(input.notes || "").slice(0, 1000),
