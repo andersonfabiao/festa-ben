@@ -79,13 +79,32 @@ for (const htmlPath of filesIn(root, ".html")) {
 const panelHtml = readFileSync(join(root, "painel.html"), "utf8");
 const animatedHtml = readFileSync(join(root, "convite-animado.html"), "utf8");
 const rsvpHtml = readFileSync(join(root, "convite.html"), "utf8");
+const appJs = readFileSync(join(root, "assets", "app.js"), "utf8");
+const animatedJs = readFileSync(join(root, "assets", "convite-animado.js"), "utf8");
 const appVersion = (html) => html.match(/<meta\s+name=["']app-version["']\s+content=["']([^"']+)/i)?.[1] || "";
-if (!appVersion(panelHtml) || appVersion(panelHtml) !== appVersion(animatedHtml)) {
-  errors.push("versão: painel.html e convite-animado.html devem usar o mesmo app-version");
+const expectedVersion = appVersion(panelHtml);
+if (!expectedVersion || expectedVersion !== appVersion(animatedHtml) || expectedVersion !== appVersion(rsvpHtml)) {
+  errors.push("versão: painel.html, convite-animado.html e convite.html devem usar o mesmo app-version");
 }
-const styleVersion = (html) => html.match(/assets\/styles\.css\?v=([^"']+)/i)?.[1] || "";
-if (!styleVersion(panelHtml) || styleVersion(panelHtml) !== styleVersion(rsvpHtml)) {
-  errors.push("versão: painel.html e convite.html devem carregar a mesma versão de assets/styles.css");
+for (const [pageName, html] of [
+  ["painel.html", panelHtml],
+  ["convite-animado.html", animatedHtml],
+  ["convite.html", rsvpHtml],
+]) {
+  for (const match of html.matchAll(/(?:<link\s+rel=["']stylesheet["']\s+href|<script\s+src)=["'](assets\/[^"'?]+\.(?:css|js))\?v=([^"']+)["']/gi)) {
+    const [, assetPath, assetVer] = match;
+    if (assetVer !== expectedVersion) {
+      errors.push(`versão: ${pageName} carrega ${assetPath}?v=${assetVer} (esperado ${expectedVersion})`);
+    }
+  }
+}
+const appReleaseMatch = appJs.match(/INVITE_RELEASE\s*=\s*["']([^"']+)["']/);
+const animatedReleaseMatch = animatedJs.match(/inviteRelease\s*=\s*["']([^"']+)["']/);
+if (!appReleaseMatch || appReleaseMatch[1] !== expectedVersion) {
+  errors.push(`versão: INVITE_RELEASE em assets/app.js deve ser ${expectedVersion}`);
+}
+if (!animatedReleaseMatch || animatedReleaseMatch[1] !== expectedVersion) {
+  errors.push(`versão: inviteRelease em assets/convite-animado.js deve ser ${expectedVersion}`);
 }
 for (const required of ["buzzPreludeVideo", "startButton", "confirmButton", "giftAction", "animatedLocation"]) {
   if (!animatedHtml.includes(`id="${required}"`)) errors.push(`convite-animado.html: controle obrigatório ausente: ${required}`);

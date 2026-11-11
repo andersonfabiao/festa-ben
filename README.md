@@ -22,7 +22,7 @@ Projeto com duas áreas: convite público para os convidados e painel de organiz
 - **Salvamento automático** no navegador (localStorage).
 - **Sincronização com repositório GitHub privado separado** para abrir o painel em qualquer aparelho sem publicar dados pessoais.
 - **Status da sincronização** — aparece em destaque logo abaixo da contagem regressiva, com ações para carregar e salvar na nuvem.
-- **Proteção e recuperação** — backup JSON completo acessível no topo, importação para outro aparelho, verificação de integridade e até 3 cópias locais automáticas antes de carregar, importar ou apagar dados.
+- **Proteção e recuperação** — backup JSON completo acessível no topo, importação para outro aparelho, verificação de integridade e até 5 cópias locais automáticas antes de carregar, importar ou apagar dados.
 - **Modo dia da festa** — visão simplificada para celular com prioridades, confirmações, tarefas marcáveis, contatos dos pais, mapa e saldos de fornecedores.
 - **Buzz, assistente do Ben** — botão de chat no painel para perguntar e pedir ações em português, sem custo e sem enviar dados para fora do aparelho.
 
@@ -108,14 +108,14 @@ Depois da primeira sincronização, o salvamento automático funciona normalment
 
 ## Importar a lista de convidados
 
-Na aba **🎟️ Convidados**, clique em **📂 Importar arquivo** e escolha uma lista `.txt`, `.csv` ou `.json`. A lista não acompanha mais os arquivos públicos do site.
+Na aba **🎟️ Convidados**, clique em **📥 Importar CSV** e escolha uma lista `.txt`, `.csv` ou `.json`. A lista fica apenas no seu aparelho e no repositório privado `festa-ben-dados` (nunca nos arquivos públicos do site).
 
 - **Adicionar aos convidados atuais** — mantém a lista e inclui só os nomes novos (repetidos são ignorados).
 - **Substituir a lista atual** — apaga os convidados deste aparelho e usa exatamente os do arquivo.
 
 Repetidos são comparados por **nome + tipo**, então uma criança e um adulto com o mesmo nome podem coexistir. Todos entram como **Pendente**, a menos que o arquivo traga o status.
 
-Para usar outro arquivo (ou uma lista atualizada), clique em **📂 Importar arquivo** e escolha o `.txt`, `.csv` ou `.json` do seu aparelho.
+Para usar outro arquivo (ou uma lista atualizada), clique em **📥 Importar CSV** e escolha o `.txt`, `.csv` ou `.json` do seu aparelho.
 
 ### Formatos aceitos
 
@@ -158,7 +158,7 @@ Pedro;criança;pendente
 
 Tipos aceitos: `adulto`/`adult`, `criança`/`child`. Status: `pendente`, `confirmado`, `não vai`.
 
-O arquivo `convidados.json` na raiz já contém a lista atual (69 pessoas: 50 adultos e 19 crianças), pronto para importar em qualquer aparelho. Depois de importar, use **✏️** em cada convidado para completar WhatsApp, observações e vínculos de responsáveis, e então **☁️ Salvar na nuvem** para levar a lista aos outros aparelhos.
+Depois de importar um arquivo local, use **✏️** em cada convidado para completar WhatsApp, observações e vínculos de responsáveis, e então **☁️ Salvar na nuvem** para levar a lista aos outros aparelhos.
 
 ## Convite digital e confirmação de presença (RSVP)
 
@@ -258,7 +258,6 @@ assets/convite-animado.js controla cenas, áudio e repetição do convite
 apps-script/rsvp.gs   script do Google que grava a resposta no data.json
 apps-script/README.md passo a passo do Apps Script
 data.json             arquivo privado; existe no repositório de dados, não no site final
-lista_convidados.txt  mesma lista em texto simples
 .nojekyll             evita processamento do Jekyll no GitHub Pages
 ```
 

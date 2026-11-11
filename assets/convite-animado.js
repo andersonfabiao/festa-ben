@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261110p12";
+  const inviteRelease = "20261111p1";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -20,11 +20,16 @@
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const audioStateKey = "ben-invite-audio";
 
-  // Quando o link vem do WhatsApp de um convidado, leva a chave para a confirmação.
+  // Quando o link vem do WhatsApp de um convidado, leva a chave para a confirmação
+  // e preserva o link de retorno ao convite animado.
   try {
     const inviteKey = new URLSearchParams(window.location.search).get("convite");
     if (inviteKey && confirmButton) {
-      confirmButton.href = "convite.html?music=1&v=" + encodeURIComponent(inviteRelease) + "&convite=" + encodeURIComponent(inviteKey);
+      const returnTarget = "convite-animado.html?convite=" + encodeURIComponent(inviteKey);
+      confirmButton.href =
+        "convite.html?music=1&v=" + encodeURIComponent(inviteRelease) +
+        "&convite=" + encodeURIComponent(inviteKey) +
+        "&voltar=" + encodeURIComponent(returnTarget);
     }
   } catch (e) {
     /* ignora */
@@ -34,15 +39,24 @@
   let navigatingToRsvp = false;
   let preludeFinishing = false;
   let startOpeningTheme = () => {};
+  let voicePreDuckTimer = 0;
   let voiceTimer = 0;
+  let voiceRestoreTimer = 0;
   let volumeFrame = 0;
   let buzzStarted = false;
   let buzzSoundUnlocked = false;
   let voicePrimed = false;
+  let voicePriming = false;
+  let voiceDuckActive = false;
   // Compensa a masterização: a música fica bem abaixo da voz do Ben.
   const themeVolume = 0.085;
-  // Durante o recado a trilha desce quase ao silêncio; fora dele volta ao normal.
-  const duckedThemeVolume = 0.006;
+  // Durante o recado a trilha desce quase ao silêncio para destacar a voz do Ben.
+  const duckedThemeVolume = 0.002;
+  const benVoiceBoost = 1.45;
+  let currentThemeVolume = themeVolume;
+  let audioCtx = null;
+  let themeGain = null;
+  let voiceGain = null;
 
   const finishPrelude = () => {
     if (preludeFinishing || experience.classList.contains("is-prelude-complete")) return;
@@ -142,12 +156,64 @@
     }
     if (buzzSkip) buzzSkip.addEventListener("click", (event) => {
       event.stopPropagation();
+      ensureAudioMixer();
       finishPrelude();
     });
-    if (buzzPrelude) buzzPrelude.addEventListener("click", enableBuzzSound);
+    if (buzzPrelude) buzzPrelude.addEventListener("click", () => {
+      ensureAudioMixer();
+      enableBuzzSound();
+    });
   } else {
     finishPrelude();
   }
+
+  const setThemeVolume = (level) => {
+    const safeLevel = Math.max(0, Math.min(1, Number(level) || 0));
+    currentThemeVolume = safeLevel;
+    if (themeGain && audioCtx) {
+      themeGain.gain.value = safeLevel;
+      audio.volume = 1;
+    } else if (audio) {
+      audio.volume = safeLevel;
+    }
+  };
+
+  const ensureAudioMixer = () => {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    try {
+      if (!audioCtx) {
+        audioCtx = new AudioContextClass();
+        const themeSource = audioCtx.createMediaElementSource(audio);
+        themeGain = audioCtx.createGain();
+        themeGain.gain.value = currentThemeVolume;
+        audio.volume = 1;
+        themeSource.connect(themeGain);
+        themeGain.connect(audioCtx.destination);
+
+        if (benVoice) {
+          const voiceSource = audioCtx.createMediaElementSource(benVoice);
+          const compressor = audioCtx.createDynamicsCompressor();
+          compressor.threshold.value = -3;
+          compressor.knee.value = 6;
+          compressor.ratio.value = 10;
+          compressor.attack.value = 0.003;
+          compressor.release.value = 0.15;
+          voiceGain = audioCtx.createGain();
+          voiceGain.gain.value = benVoiceBoost;
+          benVoice.volume = 1;
+          voiceSource.connect(compressor);
+          compressor.connect(voiceGain);
+          voiceGain.connect(audioCtx.destination);
+        }
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume().catch(() => {});
+      }
+    } catch {
+      // Fallback para controle de volume padrão caso Web Audio falhe.
+    }
+  };
 
   const clearTimers = () => {
     timers.forEach(window.clearTimeout);
@@ -173,17 +239,18 @@
   };
 
   const primeBenVoice = () => {
-    if (!benVoice || voicePrimed || !soundEnabled) return;
+    if (!benVoice || voicePrimed || voicePriming || !soundEnabled) return;
     // O recado só pode ser preparado depois que o Buzz sai da tela. Antes disso
     // o áudio é apenas liberado, sem tocar nenhum trecho da fala.
     if (experience.classList.contains("is-buzz-playing") ||
         !experience.classList.contains("is-prelude-complete")) return;
-    const previousVolume = benVoice.volume;
     // O priming é mudo para não vazar áudio (no iPhone o volume é ignorado).
+    voicePriming = true;
     benVoice.muted = true;
     benVoice.currentTime = 0;
     const attempt = benVoice.play();
     if (!attempt) {
+      voicePriming = false;
       benVoice.muted = false;
       return;
     }
@@ -191,22 +258,24 @@
       benVoice.pause();
       benVoice.currentTime = 0;
       benVoice.muted = false;
-      benVoice.volume = previousVolume || 0.96;
+      benVoice.volume = 1;
       voicePrimed = true;
+      voicePriming = false;
     }).catch(() => {
       benVoice.muted = false;
-      benVoice.volume = previousVolume || 0.96;
+      benVoice.volume = 1;
+      voicePriming = false;
     });
   };
 
   const fadeThemeTo = (target, duration = 650) => {
     if (!audio) return;
     cancelAnimationFrame(volumeFrame);
-    const initial = audio.volume;
+    const initial = currentThemeVolume;
     const startedAt = performance.now();
     const fade = (now) => {
       const progress = Math.min(1, (now - startedAt) / duration);
-      audio.volume = initial + ((target - initial) * progress);
+      setThemeVolume(initial + ((target - initial) * progress));
       if (progress < 1) volumeFrame = requestAnimationFrame(fade);
     };
     volumeFrame = requestAnimationFrame(fade);
@@ -214,8 +283,11 @@
 
   const stopBenVoice = ({ restoreTheme = true } = {}) => {
     window.clearTimeout(voiceTimer);
-    if (benVoice && !benVoice.paused) benVoice.pause();
-    if (benVoice) benVoice.currentTime = 0;
+    window.clearTimeout(voicePreDuckTimer);
+    window.clearTimeout(voiceRestoreTimer);
+    voiceDuckActive = false;
+    if (benVoice && !voicePriming && !benVoice.paused) benVoice.pause();
+    if (benVoice && !voicePriming) benVoice.currentTime = 0;
     setVoiceCue(false);
     if (restoreTheme && soundEnabled && !audio.paused) fadeThemeTo(themeVolume, 700);
   };
@@ -225,16 +297,18 @@
     // Enquanto o Buzz está na tela o recado não aparece nem toca.
     if (experience.classList.contains("is-buzz-playing") ||
         !experience.classList.contains("is-prelude-complete")) return;
+    ensureAudioMixer();
+    voiceDuckActive = true;
     setVoiceCue(true);
-    // A trilha fica apenas como um fundo quase imperceptível durante a fala.
-    // A descida curta evita encobrir as primeiras palavras do Ben.
-    fadeThemeTo(duckedThemeVolume, 350);
+    // A trilha fica quase imperceptível durante a fala para a voz do Ben se sobressair.
+    fadeThemeTo(duckedThemeVolume, 180);
     benVoice.currentTime = 0;
-    benVoice.volume = 0.96;
+    benVoice.volume = 1;
     benVoice.muted = false;
     try {
       await benVoice.play();
     } catch {
+      voiceDuckActive = false;
       setVoiceCue(true, true);
       fadeThemeTo(themeVolume, 550);
     }
@@ -242,6 +316,16 @@
 
   const scheduleBenVoice = (delay = 1250) => {
     window.clearTimeout(voiceTimer);
+    window.clearTimeout(voicePreDuckTimer);
+    window.clearTimeout(voiceRestoreTimer);
+    const preDuckDelay = Math.max(0, delay - 450);
+    voicePreDuckTimer = window.setTimeout(() => {
+      if (!soundEnabled || !benVoice || experience.classList.contains("is-departing")) return;
+      if (experience.classList.contains("is-buzz-playing") ||
+          !experience.classList.contains("is-prelude-complete")) return;
+      voiceDuckActive = true;
+      fadeThemeTo(duckedThemeVolume, 320);
+    }, preDuckDelay);
     voiceTimer = window.setTimeout(playBenVoice, delay);
   };
 
@@ -267,7 +351,7 @@
       sessionStorage.setItem(audioStateKey, JSON.stringify({
         currentTime: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
         shouldPlay: soundEnabled && !audio.paused,
-        volume: audio.volume,
+        volume: currentThemeVolume,
         savedAt: Date.now(),
       }));
     } catch {
@@ -278,7 +362,7 @@
   const playAudio = async (restart = false) => {
     if (!soundEnabled) return;
     if (restart) audio.currentTime = 0;
-    audio.volume = themeVolume;
+    setThemeVolume(voiceDuckActive ? duckedThemeVolume : themeVolume);
     try {
       await audio.play();
     } catch {
@@ -291,14 +375,14 @@
     if (!soundEnabled || !audio.paused) return;
     audio.currentTime = 0;
     const openingVolume = 0.008;
-    audio.volume = openingVolume;
+    setThemeVolume(openingVolume);
     try {
       await audio.play();
       const startedAt = performance.now();
       const fade = (now) => {
-        if (audio.paused || !soundEnabled) return;
+        if (audio.paused || !soundEnabled || voiceDuckActive) return;
         const progress = Math.min(1, (now - startedAt) / 950);
-        audio.volume = openingVolume + ((themeVolume - openingVolume) * progress);
+        setThemeVolume(openingVolume + ((themeVolume - openingVolume) * progress));
         if (progress < 1) requestAnimationFrame(fade);
       };
       requestAnimationFrame(fade);
@@ -349,16 +433,19 @@
   };
 
   startButton.addEventListener("click", () => {
-    primeBenVoice();
+    ensureAudioMixer();
     runAnimation({ restartAudio: false });
+    primeBenVoice();
   });
   replayButton.addEventListener("click", () => {
-    primeBenVoice();
+    ensureAudioMixer();
     runAnimation({ restartAudio: true });
+    primeBenVoice();
   });
   skipButton.addEventListener("click", showFinal);
 
   soundButton.addEventListener("click", () => {
+    ensureAudioMixer();
     soundEnabled = !soundEnabled;
     audio.muted = !soundEnabled;
     if (benVoice) benVoice.muted = !soundEnabled;
@@ -373,7 +460,7 @@
     if (navigatingToRsvp) return;
     navigatingToRsvp = true;
     stopBenVoice({ restoreTheme: false });
-    audio.volume = themeVolume;
+    setThemeVolume(themeVolume);
     saveAudioState();
     const destination = confirmButton.href;
     if (reduceMotion.matches) {
@@ -393,15 +480,28 @@
   });
 
   if (benVoice) {
+    benVoice.addEventListener("play", () => {
+      if (voicePriming || benVoice.muted) return;
+      window.clearTimeout(voiceRestoreTimer);
+      voiceDuckActive = true;
+      fadeThemeTo(duckedThemeVolume, 150);
+    });
     benVoice.addEventListener("ended", () => {
       setVoiceCue(false);
-      if (soundEnabled && !audio.paused) fadeThemeTo(themeVolume, 900);
+      voiceDuckActive = false;
+      window.clearTimeout(voiceRestoreTimer);
+      voiceRestoreTimer = window.setTimeout(() => {
+        if (soundEnabled && !audio.paused && !voiceDuckActive) {
+          fadeThemeTo(themeVolume, 1100);
+        }
+      }, 350);
     });
   }
 
   if (benVoiceCue) {
     benVoiceCue.addEventListener("click", () => {
       if (!benVoiceCue.classList.contains("needs-tap")) return;
+      ensureAudioMixer();
       playBenVoice();
     });
   }
@@ -430,6 +530,7 @@
   });
 
   const unlockOnFirstGesture = (event) => {
+    ensureAudioMixer();
     const target = event && event.target;
     const handledByPrelude = target && target.closest &&
       target.closest("#buzzSoundToggle, #buzzSkip");

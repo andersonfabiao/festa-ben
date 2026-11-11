@@ -74,8 +74,8 @@
     const start = date.replace(/-/g, "") + "T" + time.replace(":", "") + "00";
     const ics = [
       "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Festa Ben//Convite//PT-BR", "BEGIN:VEVENT",
-      "DTSTART;TZID=America/Sao_Paulo:" + start,
-      "DTEND;TZID=America/Sao_Paulo:" + date.replace(/-/g, "") + "T220000",
+      "DTSTART;TZID=America/Fortaleza:" + start,
+      "DTEND;TZID=America/Fortaleza:" + date.replace(/-/g, "") + "T220000",
       "SUMMARY:Aniversário do " + String(meta.name || "Ben") + " - " + (parseInt(meta.age, 10) || 5) + " anos",
       "LOCATION:" + String(meta.location || "Enjoy Kids - Liv Mall Shopping").replace(/,/g, "\\,"),
       "DESCRIPTION:Venha comemorar com a gente!", "END:VEVENT", "END:VCALENDAR"
@@ -226,11 +226,19 @@
     }
   };
 
+  const fetchEventData = () => {
+    if (!window.__benEventDataPromise) {
+      window.__benEventDataPromise = fetch("event.json?t=" + Date.now(), { cache: "no-store" })
+        .then((response) => (response.ok ? response.json() : null))
+        .catch(() => null);
+    }
+    return window.__benEventDataPromise;
+  };
+
   const load = async () => {
     try {
-      const response = await fetch("event.json?t=" + Date.now(), { cache: "no-store" });
-      if (!response.ok) return;
-      const data = await response.json();
+      const data = await fetchEventData();
+      if (!data) return;
       applyMeta(data && data.meta);
     } catch {
       // Mantém os textos estáticos quando a configuração pública não está disponível.

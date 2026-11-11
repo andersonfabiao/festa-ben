@@ -173,8 +173,16 @@
     showGifts(false);
   });
 
-  fetch("event.json?_=" + Date.now(), { cache: "no-store" })
-    .then((response) => response.ok ? response.json() : Promise.reject())
-    .then((payload) => applyModelData(payload && payload.meta))
+  const eventDataPromise = window.__benEventDataPromise || (
+    window.__benEventDataPromise = fetch("event.json?t=" + Date.now(), { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .catch(() => null)
+  );
+
+  eventDataPromise
+    .then((payload) => {
+      if (payload && payload.meta) applyModelData(payload.meta);
+      else applyModelData(fallback);
+    })
     .catch(() => applyModelData(fallback));
 })();

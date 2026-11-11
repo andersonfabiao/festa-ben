@@ -2250,6 +2250,7 @@
     renderGuestBulkBar(visible);
 
     if (!visible.length) {
+      const q = norm(guestQuery);
       list.innerHTML =
         '<div class="empty"><span class="emoji">🔎</span><h3>Nenhum convidado encontrado</h3>' +
         "<p>" +
@@ -2703,7 +2704,7 @@
     const savedStamp = state.updatedAt;
     // Salvar é sempre unidirecional: este dispositivo é a fonte da verdade.
     // O snapshot evita que uma leitura remota altere a tela durante o envio.
-    const uploadState = normalizeState(JSON.parse(JSON.stringify(state)));
+    let uploadState = normalizeState(JSON.parse(JSON.stringify(state)));
     setCloudPhase("syncing");
     if (opts.fromSettings) setConfigState("Enviando os dados para o GitHub…");
 
@@ -2719,8 +2720,22 @@
         } catch (e) {
           throw new Error("A versão da nuvem não pôde ser comparada com este dispositivo.");
         }
+        const mergedRsvps = mergeRsvpsFrom(remoteState);
+        if (mergedRsvps > 0) {
+          saveLocal();
+          renderGuests();
+          renderHero();
+          uploadState = normalizeState(JSON.parse(JSON.stringify(state)));
+        }
         const cloudChangedSinceSync = !cloud.sha || cloud.sha !== head.sha;
-        if (cloudChangedSinceSync) {
+        const onlyRsvpChange = Boolean(
+          cloud.sha &&
+          mergedRsvps > 0 &&
+          remoteState &&
+          Array.isArray(remoteState.guests) &&
+          remoteState.guests.some((g) => g && g.rsvpAt && g.rsvpAt === remoteState.updatedAt)
+        );
+        if (cloudChangedSinceSync && !onlyRsvpChange) {
           const remoteUpdatedAt = remoteState && Date.parse(remoteState.updatedAt || "")
             ? new Date(remoteState.updatedAt).toLocaleString("pt-BR")
             : "horário não informado";
@@ -3668,7 +3683,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261110p12";
+  const INVITE_RELEASE = "20261111p1";
 
   function invitePageUrl() {
     try {
@@ -4789,7 +4804,7 @@
         return;
       }
       if (event.target.closest("[data-empty-import]")) {
-        openChecklistImportModal();
+        openChecklistImportGuide();
         return;
       }
       const toggle = event.target.closest("[data-toggle-stage]");

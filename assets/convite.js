@@ -307,8 +307,8 @@
     const compactTime = meta.time.replace(":", "") + "00";
     const ics = [
       "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Festa Ben//Convite//PT-BR", "BEGIN:VEVENT",
-      "DTSTART;TZID=America/Sao_Paulo:" + compactDate + "T" + compactTime,
-      "DTEND;TZID=America/Sao_Paulo:" + compactDate + "T220000",
+      "DTSTART;TZID=America/Fortaleza:" + compactDate + "T" + compactTime,
+      "DTEND;TZID=America/Fortaleza:" + compactDate + "T220000",
       "SUMMARY:Aniversário do " + meta.name + " - " + meta.age + " anos",
       "LOCATION:" + String(meta.location || "").replace(/,/g, "\\,"),
       "DESCRIPTION:Venha comemorar com a gente!", "END:VEVENT", "END:VCALENDAR"
@@ -422,7 +422,11 @@
     document.title = "Confirmação de presença · " + meta.name + " faz " + meta.age + "!";
 
     const chips = [];
-    chips.push('<span class="invite-chip">📅 ' + esc(longDate(meta.date)) + "</span>");
+    chips.push(
+      '<a class="invite-chip invite-chip-link" href="' + esc(calendarHref()) +
+      '" download="aniversario-ben.ics" title="Adicionar ao calendário">📅 ' +
+      esc(longDate(meta.date)) + "</a>"
+    );
     if (meta.time) {
       chips.push('<span class="invite-chip">🕒 ' + esc(displayTime(meta.time)) + "</span>");
     }

@@ -21,8 +21,17 @@
   <main class="card">
     <p class="logo">BEN<br />STORY</p>
     <p>Preparando uma aventura muito especial…</p>
-    <a href="convite-animado.html">Abrir o convite</a>
+    <a id="openInviteLink" href="convite-animado.html">Abrir o convite</a>
   </main>
-  <script>setTimeout(function(){location.replace("convite-animado.html")},700)</script>
+  <script>
+    (function () {
+      var target = new URL("convite-animado.html", location.href);
+      target.search = location.search;
+      target.hash = location.hash;
+      var link = document.getElementById("openInviteLink");
+      if (link) link.href = target.href;
+      setTimeout(function () { location.replace(target.href); }, 700);
+    })();
+  </script>
 </body>
 </html>

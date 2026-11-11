@@ -12,9 +12,22 @@ var DEFAULTS = {
 };
 
 var STATUS_OK = ['confirmed', 'declined'];
+var MAX_UNLISTED_GUESTS = 60;
 
 function props_() {
   return PropertiesService.getScriptProperties();
+}
+
+function cache_() {
+  try {
+    return CacheService.getScriptCache();
+  } catch (e) {
+    return null;
+  }
+}
+
+function cacheKey_(prefix, cfg) {
+  return prefix + ':' + cfg.owner + '/' + cfg.repo + '@' + cfg.branch + ':' + cfg.path;
 }
 
 function config_() {
@@ -107,6 +120,10 @@ function ghFetch_(cfg, method, url, body) {
 }
 
 function assertPrivateRepo_(cfg) {
+  var c = cache_();
+  var key = 'priv:' + cfg.owner + '/' + cfg.repo;
+  if (c && c.get(key) === '1') return;
+
   var url =
     'https://api.github.com/repos/' +
     encodeURIComponent(cfg.owner) +
@@ -119,9 +136,26 @@ function assertPrivateRepo_(cfg) {
   if (!res.data.private) {
     throw new Error('O repositório de dados precisa ser privado.');
   }
+  if (c) {
+    try {
+      c.put(key, '1', 600);
+    } catch (e) {}
+  }
 }
 
-function readFile_(cfg) {
+function readFile_(cfg, options) {
+  var useCache = options && options.useCache === true;
+  var c = useCache ? cache_() : null;
+  var key = cacheKey_('file', cfg);
+  if (c) {
+    var cached = c.get(key);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {}
+    }
+  }
+
   var res = ghFetch_(cfg, 'get', apiUrl_(cfg) + '?ref=' + encodeURIComponent(cfg.branch));
   if (res.code === 404) {
     throw new Error(
@@ -142,7 +176,13 @@ function readFile_(cfg) {
   } catch (e) {
     throw new Error('O ' + cfg.path + ' não é um JSON válido.');
   }
-  return { sha: res.data.sha, json: json };
+  var result = { sha: res.data.sha, json: json };
+  if (c) {
+    try {
+      c.put(key, JSON.stringify(result), 10);
+    } catch (e) {}
+  }
+  return result;
 }
 
 function writeFile_(cfg, json, sha) {
@@ -153,6 +193,14 @@ function writeFile_(cfg, json, sha) {
     sha: sha,
     branch: cfg.branch,
   });
+  if (res.code === 200 || res.code === 201) {
+    var c = cache_();
+    if (c) {
+      try {
+        c.remove(cacheKey_('file', cfg));
+      } catch (e) {}
+    }
+  }
   return res;
 }
 
@@ -226,6 +274,10 @@ function publicGuest_(guest) {
 
 function createUnlistedGuest_(body) {
   if (String(body.website || '').trim()) throw new Error('Não foi possível validar o envio.');
+  var startedAt = Number(body.startedAt || 0);
+  if (startedAt > 0 && Date.now() - startedAt < 1500) {
+    throw new Error('Não foi possível validar o envio.');
+  }
   var name = String(body.name || '').replace(/\s+/g, ' ').trim().slice(0, 80);
   if (name.length < 3) throw new Error('Digite seu nome completo.');
 
@@ -236,6 +288,13 @@ function createUnlistedGuest_(body) {
     var data = file.json;
     if (!data || typeof data !== 'object' || !Array.isArray(data.guests)) {
       throw new Error('O ' + cfg.path + ' não tem uma lista de convidados.');
+    }
+
+    var unlistedCount = data.guests.filter(function (guest) {
+      return guest && guest.unlisted === true;
+    }).length;
+    if (unlistedCount >= MAX_UNLISTED_GUESTS) {
+      throw new Error('O limite de novos cadastros pelo convite foi atingido. Fale com os anfitriões.');
     }
 
     var normalizedName = normalizeSearch_(name);
@@ -441,7 +500,7 @@ function doGet(e) {
     try {
       var contactCfg = config_();
       assertPrivateRepo_(contactCfg);
-      var contactFile = readFile_(contactCfg);
+      var contactFile = readFile_(contactCfg, { useCache: true });
       var contactMeta = contactFile.json && contactFile.json.meta || {};
       return json_({
         ok: true,
@@ -456,7 +515,7 @@ function doGet(e) {
     try {
       var lookupCfg = config_();
       assertPrivateRepo_(lookupCfg);
-      var lookupFile = readFile_(lookupCfg);
+      var lookupFile = readFile_(lookupCfg, { useCache: true });
       var result = lookupGuests_(lookupFile.json, params);
       return json_({ ok: true, guests: result.guests, related: result.related });
     } catch (lookupError) {
