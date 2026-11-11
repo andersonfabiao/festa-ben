@@ -683,8 +683,10 @@
             id: String(payment.id || uid()),
             amount: parseMoney(payment.amount),
             date: /^\d{4}-\d{2}-\d{2}$/.test(payment.date) ? payment.date : "",
-            method: String(payment.method || "").slice(0, 40),
+            method: String(payment.method === "Cartão" ? "Cartão de crédito" : (payment.method || "")).slice(0, 40),
             note: String(payment.note || "").slice(0, 120),
+            installmentNumber: Math.max(0, parseInt(payment.installmentNumber, 10) || 0),
+            installmentCount: Math.max(0, parseInt(payment.installmentCount, 10) || 0),
             paid: typeof payment.paid === "boolean"
               ? payment.paid
               : (!/^\d{4}-\d{2}-\d{2}$/.test(payment.date) || payment.date <= todayISO()),
@@ -697,10 +699,27 @@
         notes: String(i.notes || "").slice(0, 1000),
         subtasks: (Array.isArray(i.subtasks) ? i.subtasks : [])
           .filter((subtask) => subtask && typeof subtask === "object" && String(subtask.title || "").trim())
-          .map((subtask) => ({ id: String(subtask.id || uid()), title: String(subtask.title).trim().slice(0, 160), done: subtask.done === true })),
+          .map((subtask) => {
+            const quantity = Math.max(0.01, Number(subtask.quantity) || 1);
+            const unitPrice = parseMoney(subtask.unitPrice) || (parseMoney(subtask.cost) / quantity);
+            return {
+              id: String(subtask.id || uid()),
+              title: String(subtask.title).trim().slice(0, 160),
+              done: subtask.done === true,
+              quantity,
+              unit: ["un.", "pacote", "caixa", "cento", "pessoa", "kg", "litro"].includes(subtask.unit) ? subtask.unit : "un.",
+              unitPrice,
+              cost: Math.round(quantity * unitPrice * 100) / 100,
+            };
+          }),
         createdAt: i.createdAt || nowISO(),
       }))
       .map((item) => {
+        const composedCost = item.subtasks.reduce((sum, subtask) => sum + num(subtask.cost), 0);
+        if (composedCost > 0) {
+          item.cost = Math.round(composedCost * 100) / 100;
+          item.unitPrice = 0;
+        }
         if (item.payments.length) {
           item.paid = Math.round(item.payments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0) * 100) / 100;
         }
@@ -1307,7 +1326,9 @@
       ? '<div class="item-subtasks"><span class="subtask-progress">' + completedSubtasks + "/" + subtasks.length + ' subitens concluídos</span>' +
         subtasks.map((subtask) => '<label class="item-subtask' + (subtask.done ? " is-done" : "") + '">' +
           '<input type="checkbox" data-subtask-check="' + esc(item.id) + '" data-subtask-id="' + esc(subtask.id) + '"' + (subtask.done ? " checked" : "") +
-          ' aria-label="Marcar subitem ' + esc(subtask.title) + '"><span>' + esc(subtask.title) + "</span></label>").join("") + "</div>"
+          ' aria-label="Marcar subitem ' + esc(subtask.title) + '"><span>' + esc(subtask.title) +
+          (num(subtask.cost) ? '<small>' + esc(String(subtask.quantity || 1).replace(".", ",")) + " " + esc(subtask.unit || "un.") + " × " + money(subtask.unitPrice) + " = " + money(subtask.cost) + "</small>" : "") +
+          "</span></label>").join("") + "</div>"
       : "";
 
     const metaBits = [];
@@ -1319,14 +1340,23 @@
       metaBits.push('<a href="https://www.instagram.com/' + esc(item.supplierInstagram) + '/" target="_blank" rel="noopener noreferrer" title="Abrir Instagram do fornecedor">📷 @' + esc(item.supplierInstagram) + "</a>");
     }
     const payments = Array.isArray(item.payments) ? item.payments : [];
-    const paidPayments = payments.filter((payment) => payment.paid).length;
-    if (payments.length) {
-      const nextPayment = payments.filter((payment) => !payment.paid && payment.date).sort((a, b) => a.date.localeCompare(b.date))[0];
-      metaBits.push("<span>💳 " + paidPayments + "/" + payments.length + " parcelas pagas" + (nextPayment ? " · próxima " + fmtDate(nextPayment.date) : "") + "</span>");
+    const installments = payments.filter((payment) => payment.method === "Cartão de crédito" && payment.installmentCount > 1);
+    const ordinaryPayments = payments.filter((payment) => !installments.includes(payment));
+    if (installments.length) {
+      const paidInstallments = installments.filter((payment) => payment.paid).length;
+      const nextInstallment = installments.filter((payment) => !payment.paid && payment.date).sort((a, b) => a.date.localeCompare(b.date))[0];
+      metaBits.push("<span>💳 " + paidInstallments + "/" + installments.length + " parcelas do cartão pagas" + (nextInstallment ? " · próxima " + fmtDate(nextInstallment.date) : "") + "</span>");
+    }
+    if (ordinaryPayments.length) {
+      const paidOrdinary = ordinaryPayments.filter((payment) => payment.paid).length;
+      metaBits.push("<span>💰 " + paidOrdinary + "/" + ordinaryPayments.length + " pagamentos realizados</span>");
     }
     const quantity = Math.max(0.01, Number(item.quantity) || 1);
     const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
-    if (quantity !== 1 || unitPrice > 0) {
+    const composedSubtasks = subtasks.filter((subtask) => num(subtask.cost) > 0);
+    if (composedSubtasks.length) {
+      metaBits.push("<span>🧾 " + composedSubtasks.length + " subitens = " + money(item.cost) + "</span>");
+    } else if (quantity !== 1 || unitPrice > 0) {
       metaBits.push("<span>📦 " + esc(String(quantity).replace(".", ",")) + " " + esc(item.unit || "un.") + " × " + money(unitPrice) + "</span>");
     }
     if (item.due) {
@@ -1677,12 +1707,12 @@
           item.supplierPhone ? "Telefone: " + formatPhoneBR(item.supplierPhone) : "",
           item.supplierInstagram ? "Instagram: @" + item.supplierInstagram : "",
           Array.isArray(item.payments) && item.payments.length
-            ? item.payments.filter((payment) => payment.paid).length + "/" + item.payments.length + " parcelas pagas"
+            ? item.payments.filter((payment) => payment.paid).length + "/" + item.payments.length + " pagamentos quitados"
             : "",
           item.notes || "",
         ].filter(Boolean).join(" · ");
         const subtasks = Array.isArray(item.subtasks) && item.subtasks.length
-          ? '<ul class="subtasks">' + item.subtasks.map((subtask) => '<li>' + (subtask.done ? "☑" : "☐") + " " + esc(subtask.title) + "</li>").join("") + "</ul>"
+          ? '<ul class="subtasks">' + item.subtasks.map((subtask) => '<li>' + (subtask.done ? "☑" : "☐") + " " + esc(subtask.title) + (num(subtask.cost) ? " — " + esc(String(subtask.quantity || 1).replace(".", ",")) + " " + esc(subtask.unit || "un.") + " × " + money(subtask.unitPrice) + " = " + money(subtask.cost) : "") + "</li>").join("") + "</ul>"
           : "";
         return '<tr class="' + (item.status === "done" ? "done" : "") + '">' +
           '<td class="check">' + (item.status === "done" ? "✓" : "□") + '</td>' +
@@ -2790,21 +2820,27 @@
   function updateItemCalculatedTotal() {
     const quantity = Math.max(0, Number(String($("#itemQuantity").value || "").replace(",", ".")) || 0);
     const unitPrice = parseMoney($("#itemUnitPrice").value);
-    const total = Math.round(quantity * unitPrice * 100) / 100;
+    const composed = $$("#subtaskRows [data-subtask-row]").reduce((sum, row) => {
+      const subQuantity = Math.max(0, Number(String(row.querySelector('[data-subtask-field="quantity"]')?.value || "").replace(",", ".")) || 0);
+      const subPrice = parseMoney(row.querySelector('[data-subtask-field="unitPrice"]')?.value || "");
+      return sum + subQuantity * subPrice;
+    }, 0);
+    const total = Math.round((composed > 0 ? composed : quantity * unitPrice) * 100) / 100;
     $("#itemCost").value = total ? total.toFixed(2).replace(".", ",") : "";
+    $("#itemCost").title = composed > 0 ? "Total formado pelos subitens" : "Quantidade × preço unitário";
   }
 
   function renderPaymentRows() {
     const wrap = $("#paymentRows");
     if (!wrap) return;
-    const methods = ["", "Pix", "Dinheiro", "Cartão", "Transferência", "Boleto"];
+    const methods = ["", "Pix", "Dinheiro", "Cartão de crédito", "Cartão de débito", "Transferência", "Boleto"];
     wrap.innerHTML = editingPayments.length
-      ? editingPayments.map((payment) => '<div class="payment-row" data-payment-id="' + esc(payment.id) + '">' +
+      ? editingPayments.map((payment) => '<div class="payment-row" data-payment-id="' + esc(payment.id) + '" data-installment-number="' + (payment.installmentNumber || 0) + '" data-installment-count="' + (payment.installmentCount || 0) + '">' +
           '<label class="field-label">Data<input class="input" type="date" data-payment-field="date" value="' + esc(payment.date || "") + '"></label>' +
-          '<label class="field-label">Valor (R$)<input class="input" inputmode="decimal" data-payment-field="amount" value="' + esc(payment.amount ? String(payment.amount).replace(".", ",") : "") + '" placeholder="0,00"></label>' +
+          '<label class="field-label">Valor (R$)<input class="input" inputmode="decimal" data-payment-field="amount" value="' + esc(payment.amount ? Number(payment.amount).toFixed(2).replace(".", ",") : "") + '" placeholder="0,00"></label>' +
           '<label class="field-label">Forma<select class="input" data-payment-field="method">' + methods.map((method) => '<option value="' + esc(method) + '"' + (method === payment.method ? " selected" : "") + '>' + esc(method || "Não informado") + '</option>').join("") + '</select></label>' +
           '<label class="payment-paid"><input type="checkbox" data-payment-field="paid"' + (payment.paid ? " checked" : "") + '><span>Pago</span></label>' +
-          '<label class="field-label">Observação<input class="input" maxlength="120" data-payment-field="note" value="' + esc(payment.note || "") + '" placeholder="Ex.: sinal"></label>' +
+          '<label class="field-label">Observação' + (payment.installmentCount > 1 ? '<span class="installment-tag">' + payment.installmentNumber + "/" + payment.installmentCount + "</span>" : "") + '<input class="input" maxlength="120" data-payment-field="note" value="' + esc(payment.note || "") + '" placeholder="Ex.: sinal"></label>' +
           '<button class="icon-btn payment-remove" type="button" data-payment-remove="' + esc(payment.id) + '" aria-label="Remover pagamento">🗑</button>' +
         "</div>").join("")
       : '<div class="payment-empty">Nenhum pagamento registrado.</div>';
@@ -2819,6 +2855,8 @@
       amount: parseMoney(row.querySelector('[data-payment-field="amount"]').value),
       method: row.querySelector('[data-payment-field="method"]').value,
       note: row.querySelector('[data-payment-field="note"]').value.trim().slice(0, 120),
+      installmentNumber: parseInt(row.dataset.installmentNumber, 10) || 0,
+      installmentCount: parseInt(row.dataset.installmentCount, 10) || 0,
       paid: row.querySelector('[data-payment-field="paid"]').checked,
     })).filter((payment) => payment.amount > 0);
     return editingPayments;
@@ -2826,11 +2864,54 @@
 
   function addPaymentRow() {
     collectPaymentsFromRows();
-    editingPayments.push({ id: uid(), date: todayISO(), amount: 0, method: "Pix", note: "", paid: false });
+    editingPayments.push({ id: uid(), date: todayISO(), amount: 0, method: "Pix", note: "", paid: false, installmentNumber: 0, installmentCount: 0 });
     renderPaymentRows();
     const rows = $$("#paymentRows [data-payment-id]");
     const last = rows[rows.length - 1];
     if (last) last.querySelector('[data-payment-field="amount"]').focus();
+  }
+
+  function addMonthsISO(date, months) {
+    const parsed = /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(date + "T12:00:00") : new Date();
+    const day = parsed.getDate();
+    parsed.setDate(1);
+    parsed.setMonth(parsed.getMonth() + months);
+    parsed.setDate(Math.min(day, new Date(parsed.getFullYear(), parsed.getMonth() + 1, 0).getDate()));
+    return parsed.toLocaleDateString("sv-SE");
+  }
+
+  function generateCreditInstallments() {
+    collectPaymentsFromRows();
+    updateItemCalculatedTotal();
+    const total = parseMoney($("#itemCost").value);
+    const count = Math.max(2, Math.min(12, parseInt($("#installmentCount").value, 10) || 2));
+    const firstDate = $("#installmentFirstDate").value;
+    if (!total) {
+      toast("Informe o valor do item ou dos subitens antes de gerar as parcelas.", "warn");
+      return;
+    }
+    if (!firstDate) {
+      toast("Informe a data do primeiro vencimento.", "warn");
+      $("#installmentFirstDate").focus();
+      return;
+    }
+    const retained = editingPayments.filter((payment) => !(payment.method === "Cartão de crédito" && payment.installmentCount > 1));
+    const totalCents = Math.round(total * 100);
+    const baseCents = Math.floor(totalCents / count);
+    const remainder = totalCents - baseCents * count;
+    const generated = Array.from({ length: count }, (_, index) => ({
+      id: uid(),
+      date: addMonthsISO(firstDate, index),
+      amount: (baseCents + (index < remainder ? 1 : 0)) / 100,
+      method: "Cartão de crédito",
+      note: "Parcela " + (index + 1) + " de " + count,
+      paid: false,
+      installmentNumber: index + 1,
+      installmentCount: count,
+    }));
+    editingPayments = retained.concat(generated);
+    renderPaymentRows();
+    toast(count + " parcelas do cartão geradas.", "ok");
   }
 
   function renderSubtaskRows() {
@@ -2839,7 +2920,11 @@
     wrap.innerHTML = editingSubtasks.length
       ? editingSubtasks.map((subtask) => '<div class="subtask-editor-row" data-subtask-row="' + esc(subtask.id) + '">' +
           '<input type="checkbox" data-subtask-field="done"' + (subtask.done ? " checked" : "") + ' aria-label="Subitem concluído">' +
-          '<input class="input" maxlength="160" data-subtask-field="title" value="' + esc(subtask.title) + '" placeholder="Ex.: Separar 10 caixas">' +
+          '<label class="field-label subtask-title">Descrição<input class="input" maxlength="160" data-subtask-field="title" value="' + esc(subtask.title) + '" placeholder="Ex.: Cachorro Tubet Toy Story"></label>' +
+          '<label class="field-label">Qtd.<input class="input" inputmode="decimal" data-subtask-field="quantity" value="' + esc(String(subtask.quantity || 1).replace(".", ",")) + '"></label>' +
+          '<label class="field-label">Unidade<select class="input" data-subtask-field="unit">' + ["un.", "pacote", "caixa", "cento", "pessoa", "kg", "litro"].map((unit) => '<option value="' + unit + '"' + (unit === (subtask.unit || "un.") ? " selected" : "") + '>' + unit + "</option>").join("") + "</select></label>" +
+          '<label class="field-label">Unitário (R$)<input class="input" inputmode="decimal" data-subtask-field="unitPrice" value="' + esc(subtask.unitPrice ? Number(subtask.unitPrice).toFixed(2).replace(".", ",") : "") + '" placeholder="0,00"></label>' +
+          '<output class="subtask-total money">' + (num(subtask.cost) ? money(subtask.cost) : "R$ 0,00") + "</output>" +
           '<button class="icon-btn" type="button" data-subtask-remove="' + esc(subtask.id) + '" aria-label="Remover subitem">🗑</button>' +
         "</div>").join("")
       : '<div class="payment-empty">Nenhum subitem. Adicione apenas quando a tarefa tiver etapas menores.</div>';
@@ -2850,13 +2935,17 @@
       id: row.dataset.subtaskRow,
       title: row.querySelector('[data-subtask-field="title"]').value.trim().slice(0, 160),
       done: row.querySelector('[data-subtask-field="done"]').checked,
+      quantity: Math.max(0.01, Number(String(row.querySelector('[data-subtask-field="quantity"]').value || "1").replace(",", ".")) || 1),
+      unit: row.querySelector('[data-subtask-field="unit"]').value,
+      unitPrice: parseMoney(row.querySelector('[data-subtask-field="unitPrice"]').value),
     })).filter((subtask) => subtask.title);
+    editingSubtasks.forEach((subtask) => { subtask.cost = Math.round(subtask.quantity * subtask.unitPrice * 100) / 100; });
     return editingSubtasks;
   }
 
   function addSubtaskRow() {
     collectSubtasksFromRows();
-    editingSubtasks.push({ id: uid(), title: "", done: false });
+    editingSubtasks.push({ id: uid(), title: "", done: false, quantity: 1, unit: "un.", unitPrice: 0, cost: 0 });
     renderSubtaskRows();
     const rows = $$("#subtaskRows [data-subtask-row]");
     const last = rows[rows.length - 1];
@@ -2878,7 +2967,8 @@
       $("#itemStage").value = item.stage;
       $("#itemStatus").value = item.status;
       const quantity = Math.max(0.01, Number(item.quantity) || 1);
-      const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
+      const hasComposedCost = Array.isArray(item.subtasks) && item.subtasks.some((subtask) => num(subtask.cost) > 0);
+      const unitPrice = hasComposedCost ? num(item.unitPrice) : (num(item.unitPrice) || (num(item.cost) / quantity));
       $("#itemQuantity").value = String(quantity);
       $("#itemUnit").value = item.unit || "un.";
       $("#itemUnitPrice").value = unitPrice ? String(unitPrice).replace(".", ",") : "";
@@ -2894,6 +2984,8 @@
       $("#itemNotes").value = item.notes || "";
       editingSubtasks = (Array.isArray(item.subtasks) ? item.subtasks : []).map((subtask) => Object.assign({}, subtask));
       renderSubtaskRows();
+      updateItemCalculatedTotal();
+      $("#installmentFirstDate").value = item.due || todayISO();
       $("#itemModalTitle").textContent = "Editar item";
       $("#deleteItemBtn").hidden = false;
     } else {
@@ -2909,6 +3001,7 @@
       renderPaymentRows();
       editingSubtasks = [];
       renderSubtaskRows();
+      $("#installmentFirstDate").value = todayISO();
       if (preferredStage) {
         collapsed.delete(preferredStage);
         saveCollapsed();
@@ -2934,6 +3027,8 @@
       return;
     }
     const payments = collectPaymentsFromRows();
+    const subtasks = collectSubtasksFromRows();
+    const composedCost = subtasks.reduce((sum, subtask) => sum + num(subtask.cost), 0);
     const data = {
       title,
       stage: $("#itemStage").value,
@@ -2941,7 +3036,7 @@
       quantity,
       unit: $("#itemUnit").value,
       unitPrice,
-      cost: Math.round(quantity * unitPrice * 100) / 100,
+      cost: Math.round((composedCost > 0 ? composedCost : quantity * unitPrice) * 100) / 100,
       paid: Math.round(payments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0) * 100) / 100,
       payments,
       supplier: $("#itemSupplier").value.trim(),
@@ -2950,7 +3045,7 @@
       due: $("#itemDue").value,
       link: $("#itemLink").value.trim(),
       notes: $("#itemNotes").value.trim(),
-      subtasks: collectSubtasksFromRows(),
+      subtasks,
     };
 
     const id = $("#itemId").value;
@@ -3522,7 +3617,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261110p8";
+  const INVITE_RELEASE = "20261110p10";
 
   function invitePageUrl() {
     try {
@@ -4475,6 +4570,7 @@
     $("#itemQuantity").addEventListener("input", updateItemCalculatedTotal);
     $("#itemUnitPrice").addEventListener("input", updateItemCalculatedTotal);
     $("#addPaymentBtn").addEventListener("click", addPaymentRow);
+    $("#generateInstallmentsBtn").addEventListener("click", generateCreditInstallments);
     $("#paymentRows").addEventListener("input", () => {
       collectPaymentsFromRows();
       const totalPaid = editingPayments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0);
@@ -4493,6 +4589,15 @@
       renderPaymentRows();
     });
     $("#addSubtaskBtn").addEventListener("click", addSubtaskRow);
+    $("#subtaskRows").addEventListener("input", (event) => {
+      const row = event.target.closest("[data-subtask-row]");
+      if (!row) return;
+      const quantity = Math.max(0, Number(String(row.querySelector('[data-subtask-field="quantity"]').value || "").replace(",", ".")) || 0);
+      const unitPrice = parseMoney(row.querySelector('[data-subtask-field="unitPrice"]').value);
+      const total = Math.round(quantity * unitPrice * 100) / 100;
+      row.querySelector(".subtask-total").textContent = money(total);
+      updateItemCalculatedTotal();
+    });
     $("#subtaskRows").addEventListener("click", (event) => {
       const remove = event.target.closest("[data-subtask-remove]");
       if (!remove) return;
@@ -5315,7 +5420,14 @@
         id: String(subtask.id || uid()),
         title: String(subtask.title).trim().slice(0, 160),
         done: subtask.done === true,
+        quantity: Math.max(0.01, Number(subtask.quantity) || 1),
+        unit: ["un.", "pacote", "caixa", "cento", "pessoa", "kg", "litro"].includes(subtask.unit) ? subtask.unit : "un.",
+        unitPrice: parseMoney(subtask.unitPrice),
+        cost: Math.round(Math.max(0.01, Number(subtask.quantity) || 1) * parseMoney(subtask.unitPrice) * 100) / 100,
       }));
+
+    const composedCost = subtasks.reduce((sum, subtask) => sum + subtask.cost, 0);
+    if (composedCost > 0) cost = composedCost;
 
     const before = JSON.stringify(state);
     const item = {

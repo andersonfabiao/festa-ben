@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261110p8";
+  const inviteRelease = "20261110p10";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");

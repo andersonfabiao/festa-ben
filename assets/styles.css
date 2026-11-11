@@ -774,6 +774,11 @@ textarea.input { resize: vertical; min-height: 78px; }
 .payment-editor-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:10px; }
 .payment-editor-head h3 { color:var(--navy); font-size:1rem; }
 .payment-editor-head .hint { margin:2px 0 0; }
+.installment-builder { display:grid; grid-template-columns:minmax(180px,1fr) 90px 145px auto; align-items:end; gap:10px; margin:0 0 12px; padding:11px; border:1px solid #d8e5f1; border-radius:13px; background:#fff; }
+.installment-builder > div { align-self:center; }
+.installment-builder strong { display:block; color:var(--navy); font-size:.82rem; }
+.installment-builder small { display:block; margin-top:2px; color:var(--muted); font-size:.7rem; }
+.installment-builder .field-label { margin:0; }
 .payment-rows { display:grid; gap:8px; }
 .payment-row { display:grid; grid-template-columns:120px 115px 125px 72px minmax(140px,1fr) 34px; gap:8px; align-items:end; }
 .payment-row .field-label { min-width:0; font-size:.7rem; }
@@ -781,15 +786,21 @@ textarea.input { resize: vertical; min-height: 78px; }
 .payment-paid { display:flex; align-items:center; justify-content:center; gap:6px; min-height:42px; margin:0; border:1px solid #cfe0ef; border-radius:11px; background:#fff; color:#47617a; font-size:.75rem; font-weight:900; cursor:pointer; }
 .payment-paid input { width:18px; height:18px; accent-color:var(--green); }
 .payment-paid:has(input:checked) { border-color:#8ed39c; background:#edf9f0; color:#1d7a35; }
+.installment-tag { float:right; padding:1px 6px; border-radius:999px; background:#e6f0ff; color:#2864a0; font-size:.65rem; }
 .payment-empty { padding:10px; border:1px dashed #cbdced; border-radius:12px; color:var(--muted); text-align:center; font-size:.78rem; font-weight:700; }
 .subtask-editor { margin:14px 0; padding:14px; border:1px solid #d8e5f1; border-radius:16px; background:#fbfdff; }
 .subtask-editor-rows { display:grid; gap:8px; }
-.subtask-editor-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; }
+.subtask-editor-row { display:grid; grid-template-columns:auto minmax(180px,1fr) 70px 90px 110px 95px auto; align-items:end; gap:8px; padding:10px; border:1px solid #dce8f3; border-radius:12px; background:#fff; }
+.subtask-editor-row .field-label { min-width:0; margin:0; font-size:.68rem; }
+.subtask-editor-row .input { min-width:0; padding:9px 8px; }
+.subtask-total { align-self:center; text-align:right; font-size:.76rem; font-weight:900; }
 .subtask-editor-row input[type="checkbox"] { width:19px; height:19px; accent-color:var(--green); }
 .item-subtasks { display:grid; gap:5px; margin:8px 0 0; padding:8px 10px; border-radius:11px; background:#f4f8fc; }
 .item-subtask { display:flex; align-items:flex-start; gap:7px; color:#3e5873; font-size:.77rem; font-weight:700; }
 .item-subtask input { flex:none; width:16px; height:16px; margin-top:1px; accent-color:var(--green); }
 .item-subtask.is-done span { color:#75869a; text-decoration:line-through; }
+.item-subtask span { display:grid; gap:1px; }
+.item-subtask small { color:#55708b; font-size:.68rem; font-weight:700; text-decoration:none; }
 .subtask-progress { color:#39709d; font-size:.7rem; font-weight:900; }
 
 .item {
@@ -2184,10 +2195,15 @@ body.no-scroll { overflow: hidden; }
   .item-meta { font-size: 0.74rem; gap: 3px 10px; }
   .payment-editor-head { align-items:stretch; flex-direction:column; }
   .payment-editor-head .btn { width:100%; }
+  .installment-builder { grid-template-columns:1fr 1fr; }
+  .installment-builder > div, .installment-builder .btn { grid-column:1 / -1; }
   .payment-row { grid-template-columns:1fr 1fr; padding:10px; border:1px solid #dce8f3; border-radius:12px; background:#fff; }
   .payment-row .field-label:nth-child(5) { grid-column:1 / -1; }
   .payment-row .icon-btn { justify-self:end; }
-  .subtask-editor-row { grid-template-columns:auto minmax(0,1fr) auto; }
+  .subtask-editor-row { grid-template-columns:auto 1fr 1fr; align-items:end; }
+  .subtask-editor-row .subtask-title { grid-column:2 / -1; }
+  .subtask-editor-row .field-label:nth-of-type(4) { grid-column:2 / 4; }
+  .subtask-total { grid-column:2 / 3; text-align:left; }
 
   .section-head h2 { font-size: 1.4rem; }
   .head-actions { width: 100%; }
