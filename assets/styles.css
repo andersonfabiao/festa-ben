@@ -775,9 +775,12 @@ textarea.input { resize: vertical; min-height: 78px; }
 .payment-editor-head h3 { color:var(--navy); font-size:1rem; }
 .payment-editor-head .hint { margin:2px 0 0; }
 .payment-rows { display:grid; gap:8px; }
-.payment-row { display:grid; grid-template-columns:130px 120px 140px minmax(140px,1fr) 34px; gap:8px; align-items:end; }
+.payment-row { display:grid; grid-template-columns:120px 115px 125px 72px minmax(140px,1fr) 34px; gap:8px; align-items:end; }
 .payment-row .field-label { min-width:0; font-size:.7rem; }
 .payment-row .input { min-width:0; padding:9px 10px; }
+.payment-paid { display:flex; align-items:center; justify-content:center; gap:6px; min-height:42px; margin:0; border:1px solid #cfe0ef; border-radius:11px; background:#fff; color:#47617a; font-size:.75rem; font-weight:900; cursor:pointer; }
+.payment-paid input { width:18px; height:18px; accent-color:var(--green); }
+.payment-paid:has(input:checked) { border-color:#8ed39c; background:#edf9f0; color:#1d7a35; }
 .payment-empty { padding:10px; border:1px dashed #cbdced; border-radius:12px; color:var(--muted); text-align:center; font-size:.78rem; font-weight:700; }
 .subtask-editor { margin:14px 0; padding:14px; border:1px solid #d8e5f1; border-radius:16px; background:#fbfdff; }
 .subtask-editor-rows { display:grid; gap:8px; }
@@ -2182,7 +2185,7 @@ body.no-scroll { overflow: hidden; }
   .payment-editor-head { align-items:stretch; flex-direction:column; }
   .payment-editor-head .btn { width:100%; }
   .payment-row { grid-template-columns:1fr 1fr; padding:10px; border:1px solid #dce8f3; border-radius:12px; background:#fff; }
-  .payment-row .field-label:nth-child(4) { grid-column:1 / -1; }
+  .payment-row .field-label:nth-child(5) { grid-column:1 / -1; }
   .payment-row .icon-btn { justify-self:end; }
   .subtask-editor-row { grid-template-columns:auto minmax(0,1fr) auto; }
 
@@ -2219,6 +2222,10 @@ body.no-scroll { overflow: hidden; }
   .modal-card { max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); border-radius: 20px; }
   .modal-head { padding: 13px 16px; border-radius: 20px 20px 0 0; }
   .modal form { padding: 16px; }
+  .modal .input,
+  .modal input,
+  .modal select,
+  .modal textarea { font-size:16px; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 0; }
 
   .invite-wrap { padding: 18px 12px 28px; }

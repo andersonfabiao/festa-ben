@@ -264,6 +264,16 @@
     return "https://wa.me/" + digits;
   }
 
+  function instagramHandle(value) {
+    return String(value == null ? "" : value)
+      .trim()
+      .replace(/^https?:\/\/(?:www\.)?instagram\.com\//i, "")
+      .replace(/^@/, "")
+      .split(/[/?#]/)[0]
+      .replace(/[^A-Za-z0-9._]/g, "")
+      .slice(0, 30);
+  }
+
   function whatsappIconSvg() {
     return '<svg aria-hidden="true" viewBox="0 0 32 32" focusable="false"><path fill="currentColor" d="M16 3a12.7 12.7 0 0 0-11 19l-1.5 5.5L9.2 26A12.8 12.8 0 1 0 16 3Zm6.8 18.1c-.3.9-1.8 1.7-2.5 1.8-.7.1-1.6.2-5.2-1.3-4.4-1.9-7.2-6.4-7.4-6.7-.2-.3-1.8-2.4-1.8-4.6s1.1-3.2 1.5-3.7c.4-.4.9-.5 1.2-.5h.9c.3 0 .6 0 .8.7l1.2 2.9c.1.2.1.5 0 .7l-.5.8-.7.8c-.2.2-.4.5-.2.9.2.4 1.1 1.8 2.4 2.9 1.7 1.5 3.1 2 3.5 2.2.4.2.7.2.9-.1l1.3-1.6c.3-.4.6-.3 1-.2l2.7 1.3c.4.2.7.3.8.5.2.2.2 1 .1 1.9Z"/></svg>';
   }
@@ -667,7 +677,7 @@
         unitPrice: parseMoney(i.unitPrice) || (parseMoney(i.cost) / Math.max(0.01, Number(i.quantity) || 1)),
         cost: parseMoney(i.cost),
         paid: parseMoney(i.paid),
-        payments: (Array.isArray(i.payments) ? i.payments : (parseMoney(i.paid) ? [{ id: "legacy-" + String(i.id || "item"), amount: parseMoney(i.paid), date: "", method: "", note: "Pagamento anterior" }] : []))
+        payments: (Array.isArray(i.payments) ? i.payments : (parseMoney(i.paid) ? [{ id: "legacy-" + String(i.id || "item"), amount: parseMoney(i.paid), date: "", method: "", note: "Pagamento anterior", paid: true }] : []))
           .filter((payment) => payment && typeof payment === "object" && parseMoney(payment.amount) > 0)
           .map((payment) => ({
             id: String(payment.id || uid()),
@@ -675,8 +685,13 @@
             date: /^\d{4}-\d{2}-\d{2}$/.test(payment.date) ? payment.date : "",
             method: String(payment.method || "").slice(0, 40),
             note: String(payment.note || "").slice(0, 120),
+            paid: typeof payment.paid === "boolean"
+              ? payment.paid
+              : (!/^\d{4}-\d{2}-\d{2}$/.test(payment.date) || payment.date <= todayISO()),
           })),
         supplier: String(i.supplier || "").slice(0, 120),
+        supplierPhone: normalizePhone(i.supplierPhone || ""),
+        supplierInstagram: instagramHandle(i.supplierInstagram || ""),
         due: /^\d{4}-\d{2}-\d{2}$/.test(i.due) ? i.due : "",
         link: String(i.link || ""),
         notes: String(i.notes || "").slice(0, 1000),
@@ -687,7 +702,7 @@
       }))
       .map((item) => {
         if (item.payments.length) {
-          item.paid = Math.round(item.payments.reduce((sum, payment) => sum + payment.amount, 0) * 100) / 100;
+          item.paid = Math.round(item.payments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0) * 100) / 100;
         }
         return item;
       });
@@ -1263,7 +1278,7 @@
     if (checklistAlertFilter === "balance" && !(num(item.cost) > num(item.paid))) return false;
     if (f.q) {
       const hay = norm(
-        [item.title, item.supplier, item.notes, stageById(item.stage).name].join(" ")
+        [item.title, item.supplier, item.supplierPhone, item.supplierInstagram, item.notes, stageById(item.stage).name].join(" ")
       );
       if (!hay.includes(norm(f.q))) return false;
     }
@@ -1297,6 +1312,18 @@
 
     const metaBits = [];
     if (item.supplier) metaBits.push("<span>🏷️ " + esc(item.supplier) + "</span>");
+    if (item.supplierPhone) {
+      metaBits.push('<a href="' + esc(waLink(item.supplierPhone)) + '" target="_blank" rel="noopener noreferrer" title="Conversar com o fornecedor no WhatsApp">💬 ' + esc(formatPhoneBR(item.supplierPhone)) + "</a>");
+    }
+    if (item.supplierInstagram) {
+      metaBits.push('<a href="https://www.instagram.com/' + esc(item.supplierInstagram) + '/" target="_blank" rel="noopener noreferrer" title="Abrir Instagram do fornecedor">📷 @' + esc(item.supplierInstagram) + "</a>");
+    }
+    const payments = Array.isArray(item.payments) ? item.payments : [];
+    const paidPayments = payments.filter((payment) => payment.paid).length;
+    if (payments.length) {
+      const nextPayment = payments.filter((payment) => !payment.paid && payment.date).sort((a, b) => a.date.localeCompare(b.date))[0];
+      metaBits.push("<span>💳 " + paidPayments + "/" + payments.length + " parcelas pagas" + (nextPayment ? " · próxima " + fmtDate(nextPayment.date) : "") + "</span>");
+    }
     const quantity = Math.max(0.01, Number(item.quantity) || 1);
     const unitPrice = num(item.unitPrice) || (num(item.cost) / quantity);
     if (quantity !== 1 || unitPrice > 0) {
@@ -1647,6 +1674,11 @@
         const quantity = Math.max(0.01, Number(item.quantity) || 1);
         const detail = [
           item.supplier ? "Fornecedor: " + item.supplier : "",
+          item.supplierPhone ? "Telefone: " + formatPhoneBR(item.supplierPhone) : "",
+          item.supplierInstagram ? "Instagram: @" + item.supplierInstagram : "",
+          Array.isArray(item.payments) && item.payments.length
+            ? item.payments.filter((payment) => payment.paid).length + "/" + item.payments.length + " parcelas pagas"
+            : "",
           item.notes || "",
         ].filter(Boolean).join(" · ");
         const subtasks = Array.isArray(item.subtasks) && item.subtasks.length
@@ -2771,11 +2803,12 @@
           '<label class="field-label">Data<input class="input" type="date" data-payment-field="date" value="' + esc(payment.date || "") + '"></label>' +
           '<label class="field-label">Valor (R$)<input class="input" inputmode="decimal" data-payment-field="amount" value="' + esc(payment.amount ? String(payment.amount).replace(".", ",") : "") + '" placeholder="0,00"></label>' +
           '<label class="field-label">Forma<select class="input" data-payment-field="method">' + methods.map((method) => '<option value="' + esc(method) + '"' + (method === payment.method ? " selected" : "") + '>' + esc(method || "Não informado") + '</option>').join("") + '</select></label>' +
+          '<label class="payment-paid"><input type="checkbox" data-payment-field="paid"' + (payment.paid ? " checked" : "") + '><span>Pago</span></label>' +
           '<label class="field-label">Observação<input class="input" maxlength="120" data-payment-field="note" value="' + esc(payment.note || "") + '" placeholder="Ex.: sinal"></label>' +
           '<button class="icon-btn payment-remove" type="button" data-payment-remove="' + esc(payment.id) + '" aria-label="Remover pagamento">🗑</button>' +
         "</div>").join("")
       : '<div class="payment-empty">Nenhum pagamento registrado.</div>';
-    const totalPaid = editingPayments.reduce((sum, payment) => sum + parseMoney(payment.amount), 0);
+    const totalPaid = editingPayments.reduce((sum, payment) => sum + (payment.paid ? parseMoney(payment.amount) : 0), 0);
     $("#itemPaid").value = totalPaid ? totalPaid.toFixed(2).replace(".", ",") : "";
   }
 
@@ -2786,13 +2819,14 @@
       amount: parseMoney(row.querySelector('[data-payment-field="amount"]').value),
       method: row.querySelector('[data-payment-field="method"]').value,
       note: row.querySelector('[data-payment-field="note"]').value.trim().slice(0, 120),
+      paid: row.querySelector('[data-payment-field="paid"]').checked,
     })).filter((payment) => payment.amount > 0);
     return editingPayments;
   }
 
   function addPaymentRow() {
     collectPaymentsFromRows();
-    editingPayments.push({ id: uid(), date: todayISO(), amount: 0, method: "Pix", note: "" });
+    editingPayments.push({ id: uid(), date: todayISO(), amount: 0, method: "Pix", note: "", paid: false });
     renderPaymentRows();
     const rows = $$("#paymentRows [data-payment-id]");
     const last = rows[rows.length - 1];
@@ -2850,10 +2884,12 @@
       $("#itemUnitPrice").value = unitPrice ? String(unitPrice).replace(".", ",") : "";
       updateItemCalculatedTotal();
       editingPayments = (Array.isArray(item.payments) ? item.payments : []).map((payment) => Object.assign({}, payment));
-      if (!editingPayments.length && item.paid) editingPayments = [{ id: uid(), amount: item.paid, date: "", method: "", note: "Pagamento anterior" }];
+      if (!editingPayments.length && item.paid) editingPayments = [{ id: uid(), amount: item.paid, date: "", method: "", note: "Pagamento anterior", paid: true }];
       renderPaymentRows();
       $("#itemDue").value = item.due || "";
       $("#itemSupplier").value = item.supplier || "";
+      $("#itemSupplierPhone").value = formatPhoneBR(item.supplierPhone || "");
+      $("#itemSupplierInstagram").value = item.supplierInstagram ? "@" + item.supplierInstagram : "";
       $("#itemLink").value = item.link || "";
       $("#itemNotes").value = item.notes || "";
       editingSubtasks = (Array.isArray(item.subtasks) ? item.subtasks : []).map((subtask) => Object.assign({}, subtask));
@@ -2892,6 +2928,11 @@
 
     const quantity = Math.max(0.01, Number(String($("#itemQuantity").value || "1").replace(",", ".")) || 1);
     const unitPrice = parseMoney($("#itemUnitPrice").value);
+    if (!isValidPhone($("#itemSupplierPhone").value)) {
+      toast("Confira o telefone do fornecedor e inclua o código do país.", "warn");
+      $("#itemSupplierPhone").focus();
+      return;
+    }
     const payments = collectPaymentsFromRows();
     const data = {
       title,
@@ -2901,9 +2942,11 @@
       unit: $("#itemUnit").value,
       unitPrice,
       cost: Math.round(quantity * unitPrice * 100) / 100,
-      paid: Math.round(payments.reduce((sum, payment) => sum + payment.amount, 0) * 100) / 100,
+      paid: Math.round(payments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0) * 100) / 100,
       payments,
       supplier: $("#itemSupplier").value.trim(),
+      supplierPhone: normalizePhone($("#itemSupplierPhone").value),
+      supplierInstagram: instagramHandle($("#itemSupplierInstagram").value),
       due: $("#itemDue").value,
       link: $("#itemLink").value.trim(),
       notes: $("#itemNotes").value.trim(),
@@ -3479,7 +3522,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261109p7";
+  const INVITE_RELEASE = "20261110p8";
 
   function invitePageUrl() {
     try {
@@ -4200,8 +4243,10 @@
         id: uid(), title: title.slice(0, 200), stage: stage || "planejamento",
         status: parseChecklistStatus(row.status), quantity, unit: parseChecklistUnit(row.unidade || row.unit),
         unitPrice, cost: Math.round(quantity * unitPrice * 100) / 100, paid,
-        payments: paid ? [{ id: uid(), amount: paid, date: "", method: "", note: "Valor importado do CSV" }] : [],
+        payments: paid ? [{ id: uid(), amount: paid, date: "", method: "", note: "Valor importado do CSV", paid: true }] : [],
         supplier: String(row.fornecedor || row.loja || "").trim().slice(0, 120), due,
+        supplierPhone: normalizePhone(row.telefone_fornecedor || row.telefone || ""),
+        supplierInstagram: instagramHandle(row.instagram_fornecedor || row.instagram || ""),
         link: safeUrl(row.link || row.url || ""), notes: String(row.observacoes || row.observacao || row.notes || "").trim().slice(0, 1000),
         subtasks: String(row.subitens || row.subtarefas || "").split("|").map((title) => title.trim()).filter(Boolean).map((title) => ({ id: uid(), title: title.slice(0, 160), done: false })),
         createdAt: nowISO(),
@@ -4432,7 +4477,12 @@
     $("#addPaymentBtn").addEventListener("click", addPaymentRow);
     $("#paymentRows").addEventListener("input", () => {
       collectPaymentsFromRows();
-      const totalPaid = editingPayments.reduce((sum, payment) => sum + payment.amount, 0);
+      const totalPaid = editingPayments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0);
+      $("#itemPaid").value = totalPaid ? totalPaid.toFixed(2).replace(".", ",") : "";
+    });
+    $("#paymentRows").addEventListener("change", () => {
+      collectPaymentsFromRows();
+      const totalPaid = editingPayments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0);
       $("#itemPaid").value = totalPaid ? totalPaid.toFixed(2).replace(".", ",") : "";
     });
     $("#paymentRows").addEventListener("click", (event) => {
@@ -4786,7 +4836,7 @@
 
     /* Modal de convidado */
     $("#guestEditForm").addEventListener("submit", handleGuestEditSubmit);
-    ["#guestEditPhone", "#setFatherPhone", "#setMotherPhone"].forEach((selector) => {
+    ["#guestEditPhone", "#setFatherPhone", "#setMotherPhone", "#itemSupplierPhone"].forEach((selector) => {
       const field = $(selector);
       if (!field) return;
       field.addEventListener("input", (event) => {
@@ -4855,9 +4905,9 @@
     $("#downloadChecklistCsvBtn").addEventListener("click", () => downloadCsvTemplate(
       "modelo-checklist-ben.csv",
       [
-        "etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;link;observacoes;subitens",
-        "Lembrancinhas;Sacolinhas Toy Story;a_fazer;25;unidade;12,50;100,00;2026-12-15;Loja Exemplo;;Confirmar cores;Comprar sacolas|Separar brindes|Montar kits",
-        "Comida & Bolo;Bolo principal;contratado;1;unidade;450,00;200,00;2027-01-05;Confeitaria Exemplo;;;Confirmar sabor|Confirmar entrega",
+        "etapa;item;status;quantidade;unidade;preco_unitario;total_pago;vencimento;fornecedor;telefone_fornecedor;instagram_fornecedor;link;observacoes;subitens",
+        "Lembrancinhas;Sacolinhas Toy Story;a_fazer;25;unidade;12,50;100,00;2026-12-15;Loja Exemplo;+55 83 98875-4742;@lojaexemplo;;Confirmar cores;Comprar sacolas|Separar brindes|Montar kits",
+        "Comida & Bolo;Bolo principal;contratado;1;unidade;450,00;200,00;2027-01-05;Confeitaria Exemplo;+351 912 345 678;@confeitariaexemplo;;;Confirmar sabor|Confirmar entrega",
       ]
     ));
     $("#checklistImportFile").addEventListener("change", (event) => {
@@ -4936,7 +4986,10 @@
     });
     $$(".modal").forEach((modal) => {
       modal.addEventListener("click", (event) => {
-        if (event.target === modal) closeModal(modal);
+        // No celular, a abertura/fechamento do teclado muda a área visível e
+        // pode transformar um toque de digitação em toque no fundo. Fechar ao
+        // tocar fora fica restrito a mouse/trackpad; o botão X continua sempre.
+        if (event.target === modal && window.matchMedia("(pointer: fine)").matches) closeModal(modal);
       });
     });
     document.addEventListener("keydown", (event) => {
@@ -5277,6 +5330,8 @@
       paid: 0,
       payments: [],
       supplier: String(input.supplier || "").trim().slice(0, 120),
+      supplierPhone: normalizePhone(input.supplierPhone || ""),
+      supplierInstagram: instagramHandle(input.supplierInstagram || ""),
       due: /^\d{4}-\d{2}-\d{2}$/.test(input.due) ? input.due : "",
       link: "",
       notes: String(input.notes || "").slice(0, 1000),
