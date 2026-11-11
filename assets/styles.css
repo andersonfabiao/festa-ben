@@ -3082,6 +3082,7 @@ body.no-scroll { overflow: hidden; }
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  background:linear-gradient(180deg,#58bce8 0%,#79cfee 66.5%,#f4dfb4 66.6%,#f4dfb4 69%,transparent 69%);
 }
 .rsvp-background::after {
   content: "";
@@ -3113,6 +3114,8 @@ body.no-scroll { overflow: hidden; }
 .star-two { bottom: 11%; right: 13%; font-size: .9rem; animation-delay: -1.8s; }
 .star-three { top:42%; left:7%; font-size:.75rem; animation-delay:-.7s; }
 .star-four { bottom:28%; left:17%; font-size:1.1rem; animation-delay:-2.6s; }
+.rsvp-baseboard { position:absolute; z-index:2; left:0; right:0; top:66.5%; height:19px; background:#f5e2b9; box-shadow:0 6px 0 rgba(126,75,39,.2); }
+.rsvp-floor { position:absolute; z-index:1; left:-10%; right:-10%; bottom:-5%; height:38%; background:repeating-linear-gradient(97deg,#d99342 0 62px,#c87c32 63px 66px,#e3a652 67px 126px); transform:perspective(420px) rotateX(15deg); transform-origin:bottom; }
 
 .rsvp-shell {
   position: relative;
@@ -3125,7 +3128,9 @@ body.no-scroll { overflow: hidden; }
   overflow: hidden;
   border: 1px solid rgba(255,255,255,.92);
   border-radius: 30px;
-  background: #fff;
+  background-color:#fffdf4;
+  background-image:linear-gradient(rgba(62,139,205,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(62,139,205,.07) 1px,transparent 1px);
+  background-size:24px 24px;
   box-shadow: 0 28px 75px rgba(22,75,111,.26), 0 0 0 6px rgba(255,255,255,.14);
   animation: invite-arrival .55s cubic-bezier(.16,1,.3,1) both;
 }
@@ -3134,9 +3139,9 @@ body.no-scroll { overflow: hidden; }
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(280px, .95fr);
   align-items: center;
-  min-height: 285px;
+  min-height: 240px;
   overflow: hidden;
-  padding: 30px 30px 0 38px;
+  padding: 8px 30px 0 38px;
   background:
     url("data:image/svg+xml,%3Csvg width='220' height='135' viewBox='0 0 220 135' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18 93C10 70 27 49 50 51C57 23 93 14 113 37C135 23 164 37 165 62C188 64 200 85 190 103C184 113 173 118 158 118H48C33 118 22 109 18 93Z' fill='%23fff' fill-opacity='.62'/%3E%3C/svg%3E"),
     linear-gradient(135deg, #74cef3, #bdeaff);
@@ -3151,7 +3156,7 @@ body.no-scroll { overflow: hidden; }
   height: 8px;
   background: repeating-linear-gradient(90deg, #e8453c 0 42px, #ffd13f 42px 84px, #3488dc 84px 126px);
 }
-.rsvp-copy { position: relative; z-index: 2; align-self: center; padding-bottom: 28px; text-align: left; }
+.rsvp-copy { position: relative; z-index: 2; align-self: center; padding-bottom: 8px; text-align: left; }
 .rsvp-logo { display: block; width: 116px; height: auto; margin: 0 0 8px; }
 .rsvp-brand-logo { display:block; width:clamp(155px,25vw,215px); height:auto; margin:0 0 8px; filter:drop-shadow(0 8px 7px rgba(22,74,111,.2)); transform:rotate(-2deg); animation:rsvp-logo-float 4.8s ease-in-out infinite; }
 
@@ -3295,23 +3300,25 @@ body.no-scroll { overflow: hidden; }
 .rsvp-title-rest { white-space: nowrap; }
 .rsvp-title-rest b { color: #e8453c; font-size: 1.35em; }
 .rsvp-hero .invite-sub { max-width: 370px; margin: 11px 0 0; color: #345a7d; font-size: .94rem; line-height: 1.45; }
-.rsvp-art { position: relative; z-index: 1; align-self: end; min-height: 244px; margin-right:-30px; animation: characters-enter .75s cubic-bezier(.16,1,.3,1) both; }
+.rsvp-art { position: relative; z-index: 1; align-self: end; min-height: 232px; margin-right:-30px; animation: characters-enter .75s cubic-bezier(.16,1,.3,1) both; }
 .rsvp-art picture { display:block; }
 .rsvp-art img {
   position: absolute;
   right: -18px;
-  bottom: 8px;
+  top: 0;
   width: clamp(420px, 48vw, 570px);
   max-width:none;
   height: auto;
   opacity:.96;
   filter: saturate(.96) contrast(.98);
-  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 88%,transparent 100%);
-  mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 88%,transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 88%,transparent 100%),linear-gradient(180deg,transparent 0,#000 9%,#000 100%);
+  -webkit-mask-composite:source-in;
+  mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 88%,transparent 100%),linear-gradient(180deg,transparent 0,#000 9%,#000 100%);
+  mask-composite:intersect;
   transform-origin: 50% 100%;
 }
 
-.rsvp-content { padding: 24px 30px 29px; }
+.rsvp-content { padding:24px 30px 29px; background:rgba(255,253,244,.42); }
 .rsvp-page .invite-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 18px; }
 .rsvp-page .invite-chip {
   justify-content: center;
@@ -3355,8 +3362,8 @@ body.no-scroll { overflow: hidden; }
 @media (max-width: 700px) {
   .rsvp-shell { padding: 12px 9px 26px; }
   .rsvp-card { border-radius: 23px; }
-  .rsvp-hero { grid-template-columns: minmax(0, 1fr) 136px; align-items: end; min-height: 198px; padding: 15px 9px 0 16px; }
-  .rsvp-copy { align-self: center; padding: 0 0 14px; text-align: left; }
+  .rsvp-hero { grid-template-columns:minmax(0,1fr) 136px; align-items:end; min-height:152px; padding:5px 9px 0 16px; }
+  .rsvp-copy { align-self:center; padding:0 0 5px; text-align:left; }
   .rsvp-logo { width: 70px; margin: 0 0 5px; }
   .rsvp-brand-logo { width:clamp(105px,30vw,132px); margin-bottom:5px; }
   .rsvp-ben-story { margin-bottom: 7px; font-size: 2.7rem; }
@@ -3366,8 +3373,8 @@ body.no-scroll { overflow: hidden; }
   .rsvp-name-blocks > span { width: 34px; height: 35px; border-width: 2px; font-size: 1.3rem; }
   .rsvp-title-rest { white-space: normal; }
   .rsvp-hero .invite-sub { margin: 7px 0 0; font-size: .76rem; line-height: 1.35; }
-  .rsvp-art { min-height:184px; margin:0 -9px 0 -82px; }
-  .rsvp-art img { right:-38px; bottom:15px; width:330px; transform:none; opacity:.94; -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 24%,#000 90%,transparent 100%); mask-image:linear-gradient(90deg,transparent 0,#000 24%,#000 90%,transparent 100%); }
+  .rsvp-art { min-height:144px; margin:0 -9px 0 -82px; }
+  .rsvp-art img { right:-38px; top:5px; width:330px; transform:none; opacity:.94; -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 24%,#000 90%,transparent 100%),linear-gradient(180deg,transparent 0,#000 10%,#000 100%); -webkit-mask-composite:source-in; mask-image:linear-gradient(90deg,transparent 0,#000 24%,#000 90%,transparent 100%),linear-gradient(180deg,transparent 0,#000 10%,#000 100%); mask-composite:intersect; }
   .rsvp-content { padding: 12px 13px 18px; }
   .rsvp-page .invite-meta { gap: 6px; margin-bottom: 10px; }
   .rsvp-page .invite-chip { min-height: 36px; padding: 5px 8px; font-size: .65rem; }
