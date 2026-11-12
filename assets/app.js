@@ -420,8 +420,8 @@
     timeLabel: "Hora da missão",
     mapHint: "abrir mapa ↗",
     giftTitle: "Diquinha de presente",
-    giftLoveLabel: "Ele vai amar",
-    giftLoveValue: "Tudo do universo Toy Story ou bloquinhos de montar estilo Lego",
+    giftLoveLabel: "Gosto de",
+    giftLoveValue: "Tudo do universo Toy Story\nUniverso do Harry Potter\nBloquinhos de montar",
     deadlinePrefix: "Confirme sua presença até",
     deadlineSuffix: "💫",
     confirmLabel: "Confirmar presença",
@@ -476,7 +476,7 @@
   }
 
   function defaultGiftSuggestions() {
-    return ["Roupa: 6 anos", "Calçado: 27"];
+    return ["Visto: 6 anos", "Calço: 27"];
   }
 
   function defaultMeta() {
@@ -3683,7 +3683,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261111p6";
+  const INVITE_RELEASE = "20261112p7";
 
   function invitePageUrl() {
     try {

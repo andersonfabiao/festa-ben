@@ -14,8 +14,8 @@
     timeLabel: "Hora da missão",
     mapHint: "abrir mapa ↗",
     giftTitle: "Diquinha de presente",
-    giftLoveLabel: "Ele vai amar",
-    giftLoveValue: "Tudo do universo Toy Story ou bloquinhos de montar estilo Lego",
+    giftLoveLabel: "Gosto de",
+    giftLoveValue: "Tudo do universo Toy Story\nUniverso do Harry Potter\nBloquinhos de montar",
     deadlinePrefix: "Confirme sua presença até",
     deadlineSuffix: "💫",
     confirmLabel: "Confirmar presença",
@@ -25,7 +25,7 @@
     voiceCueTapHint: "Toque para ouvir o Ben",
   };
 
-  const DEFAULT_GIFTS = ["Roupa: 6 anos", "Calçado: 27"];
+  const DEFAULT_GIFTS = ["Visto: 6 anos", "Calço: 27"];
 
   const escapeHtml = (value) =>
     String(value)

@@ -6,7 +6,8 @@
   const button = document.querySelector("#rsvpMusicButton");
   const label = document.querySelector("#rsvpMusicLabel");
   const stateKey = "ben-invite-audio";
-  const themeVolume = 0.085;
+  // Mesmo nível-base usado no convite animado para a troca de página ser contínua.
+  const themeVolume = 0.08;
   const arrivedFromInvite = new URLSearchParams(location.search).get("music") === "1";
   let state = null;
   let blocked = false;
@@ -25,9 +26,9 @@
   explicitlyPaused = freshState && savedShouldPlay === false && !arrivedFromInvite;
 
   audio.loop = true;
-  audio.volume = freshState && Number.isFinite(state.volume)
-    ? Math.min(state.volume, themeVolume)
-    : themeVolume;
+  // O tempo e o estado de reprodução são herdados; o volume volta sempre ao
+  // nível-base, sem carregar o ducking temporário usado durante o recado do Ben.
+  audio.volume = themeVolume;
   player.hidden = true;
 
   const saveState = () => {
@@ -35,7 +36,7 @@
       sessionStorage.setItem(stateKey, JSON.stringify({
         currentTime: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
         shouldPlay: !audio.paused && !explicitlyPaused,
-        volume: audio.volume,
+        volume: themeVolume,
         savedAt: Date.now(),
       }));
     } catch {

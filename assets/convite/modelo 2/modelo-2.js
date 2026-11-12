@@ -95,8 +95,8 @@
   const fallback = {
     date: "2027-01-09",
     time: "18:00",
-    giftSuggestions: ["Roupa: 6 anos", "Calçado: 27"],
-    invite: { giftLoveValue: "Tudo do universo Toy Story ou bloquinhos de montar estilo Lego" },
+    giftSuggestions: ["Visto: 6 anos", "Calço: 27"],
+    invite: { giftLoveValue: "Tudo do universo Toy Story\nUniverso do Harry Potter\nBloquinhos de montar" },
   };
 
   const setText = (id, value) => {
@@ -127,8 +127,8 @@
     }
 
     const suggestions = Array.isArray(meta.giftSuggestions) ? meta.giftSuggestions : fallback.giftSuggestions;
-    const first = splitGift(suggestions[0], "Roupa", "6 anos");
-    const second = splitGift(suggestions[1], "Calçado", "27");
+    const first = splitGift(suggestions[0], "Visto", "6 anos");
+    const second = splitGift(suggestions[1], "Calço", "27");
     setText("giftOneLabel", first.label);
     setText("giftOneValue", first.value);
     setText("giftTwoLabel", second.label);

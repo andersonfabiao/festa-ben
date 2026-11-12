@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261111p6";
+  const inviteRelease = "20261112p7";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -48,11 +48,14 @@
   let voicePrimed = false;
   let voicePriming = false;
   let voiceDuckActive = false;
-  // Compensa a masterização: a música fica bem abaixo da voz do Ben.
-  const themeVolume = 0.085;
+  // Mixagem única para o convite animado e a confirmação: a trilha mantém
+  // o mesmo nível percebido ao trocar de página.
+  const themeVolume = 0.08;
+  const buzzVolume = 0.82;
   // Durante o recado a trilha desce quase ao silêncio para destacar a voz do Ben.
-  const duckedThemeVolume = 0.002;
-  const benVoiceBoost = 1.45;
+  const duckedThemeVolume = 0.0015;
+  // Ganho moderado evita distorção nos picos e mantém a fala bem à frente da trilha.
+  const benVoiceBoost = 1.18;
   let currentThemeVolume = themeVolume;
   let audioCtx = null;
   let themeGain = null;
@@ -93,7 +96,7 @@
     if (!buzzPreludeVideo) return;
     buzzSoundUnlocked = true;
     buzzPreludeVideo.muted = false;
-    buzzPreludeVideo.volume = 0.9;
+    buzzPreludeVideo.volume = buzzVolume;
     buzzPreludeVideo.play().catch(() => {
       // Só volta a mutar se o navegador recusar o som mesmo depois do gesto.
       buzzPreludeVideo.muted = true;
@@ -115,7 +118,7 @@
   } else if (buzzPreludeVideo) {
     buzzPreludeVideo.addEventListener("ended", finishPrelude, { once: true });
     buzzPreludeVideo.muted = false;
-    buzzPreludeVideo.volume = 0.9;
+    buzzPreludeVideo.volume = buzzVolume;
     const startBuzz = async () => {
       if (buzzStarted || preludeFinishing) return;
       buzzStarted = true;
@@ -376,7 +379,8 @@
       sessionStorage.setItem(audioStateKey, JSON.stringify({
         currentTime: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
         shouldPlay: soundEnabled && !audio.paused,
-        volume: currentThemeVolume,
+        // Nunca persiste o volume temporariamente reduzido durante a fala do Ben.
+        volume: themeVolume,
         savedAt: Date.now(),
       }));
     } catch {
