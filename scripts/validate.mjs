@@ -112,7 +112,7 @@ for (const required of ["buzzPreludeVideo", "startButton", "confirmButton", "gif
 if (!/id="buzzPreludeVideo"[^>]+preload="auto"/.test(animatedHtml)) {
   warnings.push("convite-animado.html: a abertura do Buzz não está preparada para início imediato");
 }
-for (const lazyVideo of ["openingVideo", "revealVideo", "m2ClipVideo", "giftsCastVideo"]) {
+for (const lazyVideo of ["openingVideo", "revealVideo", "m2ClipVideo"]) {
   const pattern = new RegExp(`id="${lazyVideo}"[^>]+preload="none"`);
   if (!pattern.test(animatedHtml)) warnings.push(`convite-animado.html: ${lazyVideo} deveria carregar somente quando necessário`);
 }

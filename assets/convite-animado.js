@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261111p4";
+  const inviteRelease = "20261111p5";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -13,8 +13,6 @@
   const confirmButton = document.querySelector("#confirmButton");
   const finalInvite = document.querySelector("#finalInvite");
   const revealVideo = document.querySelector("#revealVideo");
-  const greetingScene = document.querySelector("#greetingScene");
-  const greetingAnimation = document.querySelector("#greetingAnimation");
   const audio = document.querySelector("#themeAudio");
   const benVoice = document.querySelector("#benVoiceAudio");
   const benVoiceCue = document.querySelector("#benVoiceCue");
@@ -50,7 +48,6 @@
   let voicePrimed = false;
   let voicePriming = false;
   let voiceDuckActive = false;
-  let greetingRunId = 0;
   // Compensa a masterização: a música fica bem abaixo da voz do Ben.
   const themeVolume = 0.085;
   // Durante o recado a trilha desce quase ao silêncio para destacar a voz do Ben.
@@ -362,37 +359,10 @@
   };
 
   const setScene = (scene) => {
-    experience.classList.remove("is-reveal", "is-reveal-leaving", "is-greeting", "is-greeting-leaving", "is-intro", "is-envelope", "is-final");
+    experience.classList.remove("is-reveal", "is-reveal-leaving", "is-intro", "is-envelope", "is-final");
     experience.classList.add(`is-${scene}`);
     if (scene !== "reveal" && revealVideo) revealVideo.pause();
-    if (greetingScene) greetingScene.setAttribute("aria-hidden", String(scene !== "greeting"));
     if (scene === "final") finalInvite.focus({ preventScroll: true });
-  };
-
-  const playGreeting = () => {
-    if (!greetingAnimation) {
-      setScene("final");
-      scheduleBenVoice();
-      return;
-    }
-    const runId = ++greetingRunId;
-    let finished = false;
-    const finish = () => {
-      if (finished || runId !== greetingRunId || !experience.classList.contains("is-greeting")) return;
-      finished = true;
-      experience.classList.add("is-greeting-leaving");
-      later(() => {
-        if (runId !== greetingRunId) return;
-        setScene("final");
-        scheduleBenVoice(850);
-      }, 520);
-    };
-    setScene("greeting");
-    const baseSource = greetingAnimation.dataset.source || greetingAnimation.currentSrc || greetingAnimation.src;
-    greetingAnimation.dataset.source = baseSource.split("#")[0];
-    // Alterar apenas o fragmento reinicia o WebP animado sem baixar o arquivo novamente.
-    greetingAnimation.src = greetingAnimation.dataset.source + "#replay-" + runId;
-    later(finish, 3250);
   };
 
   const updateSoundButton = () => {
@@ -448,7 +418,6 @@
 
   const showFinal = () => {
     clearTimers();
-    greetingRunId += 1;
     stopBenVoice({ restoreTheme: true });
     experience.classList.remove("is-between-scenes");
     setScene("final");
@@ -457,7 +426,6 @@
 
   const runAnimation = ({ restartAudio = false } = {}) => {
     clearTimers();
-    greetingRunId += 1;
     stopBenVoice({ restoreTheme: false });
     experience.classList.add("is-started");
 
@@ -484,7 +452,8 @@
     const transitionAt = Math.max(6200, revealDuration - 120);
     later(() => experience.classList.add("is-between-scenes"), transitionAt);
     later(() => {
-      playGreeting();
+      setScene("final");
+      scheduleBenVoice();
     }, transitionAt + 550);
     later(() => experience.classList.remove("is-between-scenes"), transitionAt + 1400);
   };

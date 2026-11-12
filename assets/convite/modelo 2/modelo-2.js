@@ -7,7 +7,7 @@
   const giftAction = $("giftAction");
   const backButton = $("backButton");
   const clipVideo = $("m2ClipVideo");
-  const giftsCast = $("giftsCastVideo");
+  const giftsCast = $("giftsCastAnimation");
   const openingVideo = $("openingVideo");
   const experience = $("experience");
   const startButton = $("startButton");
@@ -39,6 +39,12 @@
 
   const playGiftsCast = () => {
     if (!giftsCast || reduceMotion || document.hidden || !gifts?.classList.contains("is-active")) return;
+    if (giftsCast.tagName === "IMG") {
+      const source = giftsCast.dataset.source || giftsCast.currentSrc || giftsCast.src;
+      giftsCast.dataset.source = source.split("#")[0];
+      giftsCast.src = giftsCast.dataset.source + "#gift-" + Date.now();
+      return;
+    }
     if (giftsCast.preload === "none") {
       giftsCast.preload = "metadata";
       giftsCast.load();
@@ -46,7 +52,7 @@
     giftsCast.play?.().catch(() => { /* autoplay bloqueado: mantém o poster */ });
   };
 
-  if (giftsCast) giftsCast.pause();
+  if (giftsCast?.pause) giftsCast.pause();
 
   const openingVisible = () => !!experience &&
     experience.classList.contains("is-prelude-complete") &&
@@ -148,7 +154,7 @@
     }
     if (giftsCast) {
       if (visible) playGiftsCast();
-      else giftsCast.pause();
+      else giftsCast.pause?.();
     }
     (visible ? backButton : giftAction).focus({ preventScroll: true });
   };
@@ -158,7 +164,7 @@
       if (document.hidden) openingVideo.pause();
       else syncOpeningVideo();
     }
-    if (document.hidden) giftsCast?.pause();
+    if (document.hidden) giftsCast?.pause?.();
     else playGiftsCast();
     if (!clipVideo) return;
     if (document.hidden) clipVideo.pause();
