@@ -6,7 +6,7 @@
   <title>Uma aventura especial · Ben faz 5!</title>
   <meta name="description" content="Abra o convite animado do aniversário de 5 anos do Ben e venha viver essa aventura com a gente!" />
   <meta name="theme-color" content="#55b9e8" />
-  <meta name="app-version" content="20261111p3" />
+  <meta name="app-version" content="20261111p4" />
   <script>
     window.__checkBenInviteVersion = async () => {
       if (!/^https?:$/.test(location.protocol) || /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -49,8 +49,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/convite-animado.css?v=20261111p3" />
-  <link rel="stylesheet" href="assets/convite/modelo%202/modelo-2.css?v=20261111p3" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=20261111p4" />
+  <link rel="stylesheet" href="assets/convite/modelo%202/modelo-2.css?v=20261111p4" />
 </head>
 <body>
   <a class="skip-link" href="#finalInvite">Pular para o convite</a>
@@ -103,9 +103,7 @@
 
       <section class="greeting-scene" id="greetingScene" aria-label="Os brinquedos dão boas-vindas ao convidado" aria-hidden="true">
         <div class="greeting-paper">
-          <video id="greetingVideo" muted playsinline preload="metadata" poster="assets/convite/uru-poster.webp?v=20261111p3" aria-label="Woody, Buzz e Jessie dando boas-vindas no convite Ben Story">
-            <source src="assets/convite/uru-tratado.mp4?v=20261111p3" type="video/mp4" />
-          </video>
+          <img id="greetingAnimation" src="assets/convite/uru-transparente.webp?v=20261111p4" alt="Woody, Buzz e Jessie dando boas-vindas no convite Ben Story" width="640" height="420" />
         </div>
       </section>
 
@@ -136,8 +134,8 @@
             <p class="rsvp-deadline m2-deadline" id="animatedRsvpDeadline">Confirme sua presença até 29 de dezembro 💫</p>
           </div>
           <figure class="m2-clip">
-            <video id="m2ClipVideo" class="m2-clip-video" muted loop playsinline preload="none" poster="assets/convite/alien-loop-poster.webp" aria-label="Cabeça de Batata jogando o alien para cima">
-              <source src="assets/convite/alien-loop.mp4" type="video/mp4" />
+            <video id="m2ClipVideo" class="m2-clip-video" muted loop playsinline preload="none" poster="assets/convite/personagens-poster.webp" aria-label="Os personagens de Toy Story comemorando juntos">
+              <source src="assets/convite/personagens-loop.mp4" type="video/mp4" />
             </video>
           </figure>
         </div>
@@ -158,8 +156,8 @@
             <article><div class="m2-gift-orbit m2-toy"><img class="m2-gift-ball" src="assets/convite/bola.png" alt="" aria-hidden="true" /></div><h3>Brinquedos</h3><p id="giftToyValue">Tudo do universo Toy Story ou bloquinhos de montar estilo Lego</p></article>
           </div>
           <div class="m2-gifts-cast" aria-hidden="true">
-            <video id="giftsCastVideo" class="m2-gifts-cast-video" muted loop playsinline preload="none" poster="assets/convite/personagens-poster.webp">
-              <source src="assets/convite/personagens-loop.mp4" type="video/mp4" />
+            <video id="giftsCastVideo" class="m2-gifts-cast-video" muted loop playsinline preload="none" poster="assets/convite/alien-loop-poster.webp" aria-label="Cabeça de Batata jogando o alien para cima">
+              <source src="assets/convite/alien-loop.mp4" type="video/mp4" />
             </video>
           </div>
           <p class="m2-gift-closing">O melhor presente é comemorar com você!</p>
@@ -173,8 +171,8 @@
     <audio id="benVoiceAudio" preload="auto" playsinline><source src="assets/audio/ben-convite.mp3?v=20261111p2" type="audio/mpeg" /></audio>
   </div>
   <noscript><div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div></noscript>
-  <script src="assets/convite-dados.js?v=20261111p3"></script>
-  <script src="assets/convite-animado.js?v=20261111p3"></script>
-  <script src="assets/convite/modelo%202/modelo-2.js?v=20261111p3"></script>
+  <script src="assets/convite-dados.js?v=20261111p4"></script>
+  <script src="assets/convite-animado.js?v=20261111p4"></script>
+  <script src="assets/convite/modelo%202/modelo-2.js?v=20261111p4"></script>
 </body>
 </html>

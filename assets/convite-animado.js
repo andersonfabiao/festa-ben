@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261111p3";
+  const inviteRelease = "20261111p4";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -14,7 +14,7 @@
   const finalInvite = document.querySelector("#finalInvite");
   const revealVideo = document.querySelector("#revealVideo");
   const greetingScene = document.querySelector("#greetingScene");
-  const greetingVideo = document.querySelector("#greetingVideo");
+  const greetingAnimation = document.querySelector("#greetingAnimation");
   const audio = document.querySelector("#themeAudio");
   const benVoice = document.querySelector("#benVoiceAudio");
   const benVoiceCue = document.querySelector("#benVoiceCue");
@@ -75,12 +75,12 @@
     // A fumaça nasce no ponto em que o Buzz cai, cobre o corte entre as cenas
     // e revela a carta somente depois do branco total.
     experience.classList.add("is-prelude-transition", "is-impacting");
-    window.setTimeout(() => experience.classList.remove("is-impacting"), 680);
+    window.setTimeout(() => experience.classList.remove("is-impacting"), 860);
     window.setTimeout(() => {
       experience.classList.add("is-prelude-complete");
       startOpeningTheme();
-    }, 360);
-    window.setTimeout(() => experience.classList.remove("is-prelude-transition"), 1500);
+    }, 760);
+    window.setTimeout(() => experience.classList.remove("is-prelude-transition"), 1950);
   };
 
   const updateBuzzSoundControl = () => {
@@ -365,13 +365,12 @@
     experience.classList.remove("is-reveal", "is-reveal-leaving", "is-greeting", "is-greeting-leaving", "is-intro", "is-envelope", "is-final");
     experience.classList.add(`is-${scene}`);
     if (scene !== "reveal" && revealVideo) revealVideo.pause();
-    if (scene !== "greeting" && greetingVideo) greetingVideo.pause();
     if (greetingScene) greetingScene.setAttribute("aria-hidden", String(scene !== "greeting"));
     if (scene === "final") finalInvite.focus({ preventScroll: true });
   };
 
   const playGreeting = () => {
-    if (!greetingVideo) {
+    if (!greetingAnimation) {
       setScene("final");
       scheduleBenVoice();
       return;
@@ -389,10 +388,11 @@
       }, 520);
     };
     setScene("greeting");
-    greetingVideo.currentTime = 0;
-    greetingVideo.addEventListener("ended", finish, { once: true });
-    greetingVideo.play().catch(() => later(finish, 800));
-    later(finish, 2850);
+    const baseSource = greetingAnimation.dataset.source || greetingAnimation.currentSrc || greetingAnimation.src;
+    greetingAnimation.dataset.source = baseSource.split("#")[0];
+    // Alterar apenas o fragmento reinicia o WebP animado sem baixar o arquivo novamente.
+    greetingAnimation.src = greetingAnimation.dataset.source + "#replay-" + runId;
+    later(finish, 3250);
   };
 
   const updateSoundButton = () => {

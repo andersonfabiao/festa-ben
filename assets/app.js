@@ -3683,7 +3683,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261111p3";
+  const INVITE_RELEASE = "20261111p4";
 
   function invitePageUrl() {
     try {
@@ -4691,6 +4691,11 @@
     $("#copyConfirmInviteBtn").addEventListener("click", () =>
       copyLinkWithToast(invitePageUrl(), "Link da confirmação copiado.")
     );
+    $("#openAnimatedInviteLink").addEventListener("click", (event) => {
+      const freshUrl = new URL(animatedInviteUrl(), location.href);
+      freshUrl.searchParams.set("atualizar", Date.now().toString());
+      event.currentTarget.href = freshUrl.href;
+    });
     $("#saveInviteCloudBtn").addEventListener("click", () => {
       if (!hasCloud()) openSettings();
       else saveCloud();

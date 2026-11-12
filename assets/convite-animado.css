@@ -443,31 +443,20 @@ button { color: inherit; }
 .greeting-paper {
   position: relative;
   width: min(94vw, 880px);
-  overflow: hidden;
-  border-radius: clamp(18px, 3vw, 32px);
-  background: #fff;
-  box-shadow: 0 24px 55px rgba(17, 61, 91, .22);
+  overflow: visible;
+  background: transparent;
   transform: translateY(18px) scale(.96);
   filter: blur(2px);
   transition: transform .62s cubic-bezier(.2,.82,.2,1), filter .55s ease, opacity .5s ease;
 }
 
-.greeting-paper::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border: 2px solid rgba(255,255,255,.86);
-  border-radius: inherit;
-  box-shadow: inset 0 0 30px rgba(255,255,255,.42);
-}
-
-.greeting-paper video {
+.greeting-paper img {
   display: block;
   width: 100%;
   height: auto;
   max-height: 82dvh;
   object-fit: contain;
+  filter: drop-shadow(0 20px 24px rgba(17,61,91,.2));
 }
 
 .is-greeting .greeting-scene {
@@ -875,22 +864,22 @@ button { color: inherit; }
    alcança o branco total e desaparece já sobre a próxima cena. */
 .is-prelude-transition .smoke-transition {
   visibility: visible;
-  animation: smoke-prelude-layer 1.45s ease-in-out forwards;
+  animation: smoke-prelude-layer 1.9s ease-in-out forwards;
 }
 .is-prelude-transition .smoke-transition::after {
   background: rgba(190, 231, 249, .98);
-  animation: smoke-prelude-whiteout 1.45s ease-in-out forwards;
+  animation: smoke-prelude-whiteout 1.9s ease-in-out forwards;
 }
 .is-prelude-transition .smoke-transition span {
   top: auto;
   right: auto;
   bottom: var(--smoke-y, -14%);
   left: var(--smoke-x, 45%);
-  width: clamp(150px, 31vw, 420px);
+  width: clamp(190px, 38vw, 520px);
   background: rgba(115, 202, 239, .96);
   box-shadow: 0 0 82px 42px rgba(127, 211, 246, .72), inset 0 0 42px rgba(255,255,255,.42);
   filter: blur(10px);
-  animation: smoke-prelude-bloom 1.15s var(--smoke-delay, 0s) cubic-bezier(.12,.72,.18,1) forwards;
+  animation: smoke-prelude-bloom 1.55s var(--smoke-delay, 0s) cubic-bezier(.08,.7,.16,1) forwards;
 }
 .is-prelude-transition .smoke-transition span:nth-child(2n) { background: rgba(163, 222, 247, .97); }
 .is-prelude-transition .smoke-transition span:nth-child(3n) { background: rgba(83, 181, 226, .9); }
@@ -987,9 +976,9 @@ button { color: inherit; }
 @keyframes smoke-scene-layer { 0% { opacity: 0; visibility: visible; } 38%, 70% { opacity: 1; visibility: visible; } 100% { opacity: 0; visibility: hidden; } }
 @keyframes smoke-scene-bloom { 0% { opacity: 0; transform: scale(.15); } 42%, 68% { opacity: 1; transform: scale(2.15) translateY(-5%); } 100% { opacity: 0; transform: scale(2.45) translateY(-8%); } }
 @keyframes smoke-scene-whiteout { 0%, 28% { opacity: 0; } 46%, 67% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes smoke-prelude-layer { 0% { opacity:0; visibility:visible; } 14%, 74% { opacity:1; visibility:visible; } 100% { opacity:0; visibility:hidden; } }
-@keyframes smoke-prelude-bloom { 0% { opacity:0; transform:translate(-50%, 32%) scale(.06); } 34%, 68% { opacity:1; transform:translate(-50%, -22%) scale(2.55); } 100% { opacity:0; transform:translate(-50%, -52%) scale(3.1); } }
-@keyframes smoke-prelude-whiteout { 0%, 18% { opacity:0; } 34%, 62% { opacity:1; } 100% { opacity:0; } }
+@keyframes smoke-prelude-layer { 0% { opacity:0; visibility:visible; } 10%, 78% { opacity:1; visibility:visible; } 100% { opacity:0; visibility:hidden; } }
+@keyframes smoke-prelude-bloom { 0% { opacity:0; transform:translate(-50%, 35%) scale(.08); } 28%, 72% { opacity:1; transform:translate(-50%, -25%) scale(2.9); } 100% { opacity:0; transform:translate(-50%, -58%) scale(3.45); } }
+@keyframes smoke-prelude-whiteout { 0%, 14% { opacity:0; } 30%, 68% { opacity:1; } 100% { opacity:0; } }
 @keyframes buzz-impact-shake { 0%,100% { transform:none; } 12% { transform:translate3d(-8px,5px,0) rotate(-.32deg); } 27% { transform:translate3d(9px,-4px,0) rotate(.28deg); } 43% { transform:translate3d(-7px,3px,0) rotate(-.2deg); } 59% { transform:translate3d(6px,-2px,0) rotate(.16deg); } 75% { transform:translate3d(-4px,1px,0); } 88% { transform:translate3d(2px,0,0); } }
 
 @media (min-width: 681px) {
@@ -1017,7 +1006,7 @@ button { color: inherit; }
   .reveal-scene { padding: 12px; }
   .reveal-frame { width: min(88vw, 390px); height: auto; max-height: 88vh; }
   .greeting-scene { padding: 10px; }
-  .greeting-paper { width: min(96vw, 560px); border-radius: 18px; }
+  .greeting-paper { width: min(96vw, 560px); }
   .intro-copy { top: 12%; }
   .hero-characters { bottom: 5%; width: 92vw; }
   .orbit-alien { left: -18px; bottom: 19%; }

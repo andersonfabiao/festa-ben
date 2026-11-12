@@ -58,11 +58,11 @@
 .m2-signoff { width:fit-content; max-width:100%; margin:0 auto; }
 .m2-deadline { margin:0 auto; font-size:.68rem; }
 .m2-clip {
-  position:relative; width:clamp(132px,19vh,180px); margin:clamp(6px,1.6vh,14px) auto 0; padding:0;
+  position:relative; width:clamp(220px,34vh,360px); margin:clamp(4px,1vh,10px) auto 0; padding:0;
   border:0; background:none; box-shadow:none; transform:none;
 }
 .m2-clip-video {
-  display:block; width:100%; aspect-ratio:540/604; object-fit:cover; border-radius:0; background:transparent;
+  display:block; width:100%; aspect-ratio:1630/1080; object-fit:cover; border-radius:0; background:transparent;
   filter:brightness(1.1) saturate(.96);
   mix-blend-mode:multiply;
   -webkit-mask-image:radial-gradient(ellipse 78% 74% at 50% 48%,#000 50%,transparent 82%);
@@ -182,11 +182,9 @@
 .m2-gifts.is-active .m2-gift-grid article:nth-child(2) { animation-delay:.32s; }
 .m2-gifts.is-active .m2-gift-grid article:nth-child(3) { animation-delay:.44s; }
 .m2-gifts-cast {
-  width:min(100%,420px); flex:0 0 auto; aspect-ratio:1630/1080; height:auto; margin:clamp(4px,1.4vh,12px) auto 0; pointer-events:none; mix-blend-mode:multiply;
-  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 8%,#000 92%,transparent 100%),linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
-  -webkit-mask-composite:source-in;
-  mask-image:linear-gradient(180deg,transparent 0,#000 8%,#000 92%,transparent 100%),linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
-  mask-composite:intersect;
+  width:clamp(120px,19vh,175px); flex:0 0 auto; aspect-ratio:540/604; height:auto; margin:clamp(4px,1.2vh,10px) auto 0; pointer-events:none; mix-blend-mode:multiply;
+  -webkit-mask-image:radial-gradient(ellipse 78% 74% at 50% 48%,#000 50%,transparent 82%);
+  mask-image:radial-gradient(ellipse 78% 74% at 50% 48%,#000 50%,transparent 82%);
 }
 .m2-gifts-cast-video {
   display:block; width:100%; height:100%; object-fit:cover; object-position:50% 50%;
@@ -231,7 +229,7 @@
   .m2-venue { gap:6px; margin-bottom:7px; font-size:.8rem; }
   .m2-call { font-size:.7rem; letter-spacing:.14em; }.m2-actions { gap:6px; }.m2-medal { width:clamp(92px,28vw,112px); }.m2-action strong { font-size:.72rem; }
   .m2-signoff { margin-top:0; }.m2-deadline { padding:5px 9px; font-size:.66rem; }
-  .m2-clip { width:clamp(124px,17.5vh,156px); margin:clamp(6px,1.4vh,12px) auto 0; }
+  .m2-clip { width:min(82vw,310px); margin:clamp(4px,1vh,9px) auto 0; }
   .m2-back { padding:9px 16px; font-size:.88rem; }
   .m2-gift-title { margin-top:54px; }.m2-gift-title h2 { font-size:clamp(2.2rem,11vw,3.2rem); }.m2-gift-kicker { margin-bottom:8px; font-size:.68rem; }.m2-gift-title > p:last-child { margin:7px 0 9px; font-size:.78rem; }
   .m2-gift-grid { gap:5px; }.m2-gift-grid article { padding:8px 4px; border-radius:13px; }.m2-gift-orbit { width:clamp(72px,23vw,94px); border-width:4px; }.m2-gift-grid h3 { font-size:.68rem; }.m2-gift-grid p { font-size:.64rem; }
@@ -240,7 +238,7 @@
 
 @media (max-height:720px) and (max-width:600px) {
   #m2Main { padding:8px 9px 10px; }
-  .m2-main-logo { width:120px; }.m2-heading .name-blocks span { width:34px; }.m2-heading > p { font-size:.64rem; }.m2-message { display:none; }.m2-date-row { margin-top:4px; }.m2-venue { margin-bottom:5px; font-size:.72rem; }.m2-call { font-size:.68rem; }.m2-medal { width:78px; }.m2-action strong { font-size:.68rem; }.m2-deadline { font-size:.62rem; }.m2-signoff { margin-top:0; }.m2-clip { width:clamp(116px,18vh,140px); margin-top:8px; }
+  .m2-main-logo { width:120px; }.m2-heading .name-blocks span { width:34px; }.m2-heading > p { font-size:.64rem; }.m2-message { display:none; }.m2-date-row { margin-top:4px; }.m2-venue { margin-bottom:5px; font-size:.72rem; }.m2-call { font-size:.68rem; }.m2-medal { width:78px; }.m2-action strong { font-size:.68rem; }.m2-deadline { font-size:.62rem; }.m2-signoff { margin-top:0; }.m2-clip { width:min(68vw,240px); margin-top:5px; }
   .m2-gift-title { margin-top:40px; }.m2-gift-logo { width:48px; margin-bottom:2px; }.m2-gift-kicker { margin-bottom:4px; }.m2-gift-title h2 { font-size:clamp(1.9rem,9vw,2.4rem); }.m2-gift-title h2 span { margin-top:8px; padding:4px 16px; }.m2-gift-title > p:last-child { display:none; }.m2-gift-orbit { width:66px; }.m2-gift-grid article { padding:5px 3px; }.m2-gift-grid h3 { margin-top:5px; font-size:.62rem; }.m2-gift-grid p { font-size:.58rem; line-height:1.15; }
 }
 
