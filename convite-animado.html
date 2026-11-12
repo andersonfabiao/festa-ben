@@ -6,7 +6,7 @@
   <title>Uma aventura especial · Ben faz 5!</title>
   <meta name="description" content="Abra o convite animado do aniversário de 5 anos do Ben e venha viver essa aventura com a gente!" />
   <meta name="theme-color" content="#55b9e8" />
-  <meta name="app-version" content="20261111p2" />
+  <meta name="app-version" content="20261111p3" />
   <script>
     window.__checkBenInviteVersion = async () => {
       if (!/^https?:$/.test(location.protocol) || /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return false;
@@ -49,8 +49,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/convite-animado.css?v=20261111p2" />
-  <link rel="stylesheet" href="assets/convite/modelo%202/modelo-2.css?v=20261111p2" />
+  <link rel="stylesheet" href="assets/convite-animado.css?v=20261111p3" />
+  <link rel="stylesheet" href="assets/convite/modelo%202/modelo-2.css?v=20261111p3" />
 </head>
 <body>
   <a class="skip-link" href="#finalInvite">Pular para o convite</a>
@@ -99,6 +99,14 @@
       <section class="reveal-scene" id="revealScene" aria-label="A carta especial está se abrindo">
         <div class="reveal-glow" aria-hidden="true"></div>
         <div class="reveal-frame"><video id="revealVideo" muted playsinline preload="none" poster="assets/convite/start-poster.webp?v=20261106p22" aria-label="Woody, Buzz e Jessie revelados pela carta"><source src="assets/convite/start-tratado.mp4?v=20261106p22" type="video/mp4" /></video></div>
+      </section>
+
+      <section class="greeting-scene" id="greetingScene" aria-label="Os brinquedos dão boas-vindas ao convidado" aria-hidden="true">
+        <div class="greeting-paper">
+          <video id="greetingVideo" muted playsinline preload="metadata" poster="assets/convite/uru-poster.webp?v=20261111p3" aria-label="Woody, Buzz e Jessie dando boas-vindas no convite Ben Story">
+            <source src="assets/convite/uru-tratado.mp4?v=20261111p3" type="video/mp4" />
+          </video>
+        </div>
       </section>
 
       <section class="final-invite" id="finalInvite" tabindex="-1" aria-label="Convite do aniversário do Ben">
@@ -165,8 +173,8 @@
     <audio id="benVoiceAudio" preload="auto" playsinline><source src="assets/audio/ben-convite.mp3?v=20261111p2" type="audio/mpeg" /></audio>
   </div>
   <noscript><div class="no-script">Ative o JavaScript para assistir ao convite animado. Você também pode <a href="convite.html">confirmar sua presença aqui</a>.</div></noscript>
-  <script src="assets/convite-dados.js?v=20261111p2"></script>
-  <script src="assets/convite-animado.js?v=20261111p2"></script>
-  <script src="assets/convite/modelo%202/modelo-2.js?v=20261111p2"></script>
+  <script src="assets/convite-dados.js?v=20261111p3"></script>
+  <script src="assets/convite-animado.js?v=20261111p3"></script>
+  <script src="assets/convite/modelo%202/modelo-2.js?v=20261111p3"></script>
 </body>
 </html>
