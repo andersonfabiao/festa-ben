@@ -7,13 +7,13 @@
   <title>Ben faz 5! · Checklist Toy Story</title>
   <meta name="description" content="Checklist, orçamento e convidados do aniversário de 5 anos do Ben — tema Toy Story." />
   <meta name="theme-color" content="#8fd3ff" />
-  <meta name="app-version" content="20261112p7" />
+  <meta name="app-version" content="20261112p8" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 61,38 96,38 68,59 79,93 50,72 21,93 32,59 4,38 39,38' fill='%23ffc93c' stroke='%23e8453c' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261112p7" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261112p8" />
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Ir para o conteúdo principal</a>
@@ -341,123 +341,66 @@
       </div>
       <form id="itemForm">
         <input type="hidden" id="itemId" />
-        <label class="field-label">O que precisa ser feito?
-          <input id="itemTitle" class="input" required maxlength="140" placeholder="Ex.: Contratar o buffet" />
-        </label>
-        <div class="grid-2">
-          <label class="field-label">Etapa
-            <select id="itemStage" class="input"></select>
+        <section class="item-form-section item-details-section" aria-labelledby="itemDetailsTitle">
+          <div class="item-form-section-head"><span aria-hidden="true">📋</span><div><h3 id="itemDetailsTitle">Dados do item</h3><p>Identifique a tarefa e acompanhe sua execução e entrega.</p></div></div>
+          <label class="field-label">O que precisa ser feito?
+            <input id="itemTitle" class="input" required maxlength="140" placeholder="Ex.: Contratar o buffet" />
           </label>
-          <label class="field-label">Status
-            <select id="itemStatus" class="input">
-              <option value="todo">A fazer</option>
-              <option value="doing">Em andamento</option>
-              <option value="contracted">Contratado</option>
-              <option value="done">Concluído</option>
-            </select>
-          </label>
-        </div>
-        <div class="grid-2">
-          <label class="field-label">Quantidade
-            <input id="itemQuantity" class="input" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="1" />
-          </label>
-          <label class="field-label">Unidade de medida
-            <select id="itemUnit" class="input">
-              <option value="un.">Unidade (un.)</option>
-              <option value="pacote">Pacote</option>
-              <option value="caixa">Caixa</option>
-              <option value="cento">Cento</option>
-              <option value="pessoa">Pessoa</option>
-              <option value="kg">Quilograma (kg)</option>
-              <option value="litro">Litro</option>
-            </select>
-          </label>
-        </div>
-        <div class="grid-2 item-price-grid">
-          <label class="field-label">Preço unitário (R$)
-            <input id="itemUnitPrice" class="input" inputmode="decimal" placeholder="0,00" />
-          </label>
-          <label class="field-label">Total previsto (R$)
-            <input id="itemCost" class="input calculated-input" inputmode="decimal" placeholder="0,00" readonly />
-          </label>
-        </div>
-        <div class="grid-3 item-adjustments">
-          <label class="field-label">Frete (R$)
-            <input id="itemShipping" class="input" inputmode="decimal" placeholder="0,00" />
-          </label>
-          <label class="field-label">Acréscimo (R$)
-            <input id="itemSurcharge" class="input" inputmode="decimal" placeholder="0,00" />
-          </label>
-          <label class="field-label">Desconto (R$)
-            <input id="itemDiscount" class="input" inputmode="decimal" placeholder="0,00" />
-          </label>
-        </div>
-        <div class="grid-2">
-          <label class="field-label">Total pago (R$)
-            <input id="itemPaid" class="input calculated-input" inputmode="decimal" placeholder="0,00" readonly />
-          </label>
-          <label class="field-label">Vence em
-            <input id="itemDue" class="input" type="date" />
-          </label>
-        </div>
-        <div class="grid-3">
-          <label class="field-label">Pedido / contrato
-            <input id="itemOrderNumber" class="input" maxlength="80" placeholder="Ex.: Pedido 1234" />
-          </label>
-          <label class="field-label">Entrega prevista
-            <input id="itemDeliveryDate" class="input" type="date" />
-          </label>
-          <label class="field-label">Status da entrega
-            <select id="itemDeliveryStatus" class="input">
-              <option value="">Não informado</option>
-              <option value="ordered">Pedido realizado</option>
-              <option value="production">Em produção</option>
-              <option value="shipped">Enviado</option>
-              <option value="delivered">Entregue</option>
-            </select>
-          </label>
-        </div>
-        <section class="payment-editor" aria-labelledby="paymentsTitle">
-          <div class="payment-editor-head"><div><h3 id="paymentsTitle">Pagamentos</h3><p class="hint">Registre Pix, dinheiro, boleto ou cartão. Somente valores marcados como pagos entram no total.</p></div><button class="btn btn-ghost btn-sm" id="addPaymentBtn" type="button">＋ Adicionar pagamento</button></div>
-          <div class="installment-builder">
-            <div><strong>Parcelamento no cartão de crédito</strong><small>Informe a quantidade e o sistema distribui o total previsto.</small></div>
-            <label class="field-label">Parcelas
-              <select id="installmentCount" class="input">
-                <option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="5">5x</option><option value="6">6x</option>
-                <option value="7">7x</option><option value="8">8x</option><option value="9">9x</option><option value="10">10x</option><option value="11">11x</option><option value="12">12x</option>
-              </select>
-            </label>
-            <label class="field-label">1º vencimento
-              <input id="installmentFirstDate" class="input" type="date" />
-            </label>
-            <button class="btn btn-ghost btn-sm" id="generateInstallmentsBtn" type="button">Gerar parcelas</button>
+          <div class="grid-2">
+            <label class="field-label">Etapa<select id="itemStage" class="input"></select></label>
+            <label class="field-label">Status<select id="itemStatus" class="input"><option value="todo">A fazer</option><option value="doing">Em andamento</option><option value="contracted">Contratado</option><option value="done">Concluído</option></select></label>
           </div>
+          <div class="grid-3">
+            <label class="field-label">Pedido / contrato<input id="itemOrderNumber" class="input" maxlength="80" placeholder="Ex.: Pedido 1234" /></label>
+            <label class="field-label">Entrega prevista<input id="itemDeliveryDate" class="input" type="date" /></label>
+            <label class="field-label">Status da entrega<select id="itemDeliveryStatus" class="input"><option value="">Não informado</option><option value="ordered">Pedido realizado</option><option value="production">Em produção</option><option value="shipped">Enviado</option><option value="delivered">Entregue</option></select></label>
+          </div>
+        </section>
+
+        <section class="item-form-section item-values-section" aria-labelledby="itemValuesTitle">
+          <div class="item-form-section-head"><span aria-hidden="true">🧮</span><div><h3 id="itemValuesTitle">Composição e valores</h3><p>Use quantidade e preço ou detalhe o valor em subitens.</p></div></div>
+          <div class="grid-2 item-quantity-grid">
+            <label class="field-label">Quantidade<input id="itemQuantity" class="input" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="1" /></label>
+            <label class="field-label">Unidade de medida<select id="itemUnit" class="input"><option value="un.">Unidade (un.)</option><option value="pacote">Pacote</option><option value="caixa">Caixa</option><option value="cento">Cento</option><option value="pessoa">Pessoa</option><option value="kg">Quilograma (kg)</option><option value="litro">Litro</option></select></label>
+          </div>
+          <div class="grid-2 item-price-grid">
+            <label class="field-label">Preço unitário (R$)<input id="itemUnitPrice" class="input" inputmode="decimal" placeholder="0,00" /></label>
+            <label class="field-label">Total previsto (R$)<input id="itemCost" class="input calculated-input" inputmode="decimal" placeholder="0,00" readonly /></label>
+          </div>
+          <div class="grid-3 item-adjustments">
+            <label class="field-label">Frete (R$)<input id="itemShipping" class="input" inputmode="decimal" placeholder="0,00" /></label>
+            <label class="field-label">Acréscimo (R$)<input id="itemSurcharge" class="input" inputmode="decimal" placeholder="0,00" /></label>
+            <label class="field-label">Desconto (R$)<input id="itemDiscount" class="input" inputmode="decimal" placeholder="0,00" /></label>
+          </div>
+          <section class="subtask-editor" aria-labelledby="subtasksTitle">
+            <div class="payment-editor-head"><div><h3 id="subtasksTitle">Subitens</h3><p class="hint">Valores informados aqui passam a compor o total previsto.</p></div><button class="btn btn-ghost btn-sm" id="addSubtaskBtn" type="button">＋ Adicionar subitem</button></div>
+            <div id="subtaskRows" class="subtask-editor-rows"></div>
+          </section>
+        </section>
+
+        <section class="item-form-section item-supplier-section" aria-labelledby="itemSupplierTitle">
+          <div class="item-form-section-head"><span aria-hidden="true">🏪</span><div><h3 id="itemSupplierTitle">Fornecedor</h3><p>Centralize contatos, rede social e link do pedido.</p></div></div>
+          <div class="grid-2"><label class="field-label">Fornecedor / loja<input id="itemSupplier" class="input" maxlength="80" placeholder="Ex.: Buffet Alegria" /></label><label class="field-label">Link (opcional)<input id="itemLink" class="input" type="url" placeholder="https://…" /></label></div>
+          <div class="grid-2"><label class="field-label">Telefone<input id="itemSupplierPhone" class="input" type="tel" inputmode="tel" maxlength="40" autocomplete="tel" placeholder="+55 83 98875-4742" /></label><label class="field-label">Instagram<input id="itemSupplierInstagram" class="input" maxlength="80" autocapitalize="none" autocomplete="off" placeholder="@fornecedor" /></label></div>
+        </section>
+
+        <section class="item-form-section payment-editor" aria-labelledby="paymentsTitle">
+          <div class="payment-editor-head"><div><h3 id="paymentsTitle">Pagamentos</h3><p class="hint">Somente lançamentos marcados como pagos entram no total realizado.</p></div><button class="btn btn-ghost btn-sm" id="addPaymentBtn" type="button">＋ Adicionar pagamento</button></div>
+          <div class="grid-2 payment-summary-grid"><label class="field-label">Total pago (R$)<input id="itemPaid" class="input calculated-input" inputmode="decimal" placeholder="0,00" readonly /></label><label class="field-label">Vencimento geral<input id="itemDue" class="input" type="date" /></label></div>
           <div id="paymentRows" class="payment-rows"></div>
+          <div class="installment-builder" id="installmentBuilder" hidden>
+            <div><strong>Parcelar no cartão de crédito</strong><small>O sistema substitui o lançamento do cartão e distribui o total previsto nas parcelas.</small></div>
+            <label class="field-label">Quantidade<select id="installmentCount" class="input"><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="5">5x</option><option value="6">6x</option><option value="7">7x</option><option value="8">8x</option><option value="9">9x</option><option value="10">10x</option><option value="11">11x</option><option value="12">12x</option></select></label>
+            <label class="field-label">1º vencimento<input id="installmentFirstDate" class="input" type="date" /></label>
+            <button class="btn btn-primary btn-sm" id="generateInstallmentsBtn" type="button">Gerar parcelas</button>
+          </div>
         </section>
-        <div class="grid-2">
-          <label class="field-label">Fornecedor / loja
-            <input id="itemSupplier" class="input" maxlength="80" placeholder="Ex.: Buffet Alegria" />
-          </label>
-          <label class="field-label">Link (opcional)
-            <input id="itemLink" class="input" type="url" placeholder="https://…" />
-          </label>
-        </div>
-        <div class="grid-2">
-          <label class="field-label">Telefone do fornecedor
-            <input id="itemSupplierPhone" class="input" type="tel" inputmode="tel" maxlength="40" autocomplete="tel" placeholder="+55 83 98875-4742" />
-          </label>
-          <label class="field-label">Instagram do fornecedor
-            <input id="itemSupplierInstagram" class="input" maxlength="80" autocapitalize="none" autocomplete="off" placeholder="@fornecedor" />
-          </label>
-        </div>
-        <label class="field-label">Observações
-          <textarea id="itemNotes" class="input" rows="3" maxlength="500" placeholder="Detalhes, medidas, combinados…"></textarea>
-        </label>
-        <section class="subtask-editor" aria-labelledby="subtasksTitle">
-          <div class="payment-editor-head"><div><h3 id="subtasksTitle">Composição do item</h3><p class="hint">Cada subitem pode ter quantidade e preço. Quando houver valores, eles formam o total previsto do item.</p></div><button class="btn btn-ghost btn-sm" id="addSubtaskBtn" type="button">＋ Adicionar subitem</button></div>
-          <div id="subtaskRows" class="subtask-editor-rows"></div>
+
+        <section class="item-form-section item-notes-section" aria-labelledby="itemNotesTitle">
+          <div class="item-form-section-head"><span aria-hidden="true">📝</span><div><h3 id="itemNotesTitle">Observações</h3><p>Registre medidas, combinações ou qualquer detalhe importante.</p></div></div>
+          <label class="field-label"><span class="sr-only">Observações</span><textarea id="itemNotes" class="input" rows="3" maxlength="500" placeholder="Detalhes, medidas, combinados…"></textarea></label>
         </section>
-        <div class="modal-actions">
+        <div class="modal-actions item-modal-actions">
           <button type="button" class="btn btn-danger-ghost" id="deleteItemBtn" hidden>Excluir</button>
           <span class="spacer"></span>
           <button type="button" class="btn btn-ghost" data-close>Cancelar</button>
@@ -1029,8 +972,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/guest-id.js?v=20261112p7"></script>
-  <script src="assets/app.js?v=20261112p7"></script>
-  <script src="assets/assistente.js?v=20261112p7"></script>
+  <script src="assets/guest-id.js?v=20261112p8"></script>
+  <script src="assets/app.js?v=20261112p8"></script>
+  <script src="assets/assistente.js?v=20261112p8"></script>
 </body>
 </html>

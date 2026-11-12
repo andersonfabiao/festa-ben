@@ -2879,38 +2879,54 @@
     if (!wrap) return;
     const methods = ["", "Pix", "Dinheiro", "Cartão de crédito", "Cartão de débito", "Transferência", "Boleto"];
     wrap.innerHTML = editingPayments.length
-      ? editingPayments.map((payment) => '<div class="payment-row" data-payment-id="' + esc(payment.id) + '" data-installment-number="' + (payment.installmentNumber || 0) + '" data-installment-count="' + (payment.installmentCount || 0) + '">' +
-          '<label class="field-label">Data<input class="input" type="date" data-payment-field="date" value="' + esc(payment.date || "") + '"></label>' +
-          '<label class="field-label">Valor (R$)<input class="input" inputmode="decimal" data-payment-field="amount" value="' + esc(payment.amount ? Number(payment.amount).toFixed(2).replace(".", ",") : "") + '" placeholder="0,00"></label>' +
-          '<label class="field-label">Forma<select class="input" data-payment-field="method">' + methods.map((method) => '<option value="' + esc(method) + '"' + (method === payment.method ? " selected" : "") + '>' + esc(method || "Não informado") + '</option>').join("") + '</select></label>' +
-          '<label class="payment-paid"><input type="checkbox" data-payment-field="paid"' + (payment.paid ? " checked" : "") + '><span>Pago</span></label>' +
-          '<label class="field-label">Observação' + (payment.installmentCount > 1 ? '<span class="installment-tag">' + payment.installmentNumber + "/" + payment.installmentCount + "</span>" : "") + '<input class="input" maxlength="120" data-payment-field="note" value="' + esc(payment.note || "") + '" placeholder="Ex.: sinal"></label>' +
-          '<label class="field-label">Comprovante (link)<input class="input" type="url" data-payment-field="receiptUrl" value="' + esc(payment.receiptUrl || "") + '" placeholder="https://…"></label>' +
-          '<button class="icon-btn payment-remove" type="button" data-payment-remove="' + esc(payment.id) + '" aria-label="Remover pagamento">🗑</button>' +
-        "</div>").join("")
-      : '<div class="payment-empty">Nenhum pagamento registrado.</div>';
+      ? editingPayments.map((payment, index) => '<div class="payment-row" data-payment-id="' + esc(payment.id) + '" data-installment-number="' + (payment.installmentNumber || 0) + '" data-installment-count="' + (payment.installmentCount || 0) + '">' +
+          '<div class="payment-row-head"><strong>Pagamento ' + (index + 1) + '</strong>' +
+            (payment.installmentCount > 1 ? '<span class="installment-tag">Parcela ' + payment.installmentNumber + " de " + payment.installmentCount + "</span>" : "") +
+            '<button class="icon-btn payment-remove" type="button" data-payment-remove="' + esc(payment.id) + '" aria-label="Remover pagamento ' + (index + 1) + '">🗑</button></div>' +
+          '<div class="payment-row-main">' +
+            '<label class="field-label">Forma de pagamento<select class="input" data-payment-field="method">' + methods.map((method) => '<option value="' + esc(method) + '"' + (method === payment.method ? " selected" : "") + '>' + esc(method || "Selecione") + '</option>').join("") + '</select></label>' +
+            '<label class="field-label">Valor (R$)<input class="input" inputmode="decimal" data-payment-field="amount" value="' + esc(payment.amount ? Number(payment.amount).toFixed(2).replace(".", ",") : "") + '" placeholder="0,00"></label>' +
+            '<label class="field-label">Data / vencimento<input class="input" type="date" data-payment-field="date" value="' + esc(payment.date || "") + '"></label>' +
+            '<label class="payment-paid"><input type="checkbox" data-payment-field="paid"' + (payment.paid ? " checked" : "") + '><span>' + (payment.paid ? "Pago" : "Pendente") + '</span></label>' +
+          '</div><div class="payment-row-details">' +
+            '<label class="field-label">Observação<input class="input" maxlength="120" data-payment-field="note" value="' + esc(payment.note || "") + '" placeholder="Ex.: sinal, entrada ou parcela"></label>' +
+            '<label class="field-label">Comprovante (link)<input class="input" type="url" data-payment-field="receiptUrl" value="' + esc(payment.receiptUrl || "") + '" placeholder="https://…"></label>' +
+          "</div></div>").join("")
+      : '<div class="payment-empty">Nenhum pagamento registrado. Use “Adicionar pagamento” para começar.</div>';
     const totalPaid = editingPayments.reduce((sum, payment) => sum + (payment.paid ? parseMoney(payment.amount) : 0), 0);
     $("#itemPaid").value = totalPaid ? totalPaid.toFixed(2).replace(".", ",") : "";
+    syncInstallmentBuilder();
+  }
+
+  function syncInstallmentBuilder() {
+    const builder = $("#installmentBuilder");
+    if (!builder) return;
+    const hasCreditPayment = editingPayments.some((payment) => payment.method === "Cartão de crédito");
+    builder.hidden = !hasCreditPayment;
   }
 
   function collectPaymentsFromRows() {
-    editingPayments = $$("#paymentRows [data-payment-id]").map((row) => ({
-      id: row.dataset.paymentId,
-      date: row.querySelector('[data-payment-field="date"]').value,
-      amount: parseMoney(row.querySelector('[data-payment-field="amount"]').value),
-      method: row.querySelector('[data-payment-field="method"]').value,
-      note: row.querySelector('[data-payment-field="note"]').value.trim().slice(0, 120),
-      receiptUrl: safeUrl(row.querySelector('[data-payment-field="receiptUrl"]').value),
-      installmentNumber: parseInt(row.dataset.installmentNumber, 10) || 0,
-      installmentCount: parseInt(row.dataset.installmentCount, 10) || 0,
-      paid: row.querySelector('[data-payment-field="paid"]').checked,
-    })).filter((payment) => payment.amount > 0);
+    editingPayments = $$("#paymentRows [data-payment-id]").map((row) => {
+      const method = row.querySelector('[data-payment-field="method"]').value;
+      const isCredit = method === "Cartão de crédito";
+      return {
+        id: row.dataset.paymentId,
+        date: row.querySelector('[data-payment-field="date"]').value,
+        amount: parseMoney(row.querySelector('[data-payment-field="amount"]').value),
+        method,
+        note: row.querySelector('[data-payment-field="note"]').value.trim().slice(0, 120),
+        receiptUrl: safeUrl(row.querySelector('[data-payment-field="receiptUrl"]').value),
+        installmentNumber: isCredit ? (parseInt(row.dataset.installmentNumber, 10) || 0) : 0,
+        installmentCount: isCredit ? (parseInt(row.dataset.installmentCount, 10) || 0) : 0,
+        paid: row.querySelector('[data-payment-field="paid"]').checked,
+      };
+    });
     return editingPayments;
   }
 
   function addPaymentRow() {
     collectPaymentsFromRows();
-    editingPayments.push({ id: uid(), date: todayISO(), amount: 0, method: "Pix", note: "", receiptUrl: "", paid: false, installmentNumber: 0, installmentCount: 0 });
+    editingPayments.push({ id: uid(), date: todayISO(), amount: 0, method: "", note: "", receiptUrl: "", paid: false, installmentNumber: 0, installmentCount: 0 });
     renderPaymentRows();
     const rows = $$("#paymentRows [data-payment-id]");
     const last = rows[rows.length - 1];
@@ -2941,7 +2957,9 @@
       $("#installmentFirstDate").focus();
       return;
     }
-    const retained = editingPayments.filter((payment) => !(payment.method === "Cartão de crédito" && payment.installmentCount > 1));
+    // O parcelamento substitui os lançamentos de crédito existentes para não
+    // contabilizar a compra à vista e as parcelas ao mesmo tempo.
+    const retained = editingPayments.filter((payment) => payment.method !== "Cartão de crédito");
     const totalCents = Math.round(total * 100);
     const baseCents = Math.floor(totalCents / count);
     const remainder = totalCents - baseCents * count;
@@ -3082,7 +3100,7 @@
       $("#itemSupplierPhone").focus();
       return;
     }
-    const payments = collectPaymentsFromRows();
+    const payments = collectPaymentsFromRows().filter((payment) => payment.amount > 0);
     const subtasks = collectSubtasksFromRows();
     const composedCost = subtasks.reduce((sum, subtask) => sum + num(subtask.cost), 0);
     const shipping = parseMoney($("#itemShipping").value);
@@ -3683,7 +3701,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261112p7";
+  const INVITE_RELEASE = "20261112p8";
 
   function invitePageUrl() {
     try {
@@ -4647,10 +4665,23 @@
       const totalPaid = editingPayments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0);
       $("#itemPaid").value = totalPaid ? totalPaid.toFixed(2).replace(".", ",") : "";
     });
-    $("#paymentRows").addEventListener("change", () => {
+    $("#paymentRows").addEventListener("change", (event) => {
+      const row = event.target.closest("[data-payment-id]");
+      if (row && event.target.matches('[data-payment-field="method"]') && event.target.value !== "Cartão de crédito") {
+        const note = row.querySelector('[data-payment-field="note"]');
+        if ((parseInt(row.dataset.installmentCount, 10) || 0) > 1 && /^Parcela \d+ de \d+$/i.test(note.value.trim())) note.value = "";
+        row.dataset.installmentNumber = "0";
+        row.dataset.installmentCount = "0";
+        row.querySelector(".installment-tag")?.remove();
+      }
+      if (row && event.target.matches('[data-payment-field="paid"]')) {
+        const label = row.querySelector(".payment-paid span");
+        if (label) label.textContent = event.target.checked ? "Pago" : "Pendente";
+      }
       collectPaymentsFromRows();
       const totalPaid = editingPayments.reduce((sum, payment) => sum + (payment.paid ? payment.amount : 0), 0);
       $("#itemPaid").value = totalPaid ? totalPaid.toFixed(2).replace(".", ",") : "";
+      syncInstallmentBuilder();
     });
     $("#paymentRows").addEventListener("click", (event) => {
       const remove = event.target.closest("[data-payment-remove]");
