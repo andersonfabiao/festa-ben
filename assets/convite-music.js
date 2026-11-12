@@ -12,6 +12,7 @@
   let blocked = false;
   let explicitlyPaused = false;
   let attempting = false;
+  let wasPlayingBeforeHidden = false;
 
   try {
     state = JSON.parse(sessionStorage.getItem(stateKey) || "null");
@@ -124,6 +125,16 @@
       continueAudio();
     }
     saveState();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      wasPlayingBeforeHidden = !audio.paused && !explicitlyPaused;
+      audio.pause();
+      return;
+    }
+    if (wasPlayingBeforeHidden && !explicitlyPaused) continueAudio();
+    wasPlayingBeforeHidden = false;
   });
 
   window.addEventListener("pagehide", saveState);

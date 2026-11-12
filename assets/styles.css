@@ -3270,7 +3270,7 @@ body.no-scroll { overflow: hidden; }
 .rsvp-eyebrow {
   margin: 0 0 2px;
   color: #b13730;
-  font-size: .72rem;
+  font-size: .76rem;
   font-weight: 1000;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -3327,7 +3327,7 @@ body.no-scroll { overflow: hidden; }
   border-radius: 12px;
   background: #f2f8fc;
   color: #254b70;
-  font-size: .76rem;
+  font-size: .8rem;
 }
 .rsvp-page .invite-chip:last-child { grid-column: 1 / -1; }
 .rsvp-task {
@@ -3344,6 +3344,8 @@ body.no-scroll { overflow: hidden; }
 .rsvp-task .rsvp-title { color: #123a66; }
 .rsvp-task .invite-search .input { background: #fff; }
 .rsvp-foot { margin: 15px 0 0; color: #1d557c; font-size: .8rem; font-weight: 800; text-align: center; }
+.rsvp-page button { transition:transform .16s ease, filter .16s ease, box-shadow .16s ease; }
+.rsvp-page button:active { transform:translateY(2px) scale(.985); filter:brightness(.96); }
 
 @keyframes rsvp-cloud-drift {
   from { translate: -9px 0; }
@@ -3367,7 +3369,7 @@ body.no-scroll { overflow: hidden; }
   .rsvp-logo { width: 70px; margin: 0 0 5px; }
   .rsvp-brand-logo { width:clamp(105px,30vw,132px); margin-bottom:5px; }
   .rsvp-ben-story { margin-bottom: 7px; font-size: 2.7rem; }
-  .rsvp-eyebrow { font-size: .52rem; letter-spacing: .1em; }
+  .rsvp-eyebrow { display:inline-flex; width:fit-content; margin-bottom:3px; padding:3px 7px; border-radius:999px; background:rgba(255,253,244,.78); font-size:.7rem; letter-spacing:.08em; }
   .rsvp-hero h1 { flex-wrap: wrap; gap: 7px; font-size: clamp(1.2rem, 5.2vw, 1.55rem); line-height: 1.02; }
   .rsvp-name-blocks { gap: 2px; }
   .rsvp-name-blocks > span { width: 34px; height: 35px; border-width: 2px; font-size: 1.3rem; }
@@ -3377,7 +3379,7 @@ body.no-scroll { overflow: hidden; }
   .rsvp-art img { right:-38px; top:5px; width:330px; transform:none; opacity:.94; -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 24%,#000 90%,transparent 100%),linear-gradient(180deg,transparent 0,#000 10%,#000 100%); -webkit-mask-composite:source-in; mask-image:linear-gradient(90deg,transparent 0,#000 24%,#000 90%,transparent 100%),linear-gradient(180deg,transparent 0,#000 10%,#000 100%); mask-composite:intersect; }
   .rsvp-content { padding: 12px 13px 18px; }
   .rsvp-page .invite-meta { gap: 6px; margin-bottom: 10px; }
-  .rsvp-page .invite-chip { min-height: 36px; padding: 5px 8px; font-size: .65rem; }
+  .rsvp-page .invite-chip { min-height: 44px; padding: 7px 9px; font-size: .76rem; }
   .rsvp-task { padding: 13px 12px 14px; border-radius: 17px; }
   .rsvp-task .rsvp-heading { margin-bottom: 8px; }
   .rsvp-task .rsvp-title { font-size: 1.35rem; }

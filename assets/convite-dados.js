@@ -182,11 +182,10 @@
 
     setText("animatedAge", String(age));
     setText("animatedDateText", longDate(date));
-    setText("animatedWeekday", weekday(date) + " · " + copy.calendarHint);
+    setText("animatedWeekday", weekday(date));
     const calendar = $("animatedDate");
     if (calendar) {
-      calendar.href = calendarHref(meta);
-      calendar.setAttribute("aria-label", "Adicionar aniversário de " + name + " à agenda");
+      calendar.setAttribute("aria-label", longDate(date));
     }
     setText("animatedTimeText", displayTime(time));
     const deadline = [copy.deadlinePrefix, longDate(rsvpDeadline), copy.deadlineSuffix]

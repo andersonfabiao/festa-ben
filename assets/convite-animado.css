@@ -197,8 +197,8 @@ button { color: inherit; }
 .buzz-prelude-control {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   padding: 0;
   border: 2px solid rgba(255,255,255,.88);
   border-radius: 50%;
@@ -211,6 +211,7 @@ button { color: inherit; }
 }
 
 .buzz-prelude-control:hover { background: rgba(18, 78, 121, .9); transform: translateY(-1px); }
+.buzz-prelude-control:active { transform: translateY(2px) scale(.95); filter: brightness(.94); }
 .buzz-prelude-control:focus-visible { outline: 3px solid #ffdc58; outline-offset: 3px; }
 
 .is-prelude-complete .buzz-prelude { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -374,8 +375,10 @@ button { color: inherit; }
   cursor: pointer;
 }
 
-.round-control { width: 42px; height: 42px; border-radius: 50%; font-size: 1.1rem; font-weight: 900; }
-.skip-animation { padding: 9px 13px; border-radius: 999px; font-size: .76rem; font-weight: 800; }
+.round-control { width: 46px; height: 46px; border-radius: 50%; font-size: 1.1rem; font-weight: 900; }
+.skip-animation { min-height: 44px; padding: 9px 14px; border-radius: 999px; font-size: .78rem; font-weight: 800; }
+.round-control:active,
+.skip-animation:active { transform: translateY(2px) scale(.96); filter: brightness(.94); }
 .is-final .skip-animation { display: none; }
 
 .reveal-scene {
@@ -754,9 +757,9 @@ button { color: inherit; }
 
 .ben-voice-cue {
   position: fixed;
-  z-index: 18;
+  z-index: 80;
   left: 50%;
-  top: max(72px, calc(env(safe-area-inset-top) + 58px));
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 12px));
   display: flex;
   align-items: center;
   gap: 10px;
@@ -772,7 +775,7 @@ button { color: inherit; }
   pointer-events: none;
   appearance: none;
   font: inherit;
-  transform: translate(-50%, -14px) scale(.94);
+  transform: translate(-50%, 14px) scale(.94);
   transition: opacity .35s ease, transform .45s cubic-bezier(.2,.8,.2,1), visibility .35s;
 }
 .ben-voice-cue > span:first-child { font-size: 1.35rem; }
@@ -790,7 +793,7 @@ button { color: inherit; }
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translate(-50%, -14px) scale(.94);
+  transform: translate(-50%, 14px) scale(.94);
 }
 .ben-voice-cue.needs-tap {
   pointer-events: auto;
@@ -808,7 +811,7 @@ button { color: inherit; }
   visibility: hidden;
   pointer-events: none;
   animation: none;
-  transform: translate(-50%, -14px) scale(.94);
+  transform: translate(-50%, 14px) scale(.94);
 }
 
 @keyframes ben-voice-pulse {
@@ -966,7 +969,7 @@ button { color: inherit; }
   .orbit-forky { right: -17px; bottom: 27%; }
   .orbit-potato { right: 4%; top: 27%; }
   .skip-animation { padding: 8px 10px; font-size: .68rem; }
-  .round-control { width: 38px; height: 38px; }
+  .round-control { width: 44px; height: 44px; }
   .final-invite { padding: 8px; }
   .card-stage { --base-art-space: clamp(122px, 20vh, 158px); }
   .invite-card { min-height: calc(100dvh - 16px); padding: 16px 14px var(--base-art-space); border-radius: 17px; }
