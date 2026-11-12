@@ -3683,7 +3683,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261111p1";
+  const INVITE_RELEASE = "20261111p2";
 
   function invitePageUrl() {
     try {

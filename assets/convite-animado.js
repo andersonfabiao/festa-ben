@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261111p1";
+  const inviteRelease = "20261111p2";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -268,6 +268,31 @@
     });
   };
 
+  // Safari/iPhone exige que a voz seja liberada pelo próprio toque. Um play
+  // apenas no modo mudo não garante a reprodução automática alguns segundos
+  // depois, quando a tela final aparece.
+  const unlockBenVoiceOnGesture = () => {
+    if (!benVoice || voicePrimed || !soundEnabled) return;
+    try {
+      ensureAudioMixer();
+      if (benVoice.readyState < 2) benVoice.load();
+      benVoice.muted = false;
+      benVoice.volume = 1;
+      benVoice.currentTime = 0;
+      const attempt = benVoice.play();
+      benVoice.pause();
+      benVoice.currentTime = 0;
+      voicePrimed = true;
+      if (attempt?.catch) {
+        attempt.catch((error) => {
+          if (error?.name === "NotAllowedError") voicePrimed = false;
+        });
+      }
+    } catch {
+      voicePrimed = false;
+    }
+  };
+
   const fadeThemeTo = (target, duration = 650) => {
     if (!audio) return;
     cancelAnimationFrame(volumeFrame);
@@ -396,6 +421,7 @@
     stopBenVoice({ restoreTheme: true });
     experience.classList.remove("is-between-scenes");
     setScene("final");
+    scheduleBenVoice(700);
   };
 
   const runAnimation = ({ restartAudio = false } = {}) => {
@@ -432,15 +458,17 @@
     later(() => experience.classList.remove("is-between-scenes"), transitionAt + 1400);
   };
 
+  startButton.addEventListener("pointerdown", unlockBenVoiceOnGesture, { passive: true });
+  replayButton.addEventListener("pointerdown", unlockBenVoiceOnGesture, { passive: true });
   startButton.addEventListener("click", () => {
     ensureAudioMixer();
+    unlockBenVoiceOnGesture();
     runAnimation({ restartAudio: false });
-    primeBenVoice();
   });
   replayButton.addEventListener("click", () => {
     ensureAudioMixer();
+    unlockBenVoiceOnGesture();
     runAnimation({ restartAudio: true });
-    primeBenVoice();
   });
   skipButton.addEventListener("click", showFinal);
 
@@ -499,6 +527,7 @@
   }
 
   if (benVoiceCue) {
+    benVoiceCue.addEventListener("pointerdown", unlockBenVoiceOnGesture, { passive: true });
     benVoiceCue.addEventListener("click", () => {
       if (!benVoiceCue.classList.contains("needs-tap")) return;
       ensureAudioMixer();
