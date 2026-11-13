@@ -575,6 +575,7 @@
       type,
       status,
       phone: normalizePhone(g.phone || g.whatsapp || g.tel),
+      noPhone: g.noPhone === true || g.semTelefone === true,
       relation: String(g.relation || g.parentesco || g.relationship || "").trim().slice(0, 32),
       notes: String(g.notes || g.observacoes || "").slice(0, 500),
       guardians: Array.isArray(g.guardians) ? g.guardians.map(String) : [],
@@ -1965,11 +1966,22 @@
     if (guestFilter === "child" && g.type !== "child") return false;
     if (guestFilter === "sent" && (isHostGuest(g) || !phoneDigits(g.phone) || !g.inviteSentAt)) return false;
     if (guestFilter === "unsent" && (isHostGuest(g) || !phoneDigits(g.phone) || g.inviteSentAt)) return false;
-    if (guestFilter === "no_phone" && (isHostGuest(g) || phoneDigits(g.phone))) return false;
+    if (guestFilter === "no_phone" && (isHostGuest(g) || !guestNeedsPhone(g))) return false;
     if (guestFilter === "needs_reminder" && (isHostGuest(g) || g.status !== "pending" || !phoneDigits(g.phone) || !g.inviteSentAt || g.reminderSentAt)) return false;
     if (!["all", "parents", "adult", "child", "sent", "unsent", "no_phone", "needs_reminder"].includes(guestFilter) && (isHostGuest(g) || g.status !== guestFilter)) return false;
     const q = norm(guestQuery);
     return !q || norm(displayGuestName(g)).includes(q);
+  }
+
+  function guestHasResponsibleContact(g) {
+    return g.type === "child" && Array.isArray(g.guardians) && g.guardians.some((id) => {
+      const adult = guestById(id);
+      return adult && (phoneDigits(adult.phone) || adult.noPhone);
+    });
+  }
+
+  function guestNeedsPhone(g) {
+    return !phoneDigits(g.phone) && !g.noPhone && !guestHasResponsibleContact(g);
   }
 
   function selectableGuest(g) {
@@ -2021,7 +2033,11 @@
           : "") +
         reminder +
         "</div>"
-      : "";
+      : g.noPhone
+        ? '<div class="guest-contact-note">📵 Sem telefone próprio</div>'
+        : guestHasResponsibleContact(g)
+          ? '<div class="guest-contact-note">👨‍👩‍👧 Contato pelo responsável</div>'
+          : "";
     const notes = g.notes ? '<div class="guest-notes">' + esc(g.notes) + "</div>" : "";
     const unlistedBadge = g.unlisted
       ? '<span class="guest-unlisted-badge" title="Confirmou presença sem estar na lista inicial">Novo convidado</span>'
@@ -2187,13 +2203,13 @@
         '</strong><small>' + esc(timing + " · " + pendingText) + "</small></div>";
     }
 
-    const noPhone = guests.filter((g) => !phoneDigits(g.phone)).length;
+    const noPhone = guests.filter(guestNeedsPhone).length;
     const notSent = guests.filter((g) => phoneDigits(g.phone) && !g.inviteSentAt).length;
     const needsReminder = guests.filter((g) => g.status === "pending" && phoneDigits(g.phone) && g.inviteSentAt && !g.reminderSentAt).length;
     const pendingGrid = $("#guestPendingGrid");
     if (pendingGrid) {
       pendingGrid.innerHTML = [
-        { filter: "no_phone", icon: "📵", value: noPhone, label: "Sem telefone", detail: "Complete o contato" },
+        { filter: "no_phone", icon: "📵", value: noPhone, label: "Contato indefinido", detail: "Informe telefone ou responsável" },
         { filter: "unsent", icon: "✉️", value: notSent, label: "Convite não enviado", detail: "Prepare o primeiro envio" },
         { filter: "pending", icon: "⏳", value: pending, label: "Aguardando resposta", detail: "Ainda não confirmaram" },
         { filter: "needs_reminder", icon: "🔔", value: needsReminder, label: "Sem lembrete", detail: "Já receberam o convite" },
@@ -2209,7 +2225,7 @@
       child: allGuests.filter((g) => g.type === "child").length,
       sent: guests.filter((g) => phoneDigits(g.phone) && g.inviteSentAt).length,
       unsent: guests.filter((g) => phoneDigits(g.phone) && !g.inviteSentAt).length,
-      no_phone: guests.filter((g) => !phoneDigits(g.phone)).length,
+      no_phone: guests.filter(guestNeedsPhone).length,
       needs_reminder: guests.filter((g) => g.status === "pending" && phoneDigits(g.phone) && g.inviteSentAt && !g.reminderSentAt).length,
       confirmed: guests.filter((g) => g.status === "confirmed").length,
       pending: guests.filter((g) => g.status === "pending").length,
@@ -2222,7 +2238,7 @@
       child: "Crianças",
       sent: "Enviados",
       unsent: "Não enviados",
-      no_phone: "Sem telefone",
+      no_phone: "Contato indefinido",
       needs_reminder: "Sem lembrete",
       confirmed: "Confirmados",
       pending: "Pendentes",
@@ -3284,6 +3300,7 @@
       type: "adult",
       status: "pending",
       phone: "",
+      noPhone: false,
       notes: "",
       guardians: [],
     };
@@ -3294,6 +3311,8 @@
     $("#guestEditType").value = draft.type;
     $("#guestEditStatus").value = draft.status;
     $("#guestEditPhone").value = draft.phone || "";
+    $("#guestEditNoPhone").checked = draft.noPhone === true;
+    syncGuestPhoneAvailability();
     $("#guestEditNotes").value = draft.notes || "";
     $("#guestEditLink").value = guest ? guestInviteUrl(guest) : "";
     $("#guestEditLinkField").hidden = !guest;
@@ -3303,6 +3322,16 @@
 
     renderGuestRelations(draft);
     openModal($("#guestModal"));
+  }
+
+  function syncGuestPhoneAvailability() {
+    const field = $("#guestEditPhone");
+    const toggle = $("#guestEditNoPhone");
+    if (!field || !toggle) return;
+    field.disabled = toggle.checked;
+    field.setAttribute("aria-disabled", toggle.checked ? "true" : "false");
+    field.placeholder = toggle.checked ? "Telefone dispensado" : "+55 11 99999-9999";
+    if (toggle.checked) field.value = "";
   }
 
   function handleGuestEditSubmit(event) {
@@ -3320,7 +3349,8 @@
       ? $("#guestEditStatus").value
       : "pending";
 
-    const phoneRaw = $("#guestEditPhone").value;
+    const noPhone = $("#guestEditNoPhone").checked;
+    const phoneRaw = noPhone ? "" : $("#guestEditPhone").value;
     if (!isValidPhone(phoneRaw)) {
       toast(
         "Telefone incompleto: informe DDD + número (10 ou 11 dígitos) ou deixe em branco.",
@@ -3353,6 +3383,7 @@
     guest.type = type;
     guest.status = status;
     guest.phone = normalizePhone(phoneRaw);
+    guest.noPhone = noPhone;
     guest.notes = String($("#guestEditNotes").value || "").trim().slice(0, 500);
 
     if (type === "child") {
@@ -3701,7 +3732,7 @@
 
   /* ---------- Convite ---------- */
 
-  const INVITE_RELEASE = "20261112p8";
+  const INVITE_RELEASE = "20261112p9";
 
   function invitePageUrl() {
     try {
@@ -4168,6 +4199,7 @@
               type: parseGuestType(o.type || o.tipo, "adult"),
               status: parseGuestStatus(o.status || o.confirmacao),
               phone: o.phone || o.whatsapp || o.tel || "",
+              noPhone: o.noPhone === true || o.semTelefone === true,
               relation: o.relation || o.parentesco || o.relationship || "",
               notes: o.notes || o.observacoes || "",
               guardians: Array.isArray(o.guardians) ? o.guardians.map(String) : [],
@@ -4190,6 +4222,7 @@
         type: parseGuestType(row.tipo || row.type, "adult"),
         status: parseGuestStatus(row.status || row.confirmacao),
         phone: row.celular || row.telefone || row.whatsapp || row.phone || "",
+        noPhone: /^(?:1|sim|s|true|x)$/i.test(String(row.sem_telefone || row.nao_possui_telefone || "").trim()),
         relation: row.parentesco || row.relacao || row.relation || "",
         notes: row.observacoes || row.observacao || row.notes || "",
       })).filter((guest) => guest.name);
@@ -5084,6 +5117,7 @@
         guardians: guest ? guest.guardians || [] : [],
       });
     });
+    $("#guestEditNoPhone").addEventListener("change", syncGuestPhoneAvailability);
     $("#guestEditCopyLink").addEventListener("click", () => {
       copyText($("#guestEditLink").value).then((ok) => {
         toast(ok ? "Link do convite copiado." : "Não foi possível copiar automaticamente.", ok ? "ok" : "err");
@@ -5100,9 +5134,9 @@
     $("#downloadGuestCsvBtn").addEventListener("click", () => downloadCsvTemplate(
       "modelo-convidados-ben.csv",
       [
-        "nome;tipo;celular;parentesco;status;observacoes",
-        "Maria Silva;adulto;5511999999999;Tia;pendente;",
-        "João Silva;crianca;;Primo;confirmado;Alergia a amendoim",
+        "nome;tipo;celular;sem_telefone;parentesco;status;observacoes",
+        "Maria Silva;adulto;5511999999999;não;Tia;pendente;",
+        "João Silva;crianca;;sim;Primo;confirmado;Alergia a amendoim",
       ]
     ));
     $("#guestImportFile").addEventListener("change", (event) => {

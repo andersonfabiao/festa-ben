@@ -7,13 +7,13 @@
   <title>Ben faz 5! · Checklist Toy Story</title>
   <meta name="description" content="Checklist, orçamento e convidados do aniversário de 5 anos do Ben — tema Toy Story." />
   <meta name="theme-color" content="#8fd3ff" />
-  <meta name="app-version" content="20261112p8" />
+  <meta name="app-version" content="20261112p9" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 61,38 96,38 68,59 79,93 50,72 21,93 32,59 4,38 39,38' fill='%23ffc93c' stroke='%23e8453c' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <!-- Ao alterar CSS ou JS, troque o ?v= (ex.: 20261031b) para os aparelhos baixarem a versão nova. -->
-  <link rel="stylesheet" href="assets/styles.css?v=20261112p8" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261112p9" />
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Ir para o conteúdo principal</a>
@@ -201,7 +201,7 @@
           <button class="filter-chip" type="button" data-guest-filter="child">Crianças</button>
           <button class="filter-chip" type="button" data-guest-filter="sent">Enviados</button>
           <button class="filter-chip" type="button" data-guest-filter="unsent">Não enviados</button>
-          <button class="filter-chip" type="button" data-guest-filter="no_phone">Sem telefone</button>
+          <button class="filter-chip" type="button" data-guest-filter="no_phone">Contato indefinido</button>
           <button class="filter-chip" type="button" data-guest-filter="needs_reminder">Sem lembrete</button>
           <button class="filter-chip" type="button" data-guest-filter="confirmed">Confirmados</button>
           <button class="filter-chip" type="button" data-guest-filter="pending">Pendentes</button>
@@ -785,8 +785,8 @@
         <section class="import-guide" aria-labelledby="guestCsvGuideTitle">
           <h3 id="guestCsvGuideTitle">Padrão do arquivo CSV</h3>
           <p>Use ponto e vírgula entre as colunas. A primeira linha deve conter os títulos abaixo:</p>
-          <code>nome;tipo;celular;parentesco;status;observacoes</code>
-          <p class="hint"><b>tipo:</b> adulto ou crianca · <b>status:</b> pendente, confirmado ou nao_vai. Apenas <b>nome</b> é obrigatório. Para números de outro país, informe o código internacional, por exemplo <b>+351 912 345 678</b>.</p>
+          <code>nome;tipo;celular;sem_telefone;parentesco;status;observacoes</code>
+          <p class="hint"><b>tipo:</b> adulto ou crianca · <b>sem_telefone:</b> sim ou não · <b>status:</b> pendente, confirmado ou nao_vai. Apenas <b>nome</b> é obrigatório. Para números de outro país, informe o código internacional, por exemplo <b>+351 912 345 678</b>.</p>
           <div class="import-guide-actions">
             <button class="btn btn-ghost btn-sm" type="button" id="downloadGuestCsvBtn">⬇️ Baixar modelo CSV</button>
             <button class="btn btn-cloud btn-sm" type="button" id="chooseGuestCsvBtn">📂 Escolher arquivo CSV</button>
@@ -890,6 +890,10 @@
         <label class="field-label">WhatsApp (opcional)
           <input id="guestEditPhone" class="input" inputmode="tel" maxlength="40" placeholder="+55 11 99999-9999" />
         </label>
+        <label class="guest-no-phone-option">
+          <input type="checkbox" id="guestEditNoPhone" />
+          <span><strong>Não possui telefone próprio</strong><small>Use para crianças, idosos ou convidados que serão contatados por um responsável.</small></span>
+        </label>
         <label class="field-label">Observações (opcional)
           <textarea id="guestEditNotes" class="input" rows="2" maxlength="500" placeholder="Ex.: vai com 2 acompanhantes, restrição alimentar…"></textarea>
         </label>
@@ -972,8 +976,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/guest-id.js?v=20261112p8"></script>
-  <script src="assets/app.js?v=20261112p8"></script>
-  <script src="assets/assistente.js?v=20261112p8"></script>
+  <script src="assets/guest-id.js?v=20261112p9"></script>
+  <script src="assets/app.js?v=20261112p9"></script>
+  <script src="assets/assistente.js?v=20261112p9"></script>
 </body>
 </html>

@@ -807,9 +807,10 @@ textarea.input { resize: vertical; min-height: 78px; }
 .payment-empty { padding:10px; border:1px dashed #cbdced; border-radius:12px; color:var(--muted); text-align:center; font-size:.78rem; font-weight:700; }
 .subtask-editor { margin:4px 0 0; padding:13px; border:1px solid #d8e5f1; border-radius:15px; background:#f7fafc; }
 .subtask-editor-rows { display:grid; gap:8px; }
-.subtask-editor-row { display:grid; grid-template-columns:auto minmax(180px,1fr) 70px 90px 110px 95px auto; align-items:end; gap:8px; padding:10px; border:1px solid #dce8f3; border-radius:12px; background:#fff; }
+.subtask-editor-row { display:grid; grid-template-columns:auto minmax(0,1.7fr) minmax(54px,.48fr) minmax(72px,.62fr) minmax(86px,.78fr) minmax(78px,.65fr) auto; align-items:end; gap:7px; width:100%; min-width:0; padding:10px; border:1px solid #dce8f3; border-radius:12px; background:#fff; overflow:hidden; }
 .subtask-editor-row .field-label { min-width:0; margin:0; font-size:.68rem; }
 .subtask-editor-row .input { min-width:0; padding:9px 8px; }
+.subtask-editor-row .subtask-title input { text-overflow:ellipsis; }
 .subtask-total { align-self:center; text-align:right; font-size:.76rem; font-weight:900; }
 .subtask-editor-row input[type="checkbox"] { width:19px; height:19px; accent-color:var(--green); }
 .item-subtasks { display:grid; gap:5px; margin:8px 0 0; padding:8px 10px; border-radius:11px; background:#f4f8fc; }
@@ -1419,6 +1420,12 @@ body.hide-values .money-input:focus {
 .guest-accompanied-badge { display:inline-flex; align-items:center; margin-left:7px; padding:2px 7px; border:1px solid #a7dfb7; border-radius:999px; color:#197336; background:#e8f8ed; font-size:.62rem; font-weight:900; line-height:1.25; vertical-align:middle; }
 .guest-type { font-size: 0.74rem; font-weight: 700; color: var(--muted); }
 .guest-contact { margin-top: 3px; font-size: 0.75rem; font-weight: 700; color: #31506f; overflow-wrap: anywhere; }
+.guest-contact-note { display:inline-flex; align-items:center; gap:5px; margin-top:4px; padding:3px 8px; border-radius:999px; background:#eef3f8; color:#5e7085; font-size:.69rem; font-weight:800; }
+.guest-no-phone-option { display:flex; align-items:flex-start; gap:10px; margin:-3px 0 14px; padding:11px 12px; border:1px solid #d9e5f0; border-radius:12px; background:#f7fafc; color:#334e69; cursor:pointer; }
+.guest-no-phone-option input { flex:none; width:18px; height:18px; margin-top:2px; accent-color:var(--green); }
+.guest-no-phone-option span { display:grid; gap:2px; }
+.guest-no-phone-option strong { font-size:.78rem; }
+.guest-no-phone-option small { color:var(--muted); font-size:.7rem; line-height:1.35; }
 .guest-contact a { color: var(--blue); font-weight: 800; text-decoration: none; }
 .guest-contact a.guest-wa-invite { color: var(--green); }
 .guest-contact a.guest-wa-reminder { color:#b36b00; }
