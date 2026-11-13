@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261112p10";
+  const inviteRelease = "20261112p11";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -176,6 +176,7 @@
   const setThemeVolume = (level) => {
     const safeLevel = Math.max(0, Math.min(1, Number(level) || 0));
     currentThemeVolume = safeLevel;
+    if (audio) audio.dataset.mixVolume = safeLevel.toFixed(4);
     if (themeGain && audioCtx) {
       themeGain.gain.value = safeLevel;
       audio.volume = 1;
@@ -294,10 +295,13 @@
   // apenas no modo mudo não garante a reprodução automática alguns segundos
   // depois, quando a tela final aparece.
   const unlockBenVoiceOnGesture = () => {
-    if (!benVoice || voicePrimed || !soundEnabled) return;
+    if (!benVoice || voicePrimed || voicePriming || !soundEnabled) return;
     try {
       ensureAudioMixer();
       if (benVoice.readyState < 2) benVoice.load();
+      // Mantém o sinalizador ativo enquanto os eventos `play` atrasados são
+      // processados. Assim o desbloqueio não aciona o ducking da música.
+      voicePriming = true;
       benVoice.muted = false;
       benVoice.volume = 1;
       benVoice.currentTime = 0;
@@ -310,8 +314,10 @@
           if (error?.name === "NotAllowedError") voicePrimed = false;
         });
       }
+      window.setTimeout(() => { voicePriming = false; }, 650);
     } catch {
       voicePrimed = false;
+      voicePriming = false;
     }
   };
 
