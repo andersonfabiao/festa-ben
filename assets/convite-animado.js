@@ -1,6 +1,6 @@
 (async () => {
   if (window.__benInviteVersionCheck && await window.__benInviteVersionCheck) return;
-  const inviteRelease = "20261112p9";
+  const inviteRelease = "20261112p10";
   const experience = document.querySelector("#experience");
   const buzzPrelude = document.querySelector("#buzzPrelude");
   const buzzPreludeVideo = document.querySelector("#buzzPreludeVideo");
@@ -48,6 +48,7 @@
   let voicePrimed = false;
   let voicePriming = false;
   let voiceDuckActive = false;
+  let themeUnlocked = false;
   // Mixagem única para o convite animado e a confirmação: a trilha mantém
   // o mesmo nível percebido ao trocar de página.
   const themeVolume = 0.08;
@@ -160,10 +161,12 @@
     if (buzzSkip) buzzSkip.addEventListener("click", (event) => {
       event.stopPropagation();
       ensureAudioMixer();
+      unlockThemeOnGesture();
       finishPrelude();
     });
     if (buzzPrelude) buzzPrelude.addEventListener("click", () => {
       ensureAudioMixer();
+      unlockThemeOnGesture();
       enableBuzzSound();
     });
   } else {
@@ -215,6 +218,22 @@
       }
     } catch {
       // Fallback para controle de volume padrão caso Web Audio falhe.
+    }
+  };
+
+  // Em celulares, um áudio iniciado somente depois de um temporizador pode ser
+  // bloqueado. O primeiro toque libera a trilha ainda em silêncio; ela só fica
+  // audível quando o Buzz sai da tela.
+  const unlockThemeOnGesture = () => {
+    if (!audio || !soundEnabled || themeUnlocked || !audio.paused) return;
+    ensureAudioMixer();
+    setThemeVolume(0);
+    audio.currentTime = 0;
+    const attempt = audio.play();
+    if (attempt?.then) {
+      attempt.then(() => { themeUnlocked = true; }).catch(() => {
+        themeUnlocked = false;
+      });
     }
   };
 
@@ -401,16 +420,19 @@
   };
 
   startOpeningTheme = async () => {
-    if (!soundEnabled || !audio.paused) return;
+    if (!soundEnabled) return;
+    ensureAudioMixer();
     audio.currentTime = 0;
-    const openingVolume = 0.008;
+    // Começa claramente audível e chega suavemente ao volume-base.
+    const openingVolume = 0.035;
     setThemeVolume(openingVolume);
     try {
-      await audio.play();
+      if (audio.paused) await audio.play();
+      themeUnlocked = true;
       const startedAt = performance.now();
       const fade = (now) => {
         if (audio.paused || !soundEnabled || voiceDuckActive) return;
-        const progress = Math.min(1, (now - startedAt) / 950);
+        const progress = Math.min(1, (now - startedAt) / 1250);
         setThemeVolume(openingVolume + ((themeVolume - openingVolume) * progress));
         if (progress < 1) requestAnimationFrame(fade);
       };
@@ -580,6 +602,7 @@
 
   const unlockOnFirstGesture = (event) => {
     ensureAudioMixer();
+    unlockThemeOnGesture();
     const target = event && event.target;
     const handledByPrelude = target && target.closest &&
       target.closest("#buzzSoundToggle, #buzzSkip");
